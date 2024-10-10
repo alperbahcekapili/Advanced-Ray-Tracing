@@ -1,1 +1,71 @@
 .vscode
+# Ignore build directories
+/build/
+/bin/
+/obj/
+/out/
+
+# Ignore object files, archives, and compiled binaries
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.app
+
+# Ignore debug and profiling files
+*.d
+*.gcno
+*.gcda
+*.gcov
+*.prof
+*.profraw
+
+# Ignore editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+*.ncb
+*.user
+*.opt
+*.log
+*.tlog
+*.pch
+*.pdb
+
+# Ignore backup and temporary files
+*.bak
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore compiled libraries
+*.dylib
+*.framework
+
+# Ignore auto-generated tags
+tags
+*.tags
+
+# Ignore coverage reports
+coverage/
+*.lcov
+
+# Ignore other temporary files
+*.DS_Store
+Thumbs.db
+out
+myprogram

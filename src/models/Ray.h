@@ -10,10 +10,11 @@ class Ray{
     public:
     Ray(const vector<int>& o, const vector<int>& d, int t);
     string toString();
-
+    bool intersectRay(Ray other);
+    
     private:
-    vector<int>* o;
-    vector<int>* d;
+    vector<int> o;
+    vector<int> d;
     int t;
 
 };
