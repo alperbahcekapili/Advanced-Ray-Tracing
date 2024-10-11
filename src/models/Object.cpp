@@ -5,8 +5,4 @@ Object::Object(Material* material, ObjectType objectType)
     this->material = material;
     this->objectType = objectType;
 
-
-    std::cout << "I initialize as object";
-
-
 };

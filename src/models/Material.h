@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 enum MaterialType {
     Mirror,
@@ -8,10 +9,10 @@ enum MaterialType {
 class Material{
     public:
     MaterialType materialType;
-    std::vector<int>ambientProp;
-    std::vector<int>diffuseProp;
-    std::vector<int>specularProp;
-    Material(MaterialType type, int ambient[3], int diffuse[3], int specular[3]);
+    std::vector<float>ambientProp;
+    std::vector<float>diffuseProp;
+    std::vector<float>specularProp;
+    Material(MaterialType type, float ambient[3], float diffuse[3], float specular[3]);
 
 
 };

@@ -1,25 +1,20 @@
 #include "Camera.h"
+#include "util/util.cpp"
 #include <vector>
 #include <iostream>
 
 
-Camera::Camera(std::vector<int> u, std::vector<int> v, std::vector<int> poisition)
+Camera::Camera(std::vector<float> u, std::vector<float> v, std::vector<float> position)
 {
 this->u = u;
 this->v = v;
 // calculate and store w
-float wx = u.at(1)* v.at(2) - u.at(2) * v.at(1);
-float wy = - u.at(0)* v.at(2) + u.at(2)* v.at(0);
-float wz = u.at(0)* v.at(1) - u.at(1)* v.at(0);
-this->w.resize(3);
-this->w[0] = wx;
-this->w[1] = wy;
-this->w[2] = wz;
+this->w = vectorCrossProduct3D(u,v);
 
-std::cout << wx << "," << wy << "," << wz << "\n" ;
+std::cout << "Agaaa bak w: \n" << w.at(0) << "," << w.at(1) << "," << w.at(2) << "\n" ;
 this->position = position;
 }
 
-std::vector<int> Camera::getPosition(){
+std::vector<float> Camera::getPosition(){
     return this->position;
 }

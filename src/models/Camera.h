@@ -1,14 +1,17 @@
+#pragma once
+
 #include <vector>
 class Camera
 {
 private:
-    std::vector<int> u;
-    std::vector<int> v;
     // in camera space
-    std::vector<int> position; // e
-    std::vector<int> w;
+    std::vector<float> position; // e
+    
 public:
-    Camera(std::vector<int> u, std::vector<int> v, std::vector<int> position);
-    std::vector<int> getPosition();
+    Camera(std::vector<float> u, std::vector<float> v, std::vector<float> position);
+    std::vector<float> getPosition();
+    std::vector<float> w;
+    std::vector<float> u;
+    std::vector<float> v;
 };
 

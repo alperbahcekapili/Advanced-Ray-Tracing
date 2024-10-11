@@ -1,18 +1,19 @@
+#pragma once
+
 #include "Object.h"
 class Triangle : Object
 {
 private:
-    double v1[3];
-    double v2[3];
-    double v3[3];
+    float v1[3];
+    float v2[3];
+    float v3[3];
     Material* material;
     ObjectType objectType;
 
-    static double magnitude(const std::array<double, 3>& vec) ;
-    static std::array<double, 3> crossProduct(const std::array<double, 3>& vec1, const std::array<double, 3>& vec2);
+    static float magnitude(const std::vector<float> vec);
 
 
 public:
-    Triangle(Material* material, ObjectType objectType, double v1[3], double v2[3], double v3[3]);
-    double getArea(void);
+    Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3]);
+    float getArea(void);
 };
