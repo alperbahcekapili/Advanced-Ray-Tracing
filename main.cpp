@@ -1,4 +1,5 @@
 #include "src/models/Triangle.h"
+#include "src/models/Camera.h"
 #include <vector>
 
 
@@ -28,6 +29,12 @@ int main(){
     printf("Area of the triangle: %f\n", triangle->getArea());
 
     
+    vector<int> u = {0,1,0};
+    vector<int> v = {0,0,1};
+    vector<int> e = {0,0,0};
+    // intiialize camera
+    Camera* c = new Camera(u, v, e);
+
 
 
 
