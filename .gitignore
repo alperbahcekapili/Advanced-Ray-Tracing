@@ -50,7 +50,7 @@
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
+
 
 # Ignore compiled libraries
 *.dylib
