@@ -1,8 +1,12 @@
 
 
 #include <vector>
-
 #include <cassert>
+#include "../Ray.h"
+
+
+using namespace std;
+
 #define assertm(exp, msg) assert(((void)msg, exp))
 
 
@@ -56,4 +60,17 @@ float dotProduct(std::vector<float> vec1, std::vector<float> vec2){
     }
     return cum;
     
+}
+
+
+Ray createRayFrom(vector<float> start, vector<float> destination){
+    // In order to create ray from start and destination we need to substract start from destination
+    vector<float> scaledRay = vectorAdd(destination, vectorScale(start, -1));
+    vector<float> normalVector = vectorScale(scaledRay, 1 / dotProduct(scaledRay, scaledRay));
+    return Ray(start, normalVector);
+}
+
+
+float getMagnitude(std::vector<float> v){
+    return dotProduct(v,v);
 }

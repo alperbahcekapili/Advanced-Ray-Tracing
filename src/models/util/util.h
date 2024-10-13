@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include "../Ray.h"
 
 // Macro for assertions with messages
 #define assertm(exp, msg) assert(((void)msg, exp))
@@ -24,4 +25,9 @@ std::vector<float> vectorMultiplyElementwise(std::vector<float> v1, std::vector<
 std::vector<float> vectorCrossProduct3D(std::vector<float> vec1, std::vector<float> vec2);
 
 float dotProduct(std::vector<float> vec1, std::vector<float> vec2);
+
+Ray createRayFrom(vector<float> start, vector<float> destination);
+
+float getMagnitude(std::vector<float> v);
+
 #endif // VECTOR_UTILS_H

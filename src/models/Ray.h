@@ -12,7 +12,7 @@ class Ray{
     Ray(const vector<float>& o, const vector<float>& d);
     string toString();
     bool intersectRay(Ray other);
-    
+    vector<float> locationAtT(float t);
     vector<float> o;
     vector<float> d;
     

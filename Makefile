@@ -1,7 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -g  -std=c++11
-
+CXXFLAGS = -Wall -g  -std=c++11  `pkg-config --cflags opencv4`
 # Define the source files
 MAIN = main.cpp
 
@@ -17,13 +16,15 @@ OBJ = $(ALL_SRC:.cpp=.o)
 # Target executable
 TARGET = myprogram
 
-# Rule to link the object files
+# Rule to link the object files into the final executable
 $(TARGET): $(OBJ)
-	$(CXX) -o $@ $^
+	$(CXX) -o $@ $^ `pkg-config --libs opencv4`
 
 # Rule to compile each .cpp file into an object file
+# Ensure correct folder structure for .o files by creating the directory
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@mkdir -p $(dir $@)  # Create directories as needed
+	$(CXX) $(CXXFLAGS) -c $< -o $@ 
 
 # Clean up object and executable files
 clean:

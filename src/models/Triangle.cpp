@@ -1,7 +1,7 @@
 
 #include "Triangle.h"
 #include "util/util.h"
-
+#include <math.h>
 
 // Function to calculate the magnitude of this->v1 vector
 float Triangle::magnitude(const std::vector<float> vec) {
@@ -9,7 +9,7 @@ float Triangle::magnitude(const std::vector<float> vec) {
 }
 
 
-Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3]) : Object(material, objectType)
+Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3])
 {
     this->material = material;
     this->objectType = objectType;

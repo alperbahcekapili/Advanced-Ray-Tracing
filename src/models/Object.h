@@ -15,8 +15,9 @@ private:
     /* data */
 public:
 
-    float Intersects(Ray ray);
     Material* material;
     ObjectType objectType;
-    Object(Material* material, ObjectType objectType);
+    virtual float Intersects(Ray ray) ;
+    virtual vector<float> getSurfaceNormal(vector<float> location);
+    virtual ~Object() = default;
 };

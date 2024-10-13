@@ -10,9 +10,9 @@ class Material{
     public:
     MaterialType materialType;
     std::vector<float>ambientProp;
-    std::vector<float>diffuseProp;
+    float diffuseProp;
     std::vector<float>specularProp;
-    Material(MaterialType type, float ambient[3], float diffuse[3], float specular[3]);
+    Material(MaterialType type, float ambient[3], float diffuse, float specular[3]);
 
 
 };

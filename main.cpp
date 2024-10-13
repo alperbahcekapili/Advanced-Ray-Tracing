@@ -3,10 +3,19 @@
 #include "src/models/ImagePane.h"
 #include "src/models/Ray.h"
 #include "src/models/Sphere.h"
+#include "src/lights/Light.h"
+#include "src/lights/PointLight.h"
+#include "src/scene/Scene.h"
+#include "src/shaders/Shader.h"
+
+
 #include <vector>
+// for testing remove before submitting
+#include <opencv2/opencv.hpp>
 
 
 int main(){
+    
     vector<float> d;
     d.push_back(1);
     d.push_back(2);
@@ -23,7 +32,7 @@ int main(){
 
     MaterialType triangleMaterialType = MaterialType::Mirror;
     float ambientProp[3] = {4,5,1};
-    float diffuse[3] = {5,6,1};
+    float diffuse = 1;
     float specular[3] = {6,7,1};
     Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular);
     float triangleVertices[3][3] = {{1,1,5}, {4,2,2}, {123,3,3}};
@@ -54,6 +63,91 @@ int main(){
     float tval = sphere->Intersects(*intersectingRay);
     std::cout << "tvalue: " << tval << "\n";
 
+
+
+    // now initialize scene and iteratively fill the ImagePane
+    Object** objList;
+    objList = new Object*[1];
+    objList[0] = sphere;
+
+    Light** lightList;
+    lightList = new Light*[1];
+
+    lightList[0] = new  PointLight(5, {-16, -16, -16});
+
+    Scene scene = Scene(
+        objList, 1, *c, *imagePane, lightList, 1
+    );
+
+    Shader shader = Shader(
+        &scene   
+    );
+
+    float image[10][10];
+
+    // now we need to iterate over the pixels and fill them
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 10; j++)
+        {
+            // shoot ray from camera to ImagePane
+            Ray cameraRay = imagePane->rayFromCamera(i, j);
+            
+            // now iterate over the objects to find first object that hits this ray
+            // add fov in future to exclude object that are too far away from the camera
+            float minTValue = 9999999;
+            int intersectingObjIndex = -1;
+            for (int k = 0; k < 1; k++)
+            {
+                float tvalue = objList[k]->Intersects(cameraRay);
+                if (tvalue > 0 && tvalue < minTValue){
+                    minTValue = tvalue;
+                    intersectingObjIndex = k;
+                }
+            }
+
+            if (intersectingObjIndex == -1){
+                // means we need to set bg color for this pixel
+                
+                image[i][j] =255;
+                continue;
+            }
+            
+            // if reached here then camera hits an object
+            image[i][j] = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex]);
+            
+            
+            
+        }
+        
+    }
+    
+    int height = 10;
+    int width = 10; 
+
+    // Create an OpenCV Mat object to hold the image
+    cv::Mat imageMat(10, 10, CV_32F); // Use CV_32F for float representation
+
+    // Fill the Mat with the values from the float list
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            imageMat.at<float>(i, j) = image[i][j];
+        }
+    }
+
+    // Normalize the values to the range [0, 255] for display
+    cv::Mat imageNormalized;
+    cv::normalize(imageMat, imageNormalized, 0, 255, cv::NORM_MINMAX, CV_8UC1); // Convert to 8-bit grayscale
+
+    // Display the image
+    cv::imshow("Grayscale Image", imageNormalized);
+    cv::waitKey(0); // Wait for a key press
+
+    // Optionally, save the image to a file
+    cv::imwrite("output_image.png", imageNormalized);
+
+
+    
 
 
 }

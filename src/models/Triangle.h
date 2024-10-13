@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-class Triangle : Object
+class Triangle 
 {
 private:
     float v1[3];
