@@ -17,7 +17,7 @@ public:
 
     Material* material;
     ObjectType objectType;
-    virtual float Intersects(Ray ray) ;
-    virtual vector<float> getSurfaceNormal(vector<float> location);
-    virtual ~Object() = default;
+    virtual float Intersects(Ray ray)  = 0;
+    virtual vector<float> getSurfaceNormal(vector<float> location) = 0;
+    virtual ~Object() = default ;
 };

@@ -46,9 +46,12 @@ int main(){
     // intiialize camera
     Camera* c = new Camera(u, v, e);
 
+    int imgHeight = 100;
+    int imgWidth = 100;
+
 
     ImagePane* imagePane = new ImagePane(
-        10, 10, -5, 5, -5, 5, 8, c 
+        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 10, c 
     );
 
 
@@ -66,30 +69,34 @@ int main(){
 
 
     // now initialize scene and iteratively fill the ImagePane
-    Object** objList;
-    objList = new Object*[1];
+    Object** objList = new Object*[1];
+    std::cout << "I'll be setting spehere:..\n";
     objList[0] = sphere;
+    std::cout << "Sphere set...\n";
 
-    Light** lightList;
-    lightList = new Light*[1];
+    Light** lightList = new Light*[1];
+    lightList[0] = new PointLight(5, {-6, -6, -6});
 
-    lightList[0] = new  PointLight(5, {-16, -16, -16});
-
+    std::cout << "Setting scene...\n";
     Scene scene = Scene(
         objList, 1, *c, *imagePane, lightList, 1
     );
+
+    std::cout << "Scene initialized\n";
 
     Shader shader = Shader(
         &scene   
     );
 
-    float image[10][10];
+    float image[imgWidth][imgHeight];
 
     // now we need to iterate over the pixels and fill them
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < imgWidth; i++)
     {
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < imgHeight; j++)
         {
+
+            
             // shoot ray from camera to ImagePane
             Ray cameraRay = imagePane->rayFromCamera(i, j);
             
@@ -97,12 +104,14 @@ int main(){
             // add fov in future to exclude object that are too far away from the camera
             float minTValue = 9999999;
             int intersectingObjIndex = -1;
+            
             for (int k = 0; k < 1; k++)
             {
                 float tvalue = objList[k]->Intersects(cameraRay);
                 if (tvalue > 0 && tvalue < minTValue){
                     minTValue = tvalue;
                     intersectingObjIndex = k;
+                    std::cout << "For i,j:" << i <<  ", " << j  << " intersects with the object\n";
                 }
             }
 
@@ -112,29 +121,32 @@ int main(){
                 image[i][j] =255;
                 continue;
             }
+
             
+            
+            std::cout << "Calculating the diffuse shading: \n";
             // if reached here then camera hits an object
             image[i][j] = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex]);
-            
+            std::cout << image[i][j] <<  "\n";
             
             
         }
         
     }
+    std::cout << "Outside the loop\n";
     
-    int height = 10;
-    int width = 10; 
 
     // Create an OpenCV Mat object to hold the image
-    cv::Mat imageMat(10, 10, CV_32F); // Use CV_32F for float representation
+    cv::Mat imageMat(imgWidth, imgHeight, CV_32F); // Use CV_32F for float representation
 
     // Fill the Mat with the values from the float list
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
+    for (int i = 0; i < imgHeight; ++i) {
+        for (int j = 0; j < imgWidth; ++j) {
             imageMat.at<float>(i, j) = image[i][j];
         }
     }
 
+    
     // Normalize the values to the range [0, 255] for display
     cv::Mat imageNormalized;
     cv::normalize(imageMat, imageNormalized, 0, 255, cv::NORM_MINMAX, CV_8UC1); // Convert to 8-bit grayscale
