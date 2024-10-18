@@ -20,4 +20,6 @@ public:
     virtual float Intersects(Ray ray)  = 0;
     virtual vector<float> getSurfaceNormal(vector<float> location) = 0;
     virtual ~Object() = default ;
+    virtual Material* getMaterial() = 0;
+    virtual ObjectType getObject() = 0;
 };

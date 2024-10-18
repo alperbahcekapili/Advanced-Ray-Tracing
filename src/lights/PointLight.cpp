@@ -1,7 +1,7 @@
 #include "PointLight.h"
 #include "Light.h"
 #include <vector>
-#include "../models/util/util.h"
+#include "../util/util.h"
 #include <math.h>
 
 PointLight::PointLight(float intensity, std::vector<float> location)
@@ -12,7 +12,7 @@ PointLight::PointLight(float intensity, std::vector<float> location)
 
 
 float PointLight::irradianceAt(std::vector<float> location)  {
-    return this->intensity / pow(getMagnitude(vectorAdd(this->location, vectorScale(location, -1))),2);
+    return this->intensity / getMagnitude(vectorAdd(this->location, vectorScale(location, -1)));
 }
 
 

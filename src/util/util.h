@@ -4,14 +4,14 @@
 #include <vector>
 #include <string>
 #include <cassert>
-#include "../Ray.h"
+#include "../models/Ray.h"
 
 // Macro for assertions with messages
 #define assertm(exp, msg) assert(((void)msg, exp))
 
 // Function declarations
 
-
+std::vector<float> normalize(std::vector<float> v);
 // Function to add two vectors element-wise
 std::vector<float> vectorAdd(std::vector<float> v1, std::vector<float> v2);
 
@@ -29,5 +29,9 @@ float dotProduct(std::vector<float> vec1, std::vector<float> vec2);
 Ray createRayFrom(vector<float> start, vector<float> destination);
 
 float getMagnitude(std::vector<float> v);
+
+std::vector<float> clipValues(std::vector<float> v, float clip_val);
+
+float det3x3(float m[3][3]);
 
 #endif // VECTOR_UTILS_H

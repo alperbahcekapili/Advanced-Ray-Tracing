@@ -1,7 +1,7 @@
 #include "Shader.h"
 #include "../models/Object.h"
 #include "../models/Sphere.h"
-#include "../models/util/util.h"
+#include "../util/util.h"
 
 
 Shader::Shader(Scene* scene)
@@ -14,7 +14,7 @@ Shader::~Shader()
 {
 }
 
-float Shader::diffuseShadingAt(vector<float> location, Object* intersectingObject){
+vector<float> Shader::diffuseShadingAt(vector<float> location, Object* intersectingObject, int intersectingObjIndex){
 
     /*
     Iterate over the lightsources and detect if the location is lightened by the lightsource
@@ -31,29 +31,38 @@ float Shader::diffuseShadingAt(vector<float> location, Object* intersectingObjec
     // is not lighted by this lightsource
     
     float intersectingTvalue = intersectingObject->Intersects(lightRay);
+    // std::cout << "Light hits the object in required area. with thvalue:"<< intersectingTvalue <<  "..\n"; 
+    
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
     vector<float> lightHitLocation = vectorAdd(lightRay.o, vectorScale(lightRay.d, intersectingTvalue));
     float errorMargin = 0.01;
-    if(dotProduct(vectorAdd(lightHitLocation, vectorScale(location, -1)), vectorAdd(lightHitLocation, vectorScale(location, -1))) > errorMargin){
+    if(getMagnitude(vectorAdd(lightHitLocation, vectorScale(location, -1))) > errorMargin){
         // this means light is cut befor hitting this location
-        return 0;
+        // std::cout << "Light is cut before \n";
+        return this->scene->bg;
     }
 
     for (int j = 0; j < this->scene->numObjects; j++)
     {
         float tvalue = this->scene->sceneObjects[j]->Intersects(lightRay);
-        if( tvalue < intersectingTvalue ){
+        if( tvalue < intersectingTvalue && j!=intersectingObjIndex && tvalue > 0){
+            // std::cout << "intersecting: " << intersectingTvalue << ", interle. " << tvalue << "\n";
             // then this means light hits another object before hitting this location than we can retun 0 directly
-            return 0;
+            // std::cout << "Ligth is cut by another object, object camera sees: "<<  intersectingObjIndex <<" \n";
+            return this->scene->bg;
         }
     }
 
     // If we got so far then it means ith light source hits this surface thus we can calculate illumination
-    float cosTheta = dotProduct(lightRay.d, intersectingObject->getSurfaceNormal(location)); // because each of these vectors are unit we can directly calculate dot product
-    resultingMagnitude += intersectingObject->material->diffuseProp * this->scene->lights[i]->irradianceAt(location) * cosTheta;
+    float cosTheta = dotProduct(lightRay.d, intersectingObject->getSurfaceNormal(location));
+    float irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
+    // std::cout << "Irradiance: " << irradiance <<  "\n";
+    // std::cout << "Cos: " << cosTheta <<  "\n";
+    resultingMagnitude += intersectingObject->getMaterial()->diffuseProp * irradiance;
    }
    
 
-    return resultingMagnitude;
+    vector<float> retval = vectorScale(intersectingObject->getMaterial()->color ,resultingMagnitude);
+    return retval;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-class Triangle 
+class Triangle : public Object
 {
 private:
     float v1[3];
@@ -9,11 +9,14 @@ private:
     float v3[3];
     Material* material;
     ObjectType objectType;
-
-    static float magnitude(const std::vector<float> vec);
+    
 
 
 public:
     Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3]);
+    float Intersects(Ray ray) override ;
     float getArea(void);
+    vector<float> getSurfaceNormal(vector<float> location) override;
+    Material* getMaterial() override;
+    ObjectType getObject() override;
 };

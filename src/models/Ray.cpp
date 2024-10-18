@@ -5,11 +5,11 @@
 using namespace std;
 
 #include "Ray.h"
-#include "util/util.h"
+#include "../util/util.h"
 
 Ray::Ray(const vector<float>& o, const vector<float>& d){
     this->o = o;
-    this->d = d;
+    this->d = normalize(d);
 }
 
 vector<float> Ray::locationAtT(float t){

@@ -7,11 +7,15 @@
 #include "src/lights/PointLight.h"
 #include "src/scene/Scene.h"
 #include "src/shaders/Shader.h"
+#include "src/util/util.h"
 
 
 #include <vector>
 // for testing remove before submitting
 #include <opencv2/opencv.hpp>
+
+
+using namespace cv;
 
 
 int main(){
@@ -34,15 +38,20 @@ int main(){
     float ambientProp[3] = {4,5,1};
     float diffuse = 1;
     float specular[3] = {6,7,1};
-    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular);
-    float triangleVertices[3][3] = {{1,1,5}, {4,2,2}, {123,3,3}};
+    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, {0,255,0});
+    std::cout << triangleMaterial->diffuseProp;
+    float triangleVertices[3][3] = {{150,20,-20}, {0,0,-20}, {0,500,-20}};
     Triangle* triangle = new Triangle(triangleMaterial, ObjectType::TriangleType, triangleVertices[0], triangleVertices[1], triangleVertices[2]);
-    printf("Area of the triangle: %f\n", triangle->getArea());
+    Ray* test_ray = new Ray({8,8,-5}, {0,0,1});
+    float test_t_val = triangle->Intersects(*test_ray);
+    // std::vector<float> tri_surface_n = triangle->getSurfaceNormal({8,8,0});
+    // std::cout << "Surface Normal: " << tri_surface_n.at(0) << ", " << tri_surface_n.at(1) << ", " << tri_surface_n.at(2) << "\n";
+    
 
     
     vector<float> u = {1,0,0};
     vector<float> v = {0,1,0};
-    vector<float> e = {0,0,0};
+    vector<float> e = {0,0,100};
     // intiialize camera
     Camera* c = new Camera(u, v, e);
 
@@ -51,35 +60,35 @@ int main(){
 
 
     ImagePane* imagePane = new ImagePane(
-        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 10, c 
+        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 104, c 
     );
 
-
+    Material* sphereMaterial = new Material(MaterialType::Conductor, ambientProp, diffuse, specular, {255,0,0});
     Sphere* sphere = new Sphere(
-        -10, -10, -10, 5, triangleMaterial, ObjectType::SphereType
+        0, 0, -30, 25.9, sphereMaterial, ObjectType::SphereType
     );
-
-    vector<float> intersectingDirection = {-1,-1,-1};
-    Ray* intersectingRay = new Ray(
-        o, intersectingDirection
-    );
-    float tval = sphere->Intersects(*intersectingRay);
-    std::cout << "tvalue: " << tval << "\n";
-
-
 
     // now initialize scene and iteratively fill the ImagePane
-    Object** objList = new Object*[1];
-    std::cout << "I'll be setting spehere:..\n";
-    objList[0] = sphere;
-    std::cout << "Sphere set...\n";
+    Object** objList = new Object*[2];
+    std::cout << "I'll be setting triangle:..\n";
+    objList[0] = triangle;
+    objList[1] = sphere;
+    
+     // Debug: Print pointer addresses before accessing objList[0]->material
+    std::cout << "sphere addre  ss: " << sphere << std::endl;
+    std::cout << "objList[0] address: " << objList[0] << std::endl;
+    std::cout << "sphere->material address: " << sphere->getObject() << std::endl;
+    std::cout << "objList[0]->material address: " << objList[0]->getObject() << std::endl;
 
     Light** lightList = new Light*[1];
-    lightList[0] = new PointLight(5, {-6, -6, -6});
+    std::vector<float> light_location = {0,0,0};
+    lightList[0] = new PointLight(5, light_location);
+
+    std::cout << "Center of the light: " << light_location.at(0) << "," << light_location.at(1) << "," << light_location.at(2) << "\n\n";
 
     std::cout << "Setting scene...\n";
     Scene scene = Scene(
-        objList, 1, *c, *imagePane, lightList, 1
+        objList, 1, *c, *imagePane, lightList, 1, {0,0,0}
     );
 
     std::cout << "Scene initialized\n";
@@ -88,8 +97,8 @@ int main(){
         &scene   
     );
 
-    float image[imgWidth][imgHeight];
-
+    std::vector<float> image[imgWidth][imgHeight];
+    int fg_pixel_count = 0;
     // now we need to iterate over the pixels and fill them
     for (int i = 0; i < imgWidth; i++)
     {
@@ -99,36 +108,39 @@ int main(){
             
             // shoot ray from camera to ImagePane
             Ray cameraRay = imagePane->rayFromCamera(i, j);
-            
+            // printf("Camera ray at: %d,%d: %f,%f,%f\n", i, j, cameraRay.d.at(0), cameraRay.d.at(1), cameraRay.d.at(2));
             // now iterate over the objects to find first object that hits this ray
             // add fov in future to exclude object that are too far away from the camera
             float minTValue = 9999999;
             int intersectingObjIndex = -1;
             
-            for (int k = 0; k < 1; k++)
+            for (int k = 0; k < 2; k++)
             {
                 float tvalue = objList[k]->Intersects(cameraRay);
                 if (tvalue > 0 && tvalue < minTValue){
                     minTValue = tvalue;
                     intersectingObjIndex = k;
-                    std::cout << "For i,j:" << i <<  ", " << j  << " intersects with the object\n";
                 }
             }
 
             if (intersectingObjIndex == -1){
                 // means we need to set bg color for this pixel
                 
-                image[i][j] =255;
+                image[i][j] = shader.scene->bg;
                 continue;
             }
 
             
             
-            std::cout << "Calculating the diffuse shading: \n";
-            // if reached here then camera hits an object
-            image[i][j] = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex]);
-            std::cout << image[i][j] <<  "\n";
-            
+            vector<float> pixel_val = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+            if( pixel_val.at(0) == 0 && pixel_val.at(1) == 0 && pixel_val.at(2) == 0){
+                image[i][j] = shader.scene->bg;
+                continue;
+            }
+                
+            image[i][j] = clipValues(pixel_val, 255.0);
+            // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
+            fg_pixel_count++;
             
         }
         
@@ -136,27 +148,30 @@ int main(){
     std::cout << "Outside the loop\n";
     
 
-    // Create an OpenCV Mat object to hold the image
-    cv::Mat imageMat(imgWidth, imgHeight, CV_32F); // Use CV_32F for float representation
+    // Create an empty image with 3 channels (BGR) and set it to a specific color
+    cv::Mat imageMat(imgHeight, imgWidth, CV_32FC3); // Red color in BGR format
+
 
     // Fill the Mat with the values from the float list
     for (int i = 0; i < imgHeight; ++i) {
         for (int j = 0; j < imgWidth; ++j) {
-            imageMat.at<float>(i, j) = image[i][j];
+            Vec3f intensity = imageMat.at<Vec3f>(Point(i,j));
+            intensity.val[0] = image[i][j].at(2);
+            intensity.val[1] = image[i][j].at(1);
+            intensity.val[2] = image[i][j].at(0);
+            imageMat.at<Vec3f>(Point(i,j)) = intensity;
+
+            // (cv::Scalar(image[i][j].at(0),image[i][j].at(1),image[i][j].at(2)));
+            // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
         }
     }
 
-    
-    // Normalize the values to the range [0, 255] for display
-    cv::Mat imageNormalized;
-    cv::normalize(imageMat, imageNormalized, 0, 255, cv::NORM_MINMAX, CV_8UC1); // Convert to 8-bit grayscale
-
-    // Display the image
-    cv::imshow("Grayscale Image", imageNormalized);
+    printf("# of fg pixels: %d\n", fg_pixel_count);
+    cv::imshow("Image", imageMat);
     cv::waitKey(0); // Wait for a key press
 
     // Optionally, save the image to a file
-    cv::imwrite("output_image.png", imageNormalized);
+    cv::imwrite("output_image.png", imageMat);
 
 
     

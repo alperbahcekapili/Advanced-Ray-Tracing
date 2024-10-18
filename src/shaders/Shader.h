@@ -11,6 +11,6 @@ public:
     Scene* scene;
     Shader(Scene* scene);
     ~Shader();
-    float diffuseShadingAt(vector<float> locationü, Object* intersectingObject);
+    vector<float> diffuseShadingAt(vector<float> locationü, Object* intersectingObject, int diffuseShadingAt);
 };
 

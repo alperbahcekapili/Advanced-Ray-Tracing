@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <cassert>
-#include "../Ray.h"
-
+#include "../models/Ray.h"
+#include "util.h"
 
 using namespace std;
 
@@ -11,6 +11,24 @@ using namespace std;
 
 
 
+float det3x3(float m[3][3]){
+    // satir, sutun
+    return m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) + m[1][0] * (m[0][2] * m[2][1] - m[0][1] * m[2][2]) + m[2][0] * (m[0][1] * m[1][2] - m[1][1] * m[0][2]);
+}
+
+std::vector<float> clipValues(std::vector<float> v, float clip_val){
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        if(v.at(0) > clip_val)
+            v.at(0) = clip_val;
+        if(v.at(1) > clip_val)
+            v.at(1) = clip_val;
+        if(v.at(2) > clip_val)
+            v.at(2) = clip_val;
+    }
+    return v;
+    
+}
 
 std::vector<float> vectorAdd(std::vector<float> v1, std::vector<float> v2){
     assertm(v1.size() == v2.size(), "Dimensions do not match in std::vector add") ;
@@ -66,10 +84,14 @@ float dotProduct(std::vector<float> vec1, std::vector<float> vec2){
 Ray createRayFrom(vector<float> start, vector<float> destination){
     // In order to create ray from start and destination we need to substract start from destination
     vector<float> scaledRay = vectorAdd(destination, vectorScale(start, -1));
-    vector<float> normalVector = vectorScale(scaledRay, 1 / dotProduct(scaledRay, scaledRay));
-    return Ray(start, normalVector);
+    return Ray(start, scaledRay);
 }
 
+vector<float> normalize(vector<float> v){
+    // returns unit vector with the same direction
+    vector<float> unitVector = vectorScale(v, 1/sqrt(dotProduct(v, v)));
+    return unitVector;
+}
 
 float getMagnitude(std::vector<float> v){
     return dotProduct(v,v);

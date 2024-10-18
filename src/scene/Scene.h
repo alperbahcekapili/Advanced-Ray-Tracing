@@ -16,6 +16,7 @@ public:
     ImagePane imagePane; 
     Light** lights; 
     int numlights;
-    Scene(Object** sceneObjects, int numObjects, Camera camera, ImagePane imagePane, Light** lights, int numlights);
+    std::vector<float> bg;
+    Scene(Object** sceneObjects, int numObjects, Camera camera, ImagePane imagePane, Light** lights, int numlights, std::vector<float> bg);
     ~Scene();
 };

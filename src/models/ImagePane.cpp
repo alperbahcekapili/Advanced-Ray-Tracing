@@ -1,6 +1,6 @@
 
 #include "ImagePane.h"
-#include "util/util.h"
+#include "../util/util.h"
 #include <stdlib.h>
 #include <random>
 
@@ -65,7 +65,7 @@ ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Ca
 Ray ImagePane::rayFromCamera(int i, int j){
     // get relevant s and calculate ray
     Ray resultingRay = Ray(
-        this->c->getPosition(),
+        this->sValues[i][j],
         vectorAdd(this->sValues[i][j], vectorScale(this->c->getPosition(), -1))
     );
     return resultingRay;

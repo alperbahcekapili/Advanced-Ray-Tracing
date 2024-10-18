@@ -1,5 +1,5 @@
 #include "Camera.h"
-#include "util/util.cpp"
+#include "../util/util.h"
 #include <vector>
 #include <iostream>
 
