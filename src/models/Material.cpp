@@ -1,7 +1,8 @@
 #include "Material.h"
 #include <vector>
 
-Material::Material(MaterialType type, float ambient[3], float diffuse, float specular[3], std::vector<float> color){
+Material::Material(MaterialType type, float ambient[3], float diffuse, float specular[3], std::vector<float> color, float phong_exponent):
+phong_exponent(phong_exponent){
     this->color = color;
     this->materialType = type;
     this->ambientProp = std::vector<float>(ambient, ambient+3);

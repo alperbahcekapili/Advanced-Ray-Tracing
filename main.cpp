@@ -33,15 +33,18 @@ int main(){
     Ray* ray = new Ray(o,d);
     cout << ray->toString();
 
-
+    float phong_exp =  10;;
     MaterialType triangleMaterialType = MaterialType::Mirror;
-    float ambientProp[3] = {4,5,1};
+    float ambientProp[3] = {0,0.1,0};
     float diffuse = 1;
-    float specular[3] = {6,7,1};
-    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, {0,255,0});
+    float specular[3] = {1000,1000,1000};
+    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, {0,125,0} , phong_exp) ;
     std::cout << triangleMaterial->diffuseProp;
-    float triangleVertices[3][3] = {{150,20,-20}, {0,0,-20}, {0,500,-20}};
+    float triangleVertices[3][3] = {{550,20,-400}, {0,0,-400}, {0,500,-500}};
     Triangle* triangle = new Triangle(triangleMaterial, ObjectType::TriangleType, triangleVertices[0], triangleVertices[1], triangleVertices[2]);
+    float floorVertices[3][3] = {{-1000,-100,1000}, {0,-20,-1000}, {1000,-100,1000}};
+    Triangle* floor = new Triangle(triangleMaterial, ObjectType::TriangleType, floorVertices[0], floorVertices[1], floorVertices[2]);
+    
     Ray* test_ray = new Ray({8,8,-5}, {0,0,1});
     float test_t_val = triangle->Intersects(*test_ray);
     // std::vector<float> tri_surface_n = triangle->getSurfaceNormal({8,8,0});
@@ -51,28 +54,30 @@ int main(){
     
     vector<float> u = {1,0,0};
     vector<float> v = {0,1,0};
-    vector<float> e = {0,0,100};
+    vector<float> e = {0,20,100};
     // intiialize camera
     Camera* c = new Camera(u, v, e);
 
-    int imgHeight = 100;
-    int imgWidth = 100;
+    int imgHeight =300;
+    int imgWidth = 300;
 
 
     ImagePane* imagePane = new ImagePane(
-        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 104, c 
+        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 350, c 
     );
 
-    Material* sphereMaterial = new Material(MaterialType::Conductor, ambientProp, diffuse, specular, {255,0,0});
+    float amb[3] = {0.1,0,0};
+    Material* sphereMaterial = new Material(MaterialType::Conductor, amb, diffuse, specular, {255,0,0}, phong_exp);
     Sphere* sphere = new Sphere(
-        0, 0, -30, 25.9, sphereMaterial, ObjectType::SphereType
+        0, 0, -300, 20, sphereMaterial, ObjectType::SphereType
     );
 
     // now initialize scene and iteratively fill the ImagePane
-    Object** objList = new Object*[2];
+    Object** objList = new Object*[3];
     std::cout << "I'll be setting triangle:..\n";
     objList[0] = triangle;
     objList[1] = sphere;
+    objList[2] = floor;
     
      // Debug: Print pointer addresses before accessing objList[0]->material
     std::cout << "sphere addre  ss: " << sphere << std::endl;
@@ -81,14 +86,13 @@ int main(){
     std::cout << "objList[0]->material address: " << objList[0]->getObject() << std::endl;
 
     Light** lightList = new Light*[1];
-    std::vector<float> light_location = {0,0,0};
-    lightList[0] = new PointLight(5, light_location);
+    std::vector<float> light_location = {0, 150, -200};
+    lightList[0] = new PointLight(1250, light_location);
+    //lightList[1] = new PointLight(5, {100, 100, -200});
 
-    std::cout << "Center of the light: " << light_location.at(0) << "," << light_location.at(1) << "," << light_location.at(2) << "\n\n";
-
-    std::cout << "Setting scene...\n";
+    
     Scene scene = Scene(
-        objList, 1, *c, *imagePane, lightList, 1, {0,0,0}
+        objList, 3, *c, *imagePane, lightList, 1, {0,0,0}, {5,5,5}
     );
 
     std::cout << "Scene initialized\n";
@@ -114,7 +118,7 @@ int main(){
             float minTValue = 9999999;
             int intersectingObjIndex = -1;
             
-            for (int k = 0; k < 2; k++)
+            for (int k = 0; k < scene.numObjects; k++)
             {
                 float tvalue = objList[k]->Intersects(cameraRay);
                 if (tvalue > 0 && tvalue < minTValue){
@@ -132,7 +136,13 @@ int main(){
 
             
             
-            vector<float> pixel_val = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+            vector<float> diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+            vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+            vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
+            // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
+            // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
+            // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
+            vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
             if( pixel_val.at(0) == 0 && pixel_val.at(1) == 0 && pixel_val.at(2) == 0){
                 image[i][j] = shader.scene->bg;
                 continue;
@@ -167,11 +177,20 @@ int main(){
     }
 
     printf("# of fg pixels: %d\n", fg_pixel_count);
-    cv::imshow("Image", imageMat);
-    cv::waitKey(0); // Wait for a key press
+    cv::imshow("unNormalized Image", imageMat);
+    cv::waitKey(0);
 
-    // Optionally, save the image to a file
-    cv::imwrite("output_image.png", imageMat);
+    // Normalize the image (min-max scaling to [0, 255])
+    cv::Mat normalizedImage;
+    double minVal, maxVal;
+    cv::minMaxLoc(imageMat.reshape(1), &minVal, &maxVal); // Reshape to single channel to find global min/max
+
+    // Scale and convert to 8-bit (CV_8UC3) for saving
+    imageMat.convertTo(normalizedImage, CV_8UC3, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
+
+    // Display the normalized image
+    
+    cv::imwrite("output_image.png", normalizedImage);
 
 
     
