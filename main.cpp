@@ -19,58 +19,26 @@ using namespace cv;
 
 
 int main(){
-    
-    vector<float> d;
-    d.push_back(1);
-    d.push_back(2);
-    d.push_back(3);
 
-    vector<float> o;
-    o.push_back(0);
-    o.push_back(0);
-    o.push_back(0);
-
-    Ray* ray = new Ray(o,d);
-    cout << ray->toString();
-
+    // Define objects
     float phong_exp =  10;;
     MaterialType triangleMaterialType = MaterialType::Mirror;
-    float ambientProp[3] = {0,0.1,0};
-    float diffuse = 1;
-    float specular[3] = {1000,1000,1000};
-    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, {0,125,0} , phong_exp) ;
-    std::cout << triangleMaterial->diffuseProp;
+    float ambientProp[3] = {1,0,0};
+    float diffuse[3] = {255,255,255};
+    float specular[3] = {0.1,0.1,0.1};
+
+    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, phong_exp) ;
     float triangleVertices[3][3] = {{550,20,-400}, {0,0,-400}, {0,500,-500}};
     Triangle* triangle = new Triangle(triangleMaterial, ObjectType::TriangleType, triangleVertices[0], triangleVertices[1], triangleVertices[2]);
     float floorVertices[3][3] = {{-1000,-100,1000}, {0,-20,-1000}, {1000,-100,1000}};
     Triangle* floor = new Triangle(triangleMaterial, ObjectType::TriangleType, floorVertices[0], floorVertices[1], floorVertices[2]);
-    
-    Ray* test_ray = new Ray({8,8,-5}, {0,0,1});
-    float test_t_val = triangle->Intersects(*test_ray);
-    // std::vector<float> tri_surface_n = triangle->getSurfaceNormal({8,8,0});
-    // std::cout << "Surface Normal: " << tri_surface_n.at(0) << ", " << tri_surface_n.at(1) << ", " << tri_surface_n.at(2) << "\n";
-    
 
-    
-    vector<float> u = {1,0,0};
-    vector<float> v = {0,1,0};
-    vector<float> e = {0,20,100};
-    // intiialize camera
-    Camera* c = new Camera(u, v, e);
-
-    int imgHeight =300;
-    int imgWidth = 300;
-
-
-    ImagePane* imagePane = new ImagePane(
-        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 350, c 
-    );
-
-    float amb[3] = {0.1,0,0};
-    Material* sphereMaterial = new Material(MaterialType::Conductor, amb, diffuse, specular, {255,0,0}, phong_exp);
+    float amb[3] = {0,0,0};
+    Material* sphereMaterial = new Material(MaterialType::Conductor, amb, diffuse, specular, phong_exp);
     Sphere* sphere = new Sphere(
         0, 0, -300, 20, sphereMaterial, ObjectType::SphereType
     );
+
 
     // now initialize scene and iteratively fill the ImagePane
     Object** objList = new Object*[3];
@@ -79,24 +47,43 @@ int main(){
     objList[1] = sphere;
     objList[2] = floor;
     
-     // Debug: Print pointer addresses before accessing objList[0]->material
-    std::cout << "sphere addre  ss: " << sphere << std::endl;
-    std::cout << "objList[0] address: " << objList[0] << std::endl;
-    std::cout << "sphere->material address: " << sphere->getObject() << std::endl;
-    std::cout << "objList[0]->material address: " << objList[0]->getObject() << std::endl;
+    // Ray* test_ray = new Ray({8,8,-5}, {0,0,1});
+    // float test_t_val = triangle->Intersects(*test_ray);
+    // std::vector<float> tri_surface_n = triangle->getSurfaceNormal({8,8,0});
+    // std::cout << "Surface Normal: " << tri_surface_n.at(0) << ", " << tri_surface_n.at(1) << ", " << tri_surface_n.at(2) << "\n";
+    
 
+    // intiialize camera
+    vector<float> u = {1,0,0};
+    vector<float> v = {0,1,0};
+    vector<float> e = {0,20,100};
+    Camera* c = new Camera(u, v, e, 0, 1000);
+
+    // Initialize Image pane
+    int imgHeight =200;
+    int imgWidth = 200;
+    ImagePane* imagePane = new ImagePane(
+        imgHeight, imgWidth, -imgHeight/2, imgWidth/2, -imgHeight/2, imgWidth/2, 350, c 
+    );
+
+
+    // Lights
     Light** lightList = new Light*[1];
     std::vector<float> light_location = {0, 150, -200};
-    lightList[0] = new PointLight(1250, light_location);
+    std::vector<float> light_intensity = {0, 10000, 10000};
+    lightList[0] = new PointLight(light_intensity, light_location);
     //lightList[1] = new PointLight(5, {100, 100, -200});
 
-    
+    // Scene
+    int bg[3] = {0,0,0};
+    int ambientLight[3] = {1,1,1};
     Scene scene = Scene(
-        objList, 3, *c, *imagePane, lightList, 1, {0,0,0}, {5,5,5}
+        objList, 3, c, imagePane, lightList, 1, bg, ambientLight
     );
 
     std::cout << "Scene initialized\n";
 
+    // Shader
     Shader shader = Shader(
         &scene   
     );
@@ -126,11 +113,15 @@ int main(){
                     intersectingObjIndex = k;
                 }
             }
+        
+            if (minTValue > c->maxt || minTValue < c->mint){
+                image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
+                continue;
+            }
+                
 
             if (intersectingObjIndex == -1){
-                // means we need to set bg color for this pixel
-                
-                image[i][j] = shader.scene->bg;
+                image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
                 continue;
             }
 
@@ -139,14 +130,12 @@ int main(){
             vector<float> diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
             vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
             vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
-            // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
-            // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
-            // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
             vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
-            if( pixel_val.at(0) == 0 && pixel_val.at(1) == 0 && pixel_val.at(2) == 0){
-                image[i][j] = shader.scene->bg;
-                continue;
-            }
+            
+            std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
+            std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
+            std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
+            
                 
             image[i][j] = clipValues(pixel_val, 255.0);
             // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
@@ -165,6 +154,7 @@ int main(){
     // Fill the Mat with the values from the float list
     for (int i = 0; i < imgHeight; ++i) {
         for (int j = 0; j < imgWidth; ++j) {
+            // std::cout << i << "," << j << "\n";
             Vec3f intensity = imageMat.at<Vec3f>(Point(i,j));
             intensity.val[0] = image[i][j].at(2);
             intensity.val[1] = image[i][j].at(1);

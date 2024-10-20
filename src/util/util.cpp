@@ -4,7 +4,7 @@
 #include <cassert>
 #include "../models/Ray.h"
 #include "util.h"
-
+#include <math.h>
 using namespace std;
 
 #define assertm(exp, msg) assert(((void)msg, exp))
@@ -50,6 +50,18 @@ std::vector<float> vectorScale(std::vector<float> v1, float magnitude){
 }
 
 std::vector<float> vectorMultiplyElementwise(std::vector<float> v1, std::vector<float> v2){
+    assertm(v1.size() == v2.size(), "Dimensions do not match in std::vector multiply elementwise") ;
+    std::vector<float> resultingVector(v1);
+    for (size_t i = 0; i < v1.size(); i++)
+    {
+        resultingVector.at(i) *= v2.at(i);
+    }
+    return resultingVector;
+}
+
+
+
+std::vector<float> vectorMultiplyElementwise(std::vector<float> v1, std::vector<int> v2){
     assertm(v1.size() == v2.size(), "Dimensions do not match in std::vector multiply elementwise") ;
     std::vector<float> resultingVector(v1);
     for (size_t i = 0; i < v1.size(); i++)

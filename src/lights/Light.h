@@ -10,7 +10,7 @@ private:
     
 public:
     std::vector<float> location;
-    float intensity;
-    virtual float irradianceAt(std::vector<float> location) = 0;
+    std::vector<float> intensity;
+    virtual std::vector<float> irradianceAt(std::vector<float> location) = 0;
 };
 

@@ -4,15 +4,17 @@
 #include "../util/util.h"
 #include <math.h>
 
-PointLight::PointLight(float intensity, std::vector<float> location)
+PointLight::PointLight(std::vector<float> intensity, std::vector<float> location)
 {
     this->intensity = intensity;
     this->location = location;
 }
 
 
-float PointLight::irradianceAt(std::vector<float> location)  {
-    return this->intensity / getMagnitude(vectorAdd(this->location, vectorScale(location, -1)));
+std::vector<float> PointLight::irradianceAt(std::vector<float> location)  {
+    float distance = getMagnitude(vectorAdd(this->location, vectorScale(location, -1)));
+    return vectorScale(this->intensity, 1/distance);
+    
 }
 
 

@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-Camera::Camera(std::vector<float> u, std::vector<float> v, std::vector<float> position)
+Camera::Camera(std::vector<float> u, std::vector<float> v, std::vector<float> position, float mint, float maxt):mint(mint), maxt(maxt)
 {
 this->u = u;
 this->v = v;

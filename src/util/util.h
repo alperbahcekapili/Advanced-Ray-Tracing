@@ -20,6 +20,7 @@ std::vector<float> vectorScale(std::vector<float> v1, float magnitude);
 
 // Function to multiply two vectors element-wise
 std::vector<float> vectorMultiplyElementwise(std::vector<float> v1, std::vector<float> v2);
+std::vector<float> vectorMultiplyElementwise(std::vector<float> v1, std::vector<int> v2);
 
 // Function to compute the cross product of two 3D vectors
 std::vector<float> vectorCrossProduct3D(std::vector<float> vec1, std::vector<float> vec2);
