@@ -27,15 +27,15 @@ int main(){
     float diffuse[3] = {1,0.2,1};
     float specular[3] = {0.1,0.1,0.1};
 
-    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, phong_exp, {1,1,1}, 0.3, 0.3, 0.3) ;
+    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, phong_exp, {1,0.2,1}, 0.3, 0.3, 0.3) ;
     float triangleVertices[3][3] = {{550,20,-400}, {0,0,-400}, {0,500,-500}};
     Triangle* triangle = new Triangle(triangleMaterial, ObjectType::TriangleType, triangleVertices[0], triangleVertices[1], triangleVertices[2]);
     float floorVertices[3][3] = {{-1000,-100,1000}, {0,-20,-1000}, {1000,-100,1000}};
     Triangle* floor = new Triangle(triangleMaterial, ObjectType::TriangleType, floorVertices[0], floorVertices[1], floorVertices[2]);
 
     float amb[3] = {0,0,0};
-    float shepere_dif[3] = {0,0.5, 0};
-    Material* sphereMaterial = new Material(MaterialType::Dielectric, amb, shepere_dif, specular, phong_exp, {1,0,1}, 0.3, 0.3, 0.3);
+    float shepere_dif[3] = {0,1, 0};
+    Material* sphereMaterial = new Material(MaterialType::Dielectric, amb, shepere_dif, specular, phong_exp, {1,1,1}, 0.1, 0.1, 0.1);
     Sphere* sphere = new Sphere(
         0, 0, -300, 50, sphereMaterial, ObjectType::SphereType
     );
@@ -136,11 +136,11 @@ int main(){
             vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
             // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
             vector<float> specular_reflection = shader.specularReflection(cameraRay, &scene ,objList[intersectingObjIndex], 3, intersectingObjIndex);
-            vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &scene, objList[intersectingObjIndex], 3, intersectingObjIndex, false);
+            vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &scene, objList[intersectingObjIndex], 5, intersectingObjIndex, false);
             vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
             
             pixel_val = vectorAdd(specular_reflection, pixel_val);
-            pixel_val = vectorAdd(refrac_transmission, pixel_val);
+            //pixel_val = vectorAdd(refrac_transmission, pixel_val);
             // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
             // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
             // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";

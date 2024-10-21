@@ -29,6 +29,7 @@ float Sphere::Intersects(Ray ray){
 
     std::vector<float> ominc =  vectorAdd(o, vectorScale(c, -1));
     // std:cout << "Distance from ray center to sphere center: "<< getMagnitude(ominc) << "\n";
+
     float dd = dotProduct(d,d);
     float sqrt_el =  pow(mindoc, 2)   -    (dd * (getMagnitude(ominc) - pow(R, 2)));
 
@@ -41,9 +42,6 @@ float Sphere::Intersects(Ray ray){
     float t1 = (dotProduct(vectorScale(d, -1), vectorAdd(o, vectorScale(c, -1))) + sqrt(sqrt_el)) / dd;
     float t2 = (dotProduct(vectorScale(d, -1), vectorAdd(o, vectorScale(c, -1))) - sqrt(sqrt_el)) / dd;
 
-
-    // std::cout << "t1: " << t1 << "\n";
-    // std::cout << "t2: " << t2 << "\n";
     
     // need the smaller one (positive)
     if (t1 > 0 && t1 < t2) {
@@ -56,6 +54,11 @@ float Sphere::Intersects(Ray ray){
             // std::cout << "Sphere hit by ray...\n";
             return t2;
         }
+
+    if (t1>0 && t2 < 0)
+        return t1;
+    if (t2> 0 && t1 < 0)
+        return t2;
     // std::cout << "Sphere is behind the ray\n";
     return -1.0;
 }

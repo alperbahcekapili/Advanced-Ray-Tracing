@@ -104,39 +104,56 @@ This function calculates refraction and transmission
 */
 std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, int remaining_hop, int intersect_index, bool inside){
 
-
+    std::cout << "Remaninig hop: " << remaining_hop << "\n";
     if(target_obj->getMaterial()->materialType == MaterialType::Mirror)
         // We do not apply fresnel fraction to mirrors
         return {0,0,0};
 
-
+    if(remaining_hop == -1)
+        return {0,0,0};
     
 
     std::vector<float> intersecting_location = r.locationAtT(target_obj->Intersects(r));
+    std::cout << "Intersecting location: " << intersecting_location.at(0) << ", " << intersecting_location.at(1) << ", "  << intersecting_location.at(2) << "\n" ;
     std::vector<float> n = target_obj->getSurfaceNormal(intersecting_location);
     if (inside)
         n = vectorScale(n,-1);
-
+    // std::cout << "n: " << n.at(0) << ", "<< n.at(1) << ", " << n.at(2) << "\n";
     float cos_theta = dotProduct(vectorScale(r.d, -1), n);
     float n1 = scene->refraction_index;
     float n2 = target_obj->getMaterial()->refraction_index;
+
+    // std::cout << "n1,n2: " << n1 << ", " << n2 << "\n";
     if (inside){
         float tmp = n1;
         n1 = n2;
         n2 = tmp;
     }
-    float before_sqrt = 1-pow(n1/n2, 2)*(1-pow(cos_theta,2));
+    std::cout << "n1,n2: " << n1 << ", " << n2 << "\n";
+    std::cout << "ray direction: " << r.d.at(0) << ", " << r.d.at(1) << ", " << r.d.at(2) << "\n";
+    std::cout << "cos theta: " << cos_theta << "\n";
+    float before_sqrt = 1-(pow(n1/n2, 2)*(1-pow(cos_theta,2)));
     Ray reflected_ray = Ray(intersecting_location, vectorAdd(r.d , vectorScale(n, 2 * cos_theta)));
+    // TODO replace this with shadow eps
+    reflected_ray.o = vectorAdd(reflected_ray.o, vectorScale(reflected_ray.d, 0.01));
+    // We need to move reflected ray along its direction in order to prevent self intersection
+
+
 
     // for dielectric objects this cannot be negative ?
     if (target_obj->getMaterial()->materialType == MaterialType::Dielectric){
         float cosphi = sqrt(before_sqrt);
-        Ray transmitted_ray = Ray(intersecting_location, vectorSubstract(vectorScale(vectorAdd(r.d , vectorScale(n, cos_theta)), n1/n2), vectorScale(n, cosphi)) );
+        std::cout << "Before sqrt: "<< before_sqrt <<" Cosphi: " << cosphi << "\n";
+        Ray transmitted_ray = Ray(intersecting_location, vectorSubstract(  vectorScale(vectorAdd(r.d , vectorScale(n, cos_theta)), n1/n2), vectorScale(n, cosphi) ) );
+        // TODO replace below with shadow eps        
+        transmitted_ray.o = vectorAdd(transmitted_ray.o, vectorScale(transmitted_ray.d, 1));
+
+
         float rpar = (n2 * cos_theta - n1 * cos_theta) / (n2 * cos_theta + n1 * cos_theta);
         float rper = (n1 * cos_theta - n2 * cosphi) / (n1 * cos_theta - n2 * cosphi);
         float fr = (pow(rpar,2) + pow(rper,2)) / 2;
         float ft = 1 - fr;
-        
+        std::cout << "For dielectric obj: fr: " <<  fr << ", ft: " << ft <<  "\n";
         std::vector<float> lx = this->radianceAt(intersecting_location, target_obj, intersect_index);
         
         if (inside){
@@ -156,6 +173,32 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
         // now we calculated current effect we need to determine if the next ray hits another object. If so we recurse if not we terminate here
         float minTValue = 9999999;
         int next_intersecting_index = -1;
+
+
+        for (int k = 0; k < this->scene->numObjects; k++)
+        {
+            float tvalue = this->scene->sceneObjects[k]->Intersects(transmitted_ray);
+            if (tvalue > 0 && tvalue < minTValue){
+                minTValue = tvalue;
+                next_intersecting_index = k;
+            }
+        }
+        std::cout << "Next objects index is : " << next_intersecting_index << "\n";
+        std::cout << "transmitted ray: o: " << transmitted_ray.o.at(0) << ", "  << transmitted_ray.o.at(1) << ", "  << transmitted_ray.o.at(2) << ",  d:  "  << transmitted_ray.d.at(0) << ", "  << transmitted_ray.d.at(1) << ", "  << transmitted_ray.d.at(2) << "\n";
+
+        if (next_intersecting_index != -1){
+            std::cout << "I transmit a ray trough myself, inside: " << inside << ", maxhops remaining: " << remaining_hop << "\n";
+            
+            transmitted_return = vectorScale(
+                vectorMultiplyElementwise(refractionTransmission(transmitted_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index, !inside), 
+            target_obj->getMaterial()->mirrorReflectance),ft);
+            
+        }else{
+            std::cout << "I cannot transmit a ray trough myself, inside: " << inside << ", maxhops remaining: " << remaining_hop << "\n";
+        }
+
+
+
         
         for (int k = 0; k < this->scene->numObjects; k++)
         {
@@ -170,30 +213,12 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
             reflected_return = vectorScale(vectorMultiplyElementwise(refractionTransmission(reflected_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index, inside), target_obj->getMaterial()->mirrorReflectance),fr);
         }
 
-
-
-
-
         minTValue = 9999999;
         next_intersecting_index = -1;
         
-        for (int k = 0; k < this->scene->numObjects; k++)
-        {
-            float tvalue = this->scene->sceneObjects[k]->Intersects(transmitted_ray);
-            if (tvalue > 0 && tvalue < minTValue){
-                minTValue = tvalue;
-                next_intersecting_index = k;
-            }
-        }
-        if (next_intersecting_index != -1){
-            transmitted_return = vectorScale(vectorMultiplyElementwise(refractionTransmission(transmitted_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index, !inside), target_obj->getMaterial()->mirrorReflectance),ft);
-        }
-
-
-
         // we return sum of the two
         std::vector<float> cur_rad = vectorScale(vectorMultiplyElementwise(target_obj->getMaterial()->mirrorReflectance, lx), fr);
-        return vectorAdd(vectorAdd(cur_rad, transmitted_return), reflected_return);
+        return vectorAdd(vectorAdd(cur_rad, transmitted_return), reflected_return) ;
     }
     else if (target_obj->getMaterial()->materialType == MaterialType::Conductor){
 

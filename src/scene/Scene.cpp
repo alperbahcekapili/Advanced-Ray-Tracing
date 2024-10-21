@@ -12,6 +12,7 @@ Scene::Scene(Object** sceneObjects, int numObjects, Camera* camera, ImagePane* i
     std::cout << "My num obj: " << numObjects << "\n";
     this->bg = {bg[0],bg[1],bg[2]};
     this->ambient_light = {ambient_light[0],ambient_light[1],ambient_light[2]};
+    this->refraction_index = refraction_index;
 }
 
 Scene::~Scene()
