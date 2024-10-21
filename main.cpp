@@ -23,20 +23,21 @@ int main(){
     // Define objects
     float phong_exp =  10;;
     MaterialType triangleMaterialType = MaterialType::Mirror;
-    float ambientProp[3] = {1,0,0};
-    float diffuse[3] = {255,255,255};
+    float ambientProp[3] = {0.3,0.3,0.3};
+    float diffuse[3] = {1,0.2,1};
     float specular[3] = {0.1,0.1,0.1};
 
-    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, phong_exp) ;
+    Material* triangleMaterial = new Material(triangleMaterialType, ambientProp, diffuse, specular, phong_exp, {1,1,1}, 0.3, 0.3, 0.3) ;
     float triangleVertices[3][3] = {{550,20,-400}, {0,0,-400}, {0,500,-500}};
     Triangle* triangle = new Triangle(triangleMaterial, ObjectType::TriangleType, triangleVertices[0], triangleVertices[1], triangleVertices[2]);
     float floorVertices[3][3] = {{-1000,-100,1000}, {0,-20,-1000}, {1000,-100,1000}};
     Triangle* floor = new Triangle(triangleMaterial, ObjectType::TriangleType, floorVertices[0], floorVertices[1], floorVertices[2]);
 
     float amb[3] = {0,0,0};
-    Material* sphereMaterial = new Material(MaterialType::Conductor, amb, diffuse, specular, phong_exp);
+    float shepere_dif[3] = {0,0.5, 0};
+    Material* sphereMaterial = new Material(MaterialType::Dielectric, amb, shepere_dif, specular, phong_exp, {1,0,1}, 0.3, 0.3, 0.3);
     Sphere* sphere = new Sphere(
-        0, 0, -300, 20, sphereMaterial, ObjectType::SphereType
+        0, 0, -300, 50, sphereMaterial, ObjectType::SphereType
     );
 
 
@@ -68,17 +69,19 @@ int main(){
 
 
     // Lights
-    Light** lightList = new Light*[1];
-    std::vector<float> light_location = {0, 150, -200};
-    std::vector<float> light_intensity = {0, 10000, 10000};
+    int numlights = 2;
+    Light** lightList = new Light*[numlights];
+    std::vector<float> light_location = {150, 0, -300};
+    std::vector<float> light_intensity = {1500, 1500, 1500};
     lightList[0] = new PointLight(light_intensity, light_location);
-    //lightList[1] = new PointLight(5, {100, 100, -200});
+    lightList[1] = new PointLight(light_intensity, {0, 0, -200});
 
     // Scene
     int bg[3] = {0,0,0};
     int ambientLight[3] = {1,1,1};
+    float medium_refraction_index =  0.001;
     Scene scene = Scene(
-        objList, 3, c, imagePane, lightList, 1, bg, ambientLight
+        objList, 3, c, imagePane, lightList, numlights, bg, ambientLight, 0.0001, medium_refraction_index
     );
 
     std::cout << "Scene initialized\n";
@@ -127,14 +130,22 @@ int main(){
 
             
             
-            vector<float> diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+            vector<float> diffuse_intensity = {0,0,0};
+            // shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
             vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
             vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
+            // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
+            vector<float> specular_reflection = shader.specularReflection(cameraRay, &scene ,objList[intersectingObjIndex], 3, intersectingObjIndex);
+            vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &scene, objList[intersectingObjIndex], 3, intersectingObjIndex, false);
             vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
             
-            std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
-            std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
-            std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
+            pixel_val = vectorAdd(specular_reflection, pixel_val);
+            pixel_val = vectorAdd(refrac_transmission, pixel_val);
+            // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
+            // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
+            // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
+            // std::cout << "Specular Reflectance: \n" << specular_reflection.at(0) << ", " << specular_reflection.at(1) << ", " << specular_reflection.at(2) << "\n";
+            std::cout << "refrac_transmission: \n" << refrac_transmission.at(0) << ", " << refrac_transmission.at(1) << ", " << refrac_transmission.at(2) << "\n";
             
                 
             image[i][j] = clipValues(pixel_val, 255.0);

@@ -1,7 +1,8 @@
 #include "Scene.h"
 
 
-Scene::Scene(Object** sceneObjects, int numObjects, Camera* camera, ImagePane* imagePane, Light** lights, int numlights, int bg[3], int ambient_light[3]){   
+Scene::Scene(Object** sceneObjects, int numObjects, Camera* camera, ImagePane* imagePane, Light** lights, int numlights, int bg[3], int ambient_light[3], float shadow_ray_eps, float refraction_index){   
+    this->shadow_ray_eps= shadow_ray_eps;
     this->numObjects = numObjects;
     this->numlights = numlights;
     this->sceneObjects = sceneObjects;

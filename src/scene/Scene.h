@@ -19,6 +19,9 @@ public:
     int numlights;
     std::vector<int> ambient_light;
     std::vector<int> bg;
-    Scene(Object** sceneObjects, int numObects, Camera* camera, ImagePane* imagePane, Light** lights, int numlights, int bg[3], int ambient_light[3]);
+    float refraction_index;
+    float shadow_ray_eps;
+    
+    Scene(Object** sceneObjects, int numObects, Camera* camera, ImagePane* imagePane, Light** lights, int numlights, int bg[3], int ambient_light[3], float shadow_ray_eps, float refraction_index);
     ~Scene();
 };
