@@ -161,7 +161,12 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
             // ray starts from r.o and inside the object
             std::vector<float> l0 = this->radianceAt(r.o, target_obj, intersect_index);
             float x = sqrt(getMagnitude(vectorSubstract(intersecting_location, r.o)));
-            lx = vectorScale( l0 , exp(-1*target_obj->getMaterial()->absorption_coef*x));
+            std::vector<float> before_exp = vectorScale(target_obj->getMaterial()->absorption_coef, -1*x);
+            lx.at(0) =  l0.at(0) * exp(before_exp.at(0));
+            lx.at(1) =  l0.at(1) * exp(before_exp.at(1));
+            lx.at(2) =  l0.at(2) * exp(before_exp.at(2));
+
+
             
         }
 
