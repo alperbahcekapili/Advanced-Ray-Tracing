@@ -11,6 +11,9 @@
 #include "../models/Material.h"
 #include "../models/Mesh.h"
 #include "../models/Sphere.h"
+#include "../models/ImagePane.h"
+#include "../scene/Scene.h"
+
 
 void loadFromXml(const std::string &filepath)
 {
@@ -19,7 +22,7 @@ void loadFromXml(const std::string &filepath)
     
     auto res = file.LoadFile(filepath.c_str());
     float shadow_ray_eps = 0;
-    std::vector<float> background_color = {0,0,0};
+    std::vector<int> background_color = {0,0,0};
     int max_recursion_depth = 0;
 
     std::vector<float> cam_position = {0,0,0};
@@ -33,7 +36,7 @@ void loadFromXml(const std::string &filepath)
     std::vector<Camera> cameras;
 
 
-    std::vector<float> ambient_light = {0,0,0};
+    std::vector<int> ambient_light = {0,0,0};
     std::vector<PointLight> lights; 
     std::vector<float> light_position = {0,0,0};
     std::vector<float> light_intensity = {0,0,0};
@@ -370,6 +373,53 @@ void loadFromXml(const std::string &filepath)
 
 
     // Now that we have read the file we can convert it to our format
+    int num_objects = meshes.size() + spheres.size() + triangles.size();
+    Object** objlist = new Object*[num_objects];
+    for (size_t i = 0; i < meshes.size(); i++)
+    {
+        objlist[i] = &(meshes.at(i));
+    }
+    for (size_t i = 0; i < spheres.size(); i++)
+    {
+        objlist[i+meshes.size()] = &(spheres.at(i));
+    }
+    for (size_t i = 0; i < triangles.size(); i++)
+    {
+        objlist[i+meshes.size()+spheres.size()] = &(triangles.at(i));
+    }
+
+    std::vector<Scene> scenes;
+    // for each camera we need to define a image pane
+    for (size_t i = 0; i < cameras.size(); i++)
+    {
+        
+        ImagePane* imagePane = new ImagePane(
+            img_height , img_width, cam_near_plane.at(0), cam_near_plane.at(1),  cam_near_plane.at(2), cam_near_plane.at(3), cameras.at(i).mint , &(cameras.at(i))
+        );
+        Light** lights_array = new Light*[lights.size()];
+        for (size_t i = 0; i < lights.size(); i++)
+        {
+            lights_array[i] = &(lights.at(i));
+        }
+        int bg[3] = {background_color.at(0),background_color.at(1),background_color.at(2)};
+        int ambli[3] = {ambient_light.at(0), ambient_light.at(1), ambient_light.at(2)};
+        // TODO refraction index not give thus leaving none
+        Scene s = Scene(
+            objlist, 
+            meshes.size()+spheres.size()+triangles.size(),
+            &(cameras.at(i)), 
+            imagePane, 
+            lights_array, 
+            lights.size(), 
+            bg, 
+            ambli, shadow_ray_eps, 0
+        );
+        scenes.push_back(s);
+    }
+
+
+
+    // burayi desgistir her kamera icin sahne tanimlamana gerek yok
 
     
 }
