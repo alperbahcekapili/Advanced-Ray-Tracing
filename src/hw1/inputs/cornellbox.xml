@@ -8,7 +8,7 @@
             <Up>0 1 0</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
             <NearDistance>10</NearDistance>
-            <ImageResolution>100 100</ImageResolution>
+            <ImageResolution>800 800</ImageResolution>
             <ImageName>cornellbox.png</ImageName>
         </Camera>
     </Cameras>
@@ -104,6 +104,18 @@
                 2 7 6
             </Faces>
         </Mesh>
+        <!-- <Triangle id="5">
+            <Material>3</Material>
+            <Indices>
+                2 3 7
+            </Indices>
+        </Triangle>
+        <Triangle id="6">
+            <Material>3</Material>
+            <Indices>
+                2 7 6
+            </Indices>
+        </Triangle> -->
         <Sphere id="1">
             <Material>4</Material>
             <Center>9</Center>

@@ -6,7 +6,10 @@ material(material), objectType(objectType){
     for (int i = 0; i < numfaces; i++)
     {
         this->faces.push_back(Triangle(
-            material, ObjectType::TriangleType, faces.at(i)[0].data(), faces.at(i)[1].data(), faces.at(i)[2].data()
+            material, ObjectType::TriangleType, 
+            
+            
+            faces.at(i)[0].data(), faces.at(i)[1].data(), faces.at(i)[2].data()
         ));
     }
     this->num_faces = numfaces;
@@ -17,8 +20,8 @@ material(material), objectType(objectType){
 
 float Mesh::Intersects(Ray ray){
 // if a face of mesh intersects with the  ray return that
-int mint = 999999;
-int intersecting_face_index;
+float mint = 999999;
+int intersecting_face_index = -1;
 for (int i = 0; i < num_faces; i++)
 {  
    float intersecting_t = this->faces.at(i).Intersects(ray);
@@ -30,7 +33,7 @@ for (int i = 0; i < num_faces; i++)
 }
 if (intersecting_face_index == -1)
     return -1.0;
-
+    std::cout << "Mint for mesh: " << mint << ", Intersecting face index: " << intersecting_face_index <<"\n";
 return mint;
 }
 
@@ -53,7 +56,7 @@ vector<float> Mesh::getSurfaceNormal(vector<float> location) {
 
 
     }
-    return this->faces.at(intersecting_face_index).getSurfaceNormal(location);
+    return this->faces.at(0).getSurfaceNormal(location);
 
 }
 
