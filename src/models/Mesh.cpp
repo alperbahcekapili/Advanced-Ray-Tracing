@@ -3,13 +3,14 @@
 
 Mesh::Mesh(Material* material, ObjectType objectType, std::vector<std::array<std::array<float, 3>, 3> > faces, int numfaces):
 material(material), objectType(objectType){
-    for (size_t i = 0; i < numfaces; i++)
+    for (int i = 0; i < numfaces; i++)
     {
         this->faces.push_back(Triangle(
             material, ObjectType::TriangleType, faces.at(i)[0].data(), faces.at(i)[1].data(), faces.at(i)[2].data()
         ));
     }
     this->num_faces = numfaces;
+    this->objectType = objectType;
 }
 
 

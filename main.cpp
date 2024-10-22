@@ -1,22 +1,31 @@
-// #include "src/models/Triangle.h"
-// #include "src/models/Camera.h"
-// #include "src/models/ImagePane.h"
-// #include "src/models/Ray.h"
-// #include "src/models/Sphere.h"
-// #include "src/lights/Light.h"
-// #include "src/lights/PointLight.h"
-// #include "src/scene/Scene.h"
-// #include "src/shaders/Shader.h"
-// #include "src/util/util.h"
+#include "src/models/Triangle.h"
+#include "src/models/Camera.h"
+#include "src/models/ImagePane.h"
+#include "src/models/Ray.h"
+#include "src/models/Sphere.h"
+#include "src/lights/Light.h"
+#include "src/lights/PointLight.h"
+#include "src/scene/Scene.h"
+#include "src/shaders/Shader.h"
+#include "src/util/util.h"
+
+#include "src/util/parser.h"
 
 
-// #include <vector>
-// // for testing remove before submitting
-// #include <opencv2/opencv.hpp>
+#include <vector>
+#include <algorithm>
+// for testing remove before submitting
+#include <opencv2/opencv.hpp>
 
 
-// using namespace cv;
+using namespace cv;
 
+template <typename T>
+T clamp(T val, T minVal, T maxVal) {
+    if (val < minVal) return minVal;
+    if (val > maxVal) return maxVal;
+    return val;
+}
 
 // int main(){
 
@@ -91,107 +100,7 @@
 //         &scene   
 //     );
 
-//     std::vector<float> image[imgWidth][imgHeight];
-//     int fg_pixel_count = 0;
-//     // now we need to iterate over the pixels and fill them
-//     for (int i = 0; i < imgWidth; i++)
-//     {
-//         for (int j = 0; j < imgHeight; j++)
-//         {
-
-            
-//             // shoot ray from camera to ImagePane
-//             Ray cameraRay = imagePane->rayFromCamera(i, j);
-//             // printf("Camera ray at: %d,%d: %f,%f,%f\n", i, j, cameraRay.d.at(0), cameraRay.d.at(1), cameraRay.d.at(2));
-//             // now iterate over the objects to find first object that hits this ray
-//             // add fov in future to exclude object that are too far away from the camera
-//             float minTValue = 9999999;
-//             int intersectingObjIndex = -1;
-            
-//             for (int k = 0; k < scene.numObjects; k++)
-//             {
-//                 float tvalue = objList[k]->Intersects(cameraRay);
-//                 if (tvalue > 0 && tvalue < minTValue){
-//                     minTValue = tvalue;
-//                     intersectingObjIndex = k;
-//                 }
-//             }
-        
-//             if (minTValue > c->maxt || minTValue < c->mint){
-//                 image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
-//                 continue;
-//             }
-                
-
-//             if (intersectingObjIndex == -1){
-//                 image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
-//                 continue;
-//             }
-
-            
-            
-//             vector<float> diffuse_intensity = {0,0,0};
-//             // shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
-//             vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
-//             vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
-//             // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
-//             vector<float> specular_reflection = shader.specularReflection(cameraRay, &scene ,objList[intersectingObjIndex], 3, intersectingObjIndex);
-//             vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &scene, objList[intersectingObjIndex], 5, intersectingObjIndex, false);
-//             vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
-            
-//             pixel_val = vectorAdd(specular_reflection, pixel_val);
-//             //pixel_val = vectorAdd(refrac_transmission, pixel_val);
-//             // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
-//             // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
-//             // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
-//             // std::cout << "Specular Reflectance: \n" << specular_reflection.at(0) << ", " << specular_reflection.at(1) << ", " << specular_reflection.at(2) << "\n";
-//             std::cout << "refrac_transmission: \n" << refrac_transmission.at(0) << ", " << refrac_transmission.at(1) << ", " << refrac_transmission.at(2) << "\n";
-            
-                
-//             image[i][j] = clipValues(pixel_val, 255.0);
-//             // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
-//             fg_pixel_count++;
-            
-//         }
-        
-//     }
-//     std::cout << "Outside the loop\n";
-    
-
-//     // Create an empty image with 3 channels (BGR) and set it to a specific color
-//     cv::Mat imageMat(imgHeight, imgWidth, CV_32FC3); // Red color in BGR format
-
-
-//     // Fill the Mat with the values from the float list
-//     for (int i = 0; i < imgHeight; ++i) {
-//         for (int j = 0; j < imgWidth; ++j) {
-//             // std::cout << i << "," << j << "\n";
-//             Vec3f intensity = imageMat.at<Vec3f>(Point(i,j));
-//             intensity.val[0] = image[i][j].at(2);
-//             intensity.val[1] = image[i][j].at(1);
-//             intensity.val[2] = image[i][j].at(0);
-//             imageMat.at<Vec3f>(Point(i,j)) = intensity;
-
-//             // (cv::Scalar(image[i][j].at(0),image[i][j].at(1),image[i][j].at(2)));
-//             // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
-//         }
-//     }
-
-//     printf("# of fg pixels: %d\n", fg_pixel_count);
-//     cv::imshow("unNormalized Image", imageMat);
-//     cv::waitKey(0);
-
-//     // Normalize the image (min-max scaling to [0, 255])
-//     cv::Mat normalizedImage;
-//     double minVal, maxVal;
-//     cv::minMaxLoc(imageMat.reshape(1), &minVal, &maxVal); // Reshape to single channel to find global min/max
-
-//     // Scale and convert to 8-bit (CV_8UC3) for saving
-//     imageMat.convertTo(normalizedImage, CV_8UC3, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
-
-//     // Display the normalized image
-    
-//     cv::imwrite("output_image.png", normalizedImage);
+//     
 
 
     
@@ -199,11 +108,122 @@
 
 // }
 
-#include "src/util/parser.h"
-
 int main(int argc, char const *argv[])
 {
-    std::string fp = "/Users/alperb/Advanced-Ray-Tracing/support_files/simple.xml";
-    loadFromXml(fp);
+    std::string fp = "/home/alpfischer/Advanced-Ray-Tracing/src/hw1/inputs/cornellbox.xml";
+    std::vector<Scene*> scenes = loadFromXml(fp);
+    for (size_t i = 0; i < scenes.size(); i++)
+    {   
+        int scenei = i;
+        Scene curscene = *(scenes.at(i));
+        Shader shader = Shader(
+            scenes.at(i)
+        );
+
+        int imgWidth= curscene.imagePane->dimx;
+        int imgHeight = curscene.imagePane->dimy;
+        std::vector<std::vector<std::vector<float>>> image(imgWidth, std::vector<std::vector<float>>(imgHeight));
+        int fg_pixel_count = 0;
+        // now we need to iterate over the pixels and fill them
+        int total_progress = 0;
+        for (int i = 0; i < imgWidth; i++)
+        {
+            for (int j = 0; j < imgHeight; j++)
+            {
+
+                total_progress++;
+                if (total_progress % 10 == 0){
+                    // printf("Scene: %d/%ld, Total Progress: %d\n", scenei, scenes.size(), total_progress);
+                }
+                // shoot ray from camera to ImagePane
+                Ray cameraRay = curscene.imagePane->rayFromCamera(i, j);
+                
+                // now iterate over the objects to find first object that hits this ray
+                // add fov in future to exclude object that are too far away from the camera
+                float minTValue = 9999999;
+                int intersectingObjIndex = -1;
+                
+                for (int k = 0; k < curscene.numObjects; k++)
+                {
+                    float tvalue = curscene.sceneObjects[k]->Intersects(cameraRay);
+                    // printf("Intersecing t val%f\n", tvalue);
+                    if (tvalue > 0 && tvalue < minTValue){
+                        minTValue = tvalue;
+                        intersectingObjIndex = k;
+                    }
+                }
+                // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.at(0), cameraRay.o.at(1), cameraRay.o.at(2) ,cameraRay.d.at(0), cameraRay.d.at(1), cameraRay.d.at(2));
+            
+                if (minTValue > curscene.camera->maxt){
+                    // printf("Too far or too close\n");
+                    // printf("%f",minTValue);
+                    image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
+                    continue;
+                }
+                    
+
+                if (intersectingObjIndex == -1){
+                    // printf("No intersections\n");
+                    image[i][j] = {float(shader.scene->bg.at(0)),float(shader.scene->bg.at(1)),float(shader.scene->bg.at(2))};
+                    continue;
+                }
+
+                
+                Object** objList = curscene.sceneObjects;
+                vector<float> diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+                vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
+                vector<float> specular_intensity = {0,0,0};
+                // shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
+                // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
+                // vector<float> specular_reflection = shader.specularReflection(cameraRay, &curscene ,objList[intersectingObjIndex], 3, intersectingObjIndex);
+                // vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, objList[intersectingObjIndex], 5, intersectingObjIndex, false);
+                vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
+                
+                // pixel_val = vectorAdd(specular_reflection, pixel_val);
+                //pixel_val = vectorAdd(refrac_transmission, pixel_val);
+                std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
+                std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
+                std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
+                // std::cout << "Specular Reflectance: \n" << specular_reflection.at(0) << ", " << specular_reflection.at(1) << ", " << specular_reflection.at(2) << "\n";
+                // std::cout << "refrac_transmission: \n" << refrac_transmission.at(0) << ", " << refrac_transmission.at(1) << ", " << refrac_transmission.at(2) << "\n";
+                
+                    
+                image[i][j] = clipValues(pixel_val, 255.0);
+                // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
+
+                fg_pixel_count++;
+                
+            }
+            
+        }
+        std::cout << "Outside the loop\n";
+        
+
+        // Create an empty image with 3 channels (BGR) and set it to a specific color
+        cv::Mat imageMat(imgHeight, imgWidth, CV_8UC3); // Red color in BGR format
+
+
+        // Fill the Mat with the values from the float list
+        for (int i = 0; i < imgHeight; ++i) {
+            for (int j = 0; j < imgWidth; ++j) {
+                
+                imageMat.at<cv::Vec3b>(j, i)[0] = static_cast<uint8_t>(clamp(image[i][j][2], 0.0f, 255.0f)); // Blue channel
+                imageMat.at<cv::Vec3b>(j, i)[1] = static_cast<uint8_t>(clamp(image[i][j][1], 0.0f, 255.0f)); // Green channel
+                imageMat.at<cv::Vec3b>(j, i)[2] = static_cast<uint8_t>(clamp(image[i][j][0], 0.0f, 255.0f)); // Red channel (cv::Scalar(image[i][j].at(0),image[i][j].at(1),image[i][j].at(2)));
+                // std::cout << image[i][j].at(0) << ", " << image[i][j].at(1) << ", " << image[i][j].at(2) << "\n";
+            }
+        }
+
+        printf("# of fg pixels: %d\n", fg_pixel_count);
+        cv::imshow("unNormalized Image", imageMat);
+        cv::waitKey(0);
+
+        // Normalize the image (min-max scaling to [0, 255])
+       
+        
+        cv::imwrite("output_image.png", imageMat);
+
+    }
+    
     return 0;
 }

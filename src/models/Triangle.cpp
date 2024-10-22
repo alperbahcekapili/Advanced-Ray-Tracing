@@ -51,8 +51,16 @@ float Triangle::Intersects(Ray ray){
 }
 
 vector<float> Triangle::getSurfaceNormal(vector<float> location){
-    vector<float> n = vectorCrossProduct3D({this->v3[0] - this->v2[0], this->v3[1] - this->v2[1], this->v3[2] - this->v2[2]}, {this->v1[0] - this->v2[0], this->v1[1] - this->v2[1], this->v1[2] - this->v2[2]} );
-    return normalize(n);
+    vector<float> n = vectorCrossProduct3D(
+        {this->v2[0] - this->v1[0], 
+        this->v2[1] - this->v1[1], 
+        this->v2[2] - this->v1[2]}, 
+    {this->v3[0] - this->v1[0], 
+    this->v3[1] - this->v1[1], 
+    this->v3[2] - this->v1[2]} );
+    n = normalize(n);
+    
+    return ;
 }
 
 Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3])

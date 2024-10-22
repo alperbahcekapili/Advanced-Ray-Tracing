@@ -95,5 +95,8 @@
 //     };
 // }
 
-void loadFromXml(const std::string &filepath);
+#include "../scene/Scene.h"
+
+
+std::vector<Scene*>loadFromXml(const std::string &filepath);
 #endif

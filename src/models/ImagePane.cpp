@@ -24,9 +24,9 @@ ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Ca
     wd[2] = c->w.at(2)* d;
 
     vector<float> m = {0,0,0};
-    m[0] = c->getPosition().at(0) - wd.at(0);
-    m[1] = c->getPosition().at(1) - wd.at(1);
-    m[2] = c->getPosition().at(2) - wd.at(2);
+    m[0] = c->getPosition().at(0) + wd.at(0);
+    m[1] = c->getPosition().at(1) + wd.at(1);
+    m[2] = c->getPosition().at(2) + wd.at(2);
     printf("e:%f%f%f\n", c->getPosition().at(0), c->getPosition().at(1), c->getPosition().at(2));
     printf("w:%f%f%f\n", c->w.at(0), c->w.at(1), c->w.at(2));
     printf("u:%f%f%f\n", c->u.at(0), c->u.at(1), c->u.at(2));
@@ -64,6 +64,8 @@ ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Ca
 
 Ray ImagePane::rayFromCamera(int i, int j){
     // get relevant s and calculate ray
+    this->sValues[i][j];
+    this->c->getPosition();
     Ray resultingRay = Ray(
         this->sValues[i][j],
         vectorAdd(this->sValues[i][j], vectorScale(this->c->getPosition(), -1))

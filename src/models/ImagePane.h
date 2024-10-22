@@ -5,8 +5,6 @@
 class ImagePane
 {
 private:
-    int dimx;
-    int dimy;
     int l;
     int r;
     int b;
@@ -15,6 +13,8 @@ private:
     vector<float>** sValues;
     Camera* c;
 public:
+    int dimx;
+    int dimy;
     ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Camera* c);
     Ray rayFromCamera(int i, int j);
 };

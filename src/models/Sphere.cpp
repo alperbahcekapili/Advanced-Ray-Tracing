@@ -60,13 +60,17 @@ float Sphere::Intersects(Ray ray){
     if (t2> 0 && t1 < 0)
         return t2;
     // std::cout << "Sphere is behind the ray\n";
+    
     return -1.0;
 }
 
 vector<float> Sphere::getSurfaceNormal(vector<float> location){
     // surface normal can be calculated via getting normal vector that is in the direction from center to the location
-    vector<float> scaledVector = vectorAdd(vectorScale(location, -1), this->center);
-    vector<float> unitVector = vectorScale(scaledVector, 1/sqrt(dotProduct(scaledVector, scaledVector)));
+    vector<float> scaledVector = vectorAdd(vectorScale(this->center, -1), location );
+    vector<float> unitVector = normalize(scaledVector);
+    // if location is inside the sphere then we need to negate the normal
+    // if (getMagnitude(vectorSubstract(this->center , location)) < this->R)
+    //     unitVector = vectorScale(unitVector, -1);
     return unitVector;
 }
 

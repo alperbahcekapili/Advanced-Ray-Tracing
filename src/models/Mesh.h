@@ -2,7 +2,7 @@
 
 #include "Object.h"
 #include "Triangle.h"
-
+#include <array>
 class Mesh : public Object
 {
 private:

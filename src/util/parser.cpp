@@ -15,7 +15,7 @@
 #include "../scene/Scene.h"
 
 
-void loadFromXml(const std::string &filepath)
+std::vector<Scene*> loadFromXml(const std::string &filepath)
 {
     tinyxml2::XMLDocument file;
     std::stringstream stream;
@@ -33,17 +33,17 @@ void loadFromXml(const std::string &filepath)
     int img_width;
     int img_height;
     std::string camera_name;
-    std::vector<Camera> cameras;
+    std::vector<Camera*> cameras;
 
 
     std::vector<int> ambient_light = {0,0,0};
-    std::vector<PointLight> lights; 
+    std::vector<PointLight*> lights; 
     std::vector<float> light_position = {0,0,0};
     std::vector<float> light_intensity = {0,0,0};
 
 
 
-    std::vector<Material> materials;
+    std::vector<Material*> materials;
     MaterialType material_type;
     std::vector<float> ambient_reflectance = {0,0,0};
     std::vector<float> diffuse_reflectance = {0,0,0};
@@ -66,18 +66,18 @@ void loadFromXml(const std::string &filepath)
     int facevid1, facevid2, facevid3;
     std::vector<std::array<std::array<float, 3>, 3>> mesh_faces;
     int mesh_numfaces = 0;
-    std::vector<Mesh> meshes;
+    std::vector<Mesh*> meshes;
 
 
     int triangle_material_id;
     int trianglev1, trianglev2, trianglev3;
-    std::vector<Triangle> triangles;
+    std::vector<Triangle*> triangles;
 
 
     int sphere_material_id;
     float shpere_radius;
     int sphere_center_id;
-    std::vector<Sphere> spheres;
+    std::vector<Sphere*> spheres;
 
 
     if (res)
@@ -102,7 +102,7 @@ void loadFromXml(const std::string &filepath)
         stream << "0 0 0" << std::endl;
     }
     stream >> background_color.at(0) >> background_color.at(1) >> background_color.at(2);
-    std::cout << background_color.at(0) << background_color.at(1) << background_color.at(2);
+    
 
     element = root->FirstChildElement("ShadowRayEpsilon");
     if (element)
@@ -123,7 +123,7 @@ void loadFromXml(const std::string &filepath)
     }
     else
     {
-        stream << "0" << std::endl;
+        stream << "1" << std::endl;
     }
     stream >> max_recursion_depth;
 
@@ -157,8 +157,8 @@ void loadFromXml(const std::string &filepath)
         stream >> img_width >> img_height;
         stream >> camera_name;
         // max t hardcoded
-        Camera camera = Camera(
-            cam_up, cam_gaze, cam_position, 1000, cam_near_distance, camera_name
+        Camera* camera = new Camera(
+            cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name
         );
         cameras.push_back(camera);
         element = element->NextSiblingElement("Camera");
@@ -181,7 +181,7 @@ void loadFromXml(const std::string &filepath)
 
         stream >> light_position.at(0) >> light_position.at(1) >> light_position.at(2);
         stream >> light_intensity.at(0) >> light_intensity.at(1) >> light_intensity.at(2);
-        PointLight l = PointLight(light_intensity, light_position);
+        PointLight* l = new PointLight(light_intensity, light_position);
         lights.push_back(l);
         element = element->NextSiblingElement("PointLight");
     }
@@ -227,7 +227,7 @@ void loadFromXml(const std::string &filepath)
         if (child)
         stream << child->GetText() << std::endl;
         else
-        stream << 0 << std::endl;
+        stream << "0 0 0 \n" << std::endl;
 
         child = element->FirstChildElement("AbsorptionIndex");
         if (child)
@@ -263,11 +263,13 @@ void loadFromXml(const std::string &filepath)
             stream >> mirror_reflectance.at(0) >> mirror_reflectance.at(1)>> mirror_reflectance.at(2);
         }
         stream >> phong_exponent;
-        Material material = Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficent);
+        Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficent);
         materials.push_back(material);
         element = element->NextSiblingElement("Material");
     }
     stream.clear();  // Clear any potential error state flags
+    stream.str(""); // Clear the stream content
+
 
     element = root->FirstChildElement("VertexData");
     stream << element->GetText() << std::endl;
@@ -277,8 +279,7 @@ void loadFromXml(const std::string &filepath)
         vertices.push_back(cur_vertex);
     }
     stream.clear();
-
-    // TODO ID' ler 1' den basliyor!!!
+    stream.str("");
 
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Mesh");
@@ -288,7 +289,7 @@ void loadFromXml(const std::string &filepath)
         child = element->FirstChildElement("Material");
         stream << child->GetText() << std::endl;
         stream >> mesh_material_id;
-        mesh_material = &(materials.at(mesh_material_id-1));
+        mesh_material = materials.at(mesh_material_id-1);
 
         child = element->FirstChildElement("Faces");
         stream << child->GetText() << std::endl;
@@ -307,36 +308,52 @@ void loadFromXml(const std::string &filepath)
         }
 
         stream.clear();
-        Mesh m = Mesh(&materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces, mesh_numfaces);
+        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces, mesh_numfaces);
+        mesh_numfaces = 0;
         meshes.push_back(m);
         mesh_faces.clear();
         element = element->NextSiblingElement("Mesh");
     }
-    stream.clear();
 
-    // //Get Triangles
-    element = root->FirstChildElement("Objects");
-    element = element->FirstChildElement("Triangle");
+        // //Get Triangles
+        element = root->FirstChildElement("Objects");
+        element = element->FirstChildElement("Triangle");
 
-    while (element)
-    {
-        child = element->FirstChildElement("Material");
-        stream << child->GetText() << std::endl;
-        stream >> triangle_material_id;
+        while (element)
+        {
+            child = element->FirstChildElement("Material");
+            std::string material_text = child->GetText(); // Get the material text as a string
+        
+            // Clear the stream and load the new string to convert to an integer
+            stream.str(material_text); // Set the string in the stream
+            stream.clear();            // Clear the stream state to avoid errors
+            
+            // Extract the integer material ID from the stream
+            stream >> triangle_material_id;
 
-        child = element->FirstChildElement("Indices");
-        stream << child->GetText() << std::endl;
-        stream >> trianglev1 >> trianglev2 >> trianglev3;
+            child = element->FirstChildElement("Indices");
+            std::string indices_text = child->GetText(); // Get the indices text as a string
+
+            // Clear the stream and load the new string
+            stream.str(indices_text); // Set the string in the stream
+            stream.clear();           // Clear the stream state
+            
+            // Extract the three vertex indices from the stream
+            stream >> trianglev1 >> trianglev2 >> trianglev3;
+
 
         float triv1[3] = {vertices.at(trianglev1-1).at(0),vertices.at(trianglev1-1).at(1),vertices.at(trianglev1-1).at(2)};
         float triv2[3] = {vertices.at(trianglev2-1).at(0),vertices.at(trianglev2-1).at(1),vertices.at(trianglev2-1).at(2)};
         float triv3[3] = {vertices.at(trianglev3-1).at(0),vertices.at(trianglev3-1).at(1),vertices.at(trianglev3-1).at(2)};
         
-        triangles.push_back(Triangle(
-            &materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3
+        triangles.push_back(new Triangle(
+            materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3
         ));
         element = element->NextSiblingElement("Triangle");
     }
+    stream.str("");
+    stream.clear();
+
 
     // //Get Spheres
     element = root->FirstChildElement("Objects");
@@ -355,11 +372,12 @@ void loadFromXml(const std::string &filepath)
         stream << child->GetText() << std::endl;
         stream >> shpere_radius;
 
-        Sphere s = Sphere(vertices.at(sphere_center_id-1).at(0),
+        Sphere* s = new Sphere(
+        vertices.at(sphere_center_id-1).at(0),
         vertices.at(sphere_center_id-1).at(1),
         vertices.at(sphere_center_id-1).at(2),
-        shpere_radius,
-        &materials.at(sphere_material_id-1),
+        shpere_radius,  
+        materials.at(sphere_material_id-1),
         ObjectType::SphereType);
         element = element->NextSiblingElement("Sphere");
         spheres.push_back(s);
@@ -377,37 +395,37 @@ void loadFromXml(const std::string &filepath)
     Object** objlist = new Object*[num_objects];
     for (size_t i = 0; i < meshes.size(); i++)
     {
-        objlist[i] = &(meshes.at(i));
+        objlist[i] = meshes.at(i);
     }
     for (size_t i = 0; i < spheres.size(); i++)
     {
-        objlist[i+meshes.size()] = &(spheres.at(i));
+        objlist[i+meshes.size()] = spheres.at(i);
     }
     for (size_t i = 0; i < triangles.size(); i++)
     {
-        objlist[i+meshes.size()+spheres.size()] = &(triangles.at(i));
+        objlist[i+meshes.size()+spheres.size()] = triangles.at(i);
     }
 
-    std::vector<Scene> scenes;
+    std::vector<Scene*> scenes;
     // for each camera we need to define a image pane
     for (size_t i = 0; i < cameras.size(); i++)
     {
         
         ImagePane* imagePane = new ImagePane(
-            img_height , img_width, cam_near_plane.at(0), cam_near_plane.at(1),  cam_near_plane.at(2), cam_near_plane.at(3), cameras.at(i).mint , &(cameras.at(i))
+            img_height , img_width, cam_near_plane.at(0), cam_near_plane.at(1),  cam_near_plane.at(2), cam_near_plane.at(3), cameras.at(i)->mint , cameras.at(i)
         );
         Light** lights_array = new Light*[lights.size()];
         for (size_t i = 0; i < lights.size(); i++)
         {
-            lights_array[i] = &(lights.at(i));
+            lights_array[i] = lights.at(i);
         }
         int bg[3] = {background_color.at(0),background_color.at(1),background_color.at(2)};
         int ambli[3] = {ambient_light.at(0), ambient_light.at(1), ambient_light.at(2)};
         // TODO refraction index not give thus leaving none
-        Scene s = Scene(
+        Scene* s = new Scene(
             objlist, 
             meshes.size()+spheres.size()+triangles.size(),
-            &(cameras.at(i)), 
+            cameras.at(i), 
             imagePane, 
             lights_array, 
             lights.size(), 
@@ -417,9 +435,10 @@ void loadFromXml(const std::string &filepath)
         scenes.push_back(s);
     }
 
+    return scenes;
 
 
-    // burayi desgistir her kamera icin sahne tanimlamana gerek yok
+    //TODO  burayi desgistir her kamera icin sahne tanimlamana gerek yok
 
     
 }

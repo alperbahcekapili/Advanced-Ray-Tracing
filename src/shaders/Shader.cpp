@@ -264,19 +264,6 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
         vectorScale(vectorMultiplyElementwise(refractionTransmission(reflected_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index, inside), target_obj->getMaterial()->mirrorReflectance), fr));
     }
 
-    
-    
-    
-    
-
-    
-
-
-
-
-
-
-
 
 }
 
@@ -349,11 +336,11 @@ bool Shader::lightHits(Ray light_ray, std::vector<float> location, Object* inter
     // from the given location then that means light hits the other side of the object
     vector<float> lightHitLocation = vectorAdd(light_ray.o, vectorScale(light_ray.d, intersectingTvalue));
     float errorMargin = 0.01;
-    if(getMagnitude(vectorAdd(lightHitLocation, vectorScale(location, -1))) > errorMargin){
-        // This means the light is in the other side of the object
-        // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
-        return false;
-    }
+    // if(getMagnitude(vectorAdd(lightHitLocation, vectorScale(location, -1))) > errorMargin){
+    //     // This means the light is in the other side of the object
+    //     // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
+    //     return false;
+    // }
     bool in_shadow = false;
     for (int j = 0; j < numobj; j++)
     {
@@ -390,15 +377,20 @@ vector<float> Shader::diffuseShadingAt(vector<float> location, Object* intersect
    for (int i = 0; i < this->scene->numlights; i++)
    {
     Ray lightRay = createRayFrom(this->scene->lights[i]->location, location);
+    
     bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
     if (!ligth_hits)
         continue;
 
     // If we got so far then it means ith light source hits this surface thus we can calculate illumination
-    float cosTheta = dotProduct(lightRay.d, intersectingObject->getSurfaceNormal(location));
+    printf("Intersercting object: %d\n", intersectingObjIndex);
+    float cosTheta = dotProduct(vectorScale(lightRay.d, -1), intersectingObject->getSurfaceNormal(location) );
+    if (cosTheta < 0)
+        cosTheta = 0;
     std::vector<float> irradiance = vectorScale(this->scene->lights[i]->irradianceAt(location), cosTheta);
+
     //std::cout << "Irradiance: " << irradiance.at(0) << "," << irradiance.at(1) << "," << irradiance.at(2) <<  "\n";
-    //std::cout << "Cos: " << cosTheta <<  "\n";
+    std::cout << "Cos: " << cosTheta <<  "\n";
     vector<float> tmp = vectorMultiplyElementwise(intersectingObject->getMaterial()->diffuseProp ,irradiance);
     pixel = vectorAdd(pixel, tmp);
 
@@ -425,13 +417,19 @@ vector<float> Shader::specularShadingAt(Ray cameraRay,vector<float> location, Ob
             continue;
 
         std::vector<float> surface_normal = intersectingObject->getSurfaceNormal(location);
-        std::vector<float> tmp = vectorAdd(cameraRay.d, lightRay.d);
-        float costheta  = dotProduct(surface_normal,tmp) / (getMagnitude(surface_normal) * getMagnitude(tmp));
+        // std::cout <<  "Lightray in specular " <<lightRay.d.at(0) << "," << lightRay.d.at(2) << "," << lightRay.d.at(2) << "\n" ;
+        
+        std::vector<float> h = normalize(vectorAdd(cameraRay.d, lightRay.d));
+        // std::cout <<  "Lightray in specular " <<h.at(0) << "," << h.at(2) << "," << h.at(2) << "\n" ;
+        float costheta  = dotProduct(surface_normal,vectorScale(h,-1));
         if (costheta < 0){
             costheta = 0;
         }else{
             costheta = pow(costheta, intersectingObject->getMaterial()->phong_exponent);
         }
+
+
+        std::cout << "Cos theta in specular: " << costheta << "\n";
         resultingMagnitude = vectorAdd(resultingMagnitude,vectorMultiplyElementwise(intersectingObject->getMaterial()->specularProp, vectorScale(this->scene->lights[i]->irradianceAt(location),  costheta)));
     }
 
