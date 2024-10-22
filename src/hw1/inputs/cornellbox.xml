@@ -8,7 +8,7 @@
             <Up>0 1 0</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
             <NearDistance>10</NearDistance>
-            <ImageResolution>800 800</ImageResolution>
+            <ImageResolution>200 200</ImageResolution>
             <ImageName>cornellbox.png</ImageName>
         </Camera>
     </Cameras>

@@ -10,7 +10,7 @@
             <Up>0 1 0</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
             <NearDistance>10</NearDistance>
-            <ImageResolution>800 800</ImageResolution>
+            <ImageResolution>400 400</ImageResolution>
             <ImageName>cornellbox_recursive.png</ImageName>
         </Camera>
     </Cameras>
@@ -111,12 +111,12 @@
                 2 7 6
             </Faces>
         </Mesh>
-        <Sphere id="1">
+        <Sphere id="6">
             <Material>6</Material>
             <Center>9</Center>
             <Radius>4</Radius>
         </Sphere>
-        <Sphere id="2">
+        <Sphere id="7">
             <Material>5</Material>
             <Center>10</Center>
             <Radius>4</Radius>

@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -g  -std=c++11  `pkg-config --cflags opencv4`
+CXXFLAGS = -Wall -g  -std=c++11  -O3 `pkg-config --cflags opencv4`
 # Define the source files
 MAIN = main.cpp
 

@@ -110,7 +110,7 @@ T clamp(T val, T minVal, T maxVal) {
 
 int main(int argc, char const *argv[])
 {
-    std::string fp = "/Users/alperb/Advanced-Ray-Tracing/src/hw1/inputs/cornellbox.xml";
+    std::string fp = "/Users/alperb/Advanced-Ray-Tracing/src/hw1/inputs/cornellbox_recursive.xml";
     std::vector<Scene*> scenes = loadFromXml(fp);
     std::cout << "xml loaded";
     for (size_t i = 0; i < scenes.size(); i++)
@@ -169,25 +169,33 @@ int main(int argc, char const *argv[])
                     continue;
                 }
 
-                std::cout << i << "," << j << "\n";
+               // std::cout << i << "," << j << "\n";
                 
                 Object** objList = curscene.sceneObjects;
                 vector<float> diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
                 vector<float> ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
-                vector<float> specular_intensity = {0,0,0};
-                // shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
+                vector<float> specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
                 // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
-                // vector<float> specular_reflection = shader.specularReflection(cameraRay, &curscene ,objList[intersectingObjIndex], 3, intersectingObjIndex);
-                // vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, objList[intersectingObjIndex], 5, intersectingObjIndex, false);
+                
                 vector<float> pixel_val = vectorAdd(specular_intensity, vectorAdd(diffuse_intensity, ambient_intensity));
                 
-                // pixel_val = vectorAdd(specular_reflection, pixel_val);
+                if(objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Mirror){
+                    vector<float> specular_reflection = shader.specularReflection(cameraRay, &curscene ,objList[intersectingObjIndex], 6, intersectingObjIndex);
+                    pixel_val = vectorAdd(specular_reflection, pixel_val);
+                }
+                else if (objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Dielectric || objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Conductor){
+                    vector<float> refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, objList[intersectingObjIndex], 6, intersectingObjIndex);
+                    pixel_val = vectorAdd(refrac_transmission, pixel_val);
+                    std::cout << "refrac_transmission: \n" << refrac_transmission.at(0) << ", " << refrac_transmission.at(1) << ", " << refrac_transmission.at(2) << "\n";
+
+                }
+
                 //pixel_val = vectorAdd(refrac_transmission, pixel_val);
                 // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.at(0) << ", " << ambient_intensity.at(1) << ", " << ambient_intensity.at(2) << "\n";
-                std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
+                // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.at(0) << ", " << diffuse_intensity.at(1) << ", " << diffuse_intensity.at(2) << "\n";
                 // std::cout << "Specular Intensity: \n" << specular_intensity.at(0) << ", " << specular_intensity.at(1) << ", " << specular_intensity.at(2) << "\n";
                 // std::cout << "Specular Reflectance: \n" << specular_reflection.at(0) << ", " << specular_reflection.at(1) << ", " << specular_reflection.at(2) << "\n";
-                // std::cout << "refrac_transmission: \n" << refrac_transmission.at(0) << ", " << refrac_transmission.at(1) << ", " << refrac_transmission.at(2) << "\n";
+                
                 
                     
                 image[i][j] = clipValues(pixel_val, 255.0);

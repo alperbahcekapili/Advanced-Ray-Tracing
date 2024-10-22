@@ -77,8 +77,7 @@ Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float
     {this->v3[0] - this->v1[0], 
     this->v3[1] - this->v1[1], 
     this->v3[2] - this->v1[2]} );
-    
-    std::cout << "aaa";
+
     std::vector<float> n = normalize(scaled_n);
     this->normal =  std::vector<float>(3,0);
     this->normal.at(0) = n.at(0);

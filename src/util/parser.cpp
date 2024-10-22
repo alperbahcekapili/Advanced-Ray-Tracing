@@ -203,7 +203,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             material_type = MaterialType::Dielectric;
 
         if (!is_mirror && !is_dielectric && !is_conductor)
-        material_type = MaterialType::Conductor;
+        material_type = MaterialType::Other;
 
 
         child = element->FirstChildElement("AmbientReflectance");
@@ -235,15 +235,13 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         else
         stream << 0 << std::endl;
 
-        if(is_mirror){
-            child = element->FirstChildElement("MirrorReflectance");
+        child = element->FirstChildElement("MirrorReflectance");
         if (child)
         {
-            assert(is_mirror == true);
             stream << child->GetText() << std::endl;
         }else{
-            mirror_reflectance = {0,0,0};
-        }}
+            stream << "0 0 0 \n" << std::endl;
+        }
         child = element->FirstChildElement("PhongExponent");
         if(child)
         stream << child->GetText() << std::endl;
@@ -257,11 +255,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream >> refraction_index;
         stream >> absorption_coefficent.at(0) >>  absorption_coefficent.at(1) >>  absorption_coefficent.at(2);
         stream >> absorption_index;
-
-        if (is_mirror)
-        {
-            stream >> mirror_reflectance.at(0) >> mirror_reflectance.at(1)>> mirror_reflectance.at(2);
-        }
+        stream >> mirror_reflectance.at(0) >> mirror_reflectance.at(1)>> mirror_reflectance.at(2);
+        
         stream >> phong_exponent;
         Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficent);
         materials.push_back(material);
@@ -430,7 +425,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             lights_array, 
             lights.size(), 
             bg, 
-            ambli, shadow_ray_eps, 0
+            ambli, shadow_ray_eps, 1
         );
         scenes.push_back(s);
     }

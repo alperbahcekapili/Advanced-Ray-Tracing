@@ -3,7 +3,8 @@
 enum MaterialType {
     Mirror,
     Conductor,
-    Dielectric
+    Dielectric,
+    Other
 };
 
 class Material{

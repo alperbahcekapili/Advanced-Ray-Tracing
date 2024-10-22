@@ -33,7 +33,7 @@ for (int i = 0; i < num_faces; i++)
 }
 if (intersecting_face_index == -1)
     return -1.0;
-    std::cout << "Mint for mesh: " << mint << ", Intersecting face index: " << intersecting_face_index <<"\n";
+    // std::cout << "Mint for mesh: " << mint << ", Intersecting face index: " << intersecting_face_index <<"\n";
 return mint;
 }
 
