@@ -123,7 +123,7 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
         if (next_intersecting_index != -1){
             std::vector<float> coeff = attenuation_magn;
             coeff = vectorScale(coeff, ft);
-            std::cout << "I am dielectric, I multiply transmission recursion output with: " << coeff.at(0) << "," << coeff.at(1) << "," << coeff.at(2) << "\n" ;
+            // std::cout << "I am dielectric, I multiply transmission recursion output with: " << coeff.at(0) << "," << coeff.at(1) << "," << coeff.at(2) << "\n" ;
             transmitted_return = 
                 vectorMultiplyElementwise(
                     refractionTransmission(outgoing_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index), 
@@ -147,7 +147,7 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
         
         if (next_intersecting_index != -1){
             std::vector<float> coeff = vectorScale({1,1,1},fr);
-            std::cout << "I am dielectric, I multiply reflection recursion output with: " << coeff.at(0) << "," << coeff.at(1) << "," << coeff.at(2) << "\n" ;
+            // std::cout << "I am dielectric, I multiply reflection recursion output with: " << coeff.at(0) << "," << coeff.at(1) << "," << coeff.at(2) << "\n" ;
             reflected_return = 
             vectorMultiplyElementwise(
                 refractionTransmission(reflected_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index), 
@@ -161,7 +161,6 @@ std::vector<float> Shader::refractionTransmission(Ray r, Scene* scene, Object* t
         float rs = ((pow(n2, 2) + pow(k2,2)) - 2*n2*cos_theta + pow(cos_theta,2)) /  ((pow(n2, 2) + pow(k2,2)) + 2*n2*cos_theta + pow(cos_theta,2)) ;
         float rp = ((pow(n2, 2) + pow(k2,2))*pow(cos_theta,2) - 2 * n2 * cos_theta +1) / ((pow(n2, 2) + pow(k2,2))*pow(cos_theta,2) + 2 * n2 * cos_theta +1);
         float fr = (rs+rp)/2;
-        float ft = 0;
         // we can optimize here TODO:
         // now we calculated current effect we need to determine if the next ray hits another object. If so we recurse if not we terminate here
         float minTValue = 9999999;
@@ -212,7 +211,7 @@ std::vector<float> Shader::specularReflection(Ray r, Scene* scene, Object* targe
     
     
     if (remaining_hop == 0 || target_obj->getMaterial()->materialType != MaterialType::Mirror){
-        std::cout << "I return: " << current_pixel_val.at(0) << ", " << current_pixel_val.at(1) << ", " << current_pixel_val.at(2) << "\n";
+        // std::cout << "I return: " << current_pixel_val.at(0) << ", " << current_pixel_val.at(1) << ", " << current_pixel_val.at(2) << "\n";
         return current_pixel_val;
     }
 
@@ -266,7 +265,7 @@ bool Shader::lightHits(Ray light_ray, std::vector<float> location, Object* inter
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
     vector<float> lightHitLocation = vectorAdd(light_ray.o, vectorScale(light_ray.d, intersectingTvalue));
-    float errorMargin = 0.01;
+    // float errorMargin = 0.01;
     // if(getMagnitude(vectorAdd(lightHitLocation, vectorScale(location, -1))) > errorMargin){
     //     // This means the light is in the other side of the object
     //     // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";

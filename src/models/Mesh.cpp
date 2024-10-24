@@ -41,7 +41,7 @@ return mint;
 vector<float> Mesh::getSurfaceNormal(vector<float> location) {
     // get closest triangle and calculate normal of that triangle
     int mindist = 999999;
-    int intersecting_face_index;
+    int intersecting_face_index=-1;
     for (int i = 0; i < num_faces; i++)
     {  
         std::vector<float> center = {

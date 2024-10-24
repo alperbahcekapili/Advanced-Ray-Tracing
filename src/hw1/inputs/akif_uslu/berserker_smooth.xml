@@ -9,7 +9,7 @@
             <Up>-0.08222609758377075 0.09459094703197479 0.9921146631240845</Up>
             <NearPlane>-1 1 -1.3333333333333333 1.3333333333333333</NearPlane>
             <NearDistance>3</NearDistance>
-            <ImageResolution>768 1024</ImageResolution>
+            <ImageResolution>192 256</ImageResolution>
             <ImageName>berserker_smooth.png</ImageName>
         </Camera>
     </Cameras>

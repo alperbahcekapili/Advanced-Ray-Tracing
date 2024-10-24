@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -g  -std=c++11  -O3 `pkg-config --cflags opencv4`
+CXXFLAGS = -Wall -Wextra -pedantic -ansi -O3 -g  -std=c++11   `pkg-config --cflags opencv4`
 # Define the source files
 MAIN = main.cpp
 
@@ -14,7 +14,7 @@ ALL_SRC = $(MAIN) $(SRC)
 OBJ = $(ALL_SRC:.cpp=.o)
 
 # Target executable
-TARGET = myprogram
+TARGET = raytracer
 
 # Rule to link the object files into the final executable
 $(TARGET): $(OBJ)

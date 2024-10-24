@@ -103,6 +103,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     }
     stream >> background_color.at(0) >> background_color.at(1) >> background_color.at(2);
     
+    stream.clear();
+    stream.str("");
 
     element = root->FirstChildElement("ShadowRayEpsilon");
     if (element)
@@ -113,6 +115,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     {
         stream << "0.001" << std::endl;
     }
+    
     stream >> shadow_ray_eps;
 
 
