@@ -6,7 +6,7 @@
 
 
 
-ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Camera* c)
+ImagePane::ImagePane(int dimx, int dimy, float l, float r, float b, float t, float d, Camera* c)
 {
     this->dimx = dimx;
     this->dimy = dimy;
@@ -21,11 +21,11 @@ ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Ca
     Vec3  wd(c->w.x * d, c->w.y * d, c->w.z * d);
     Vec3  m (c->getPosition().x + wd.x, c->getPosition().y + wd.y, c->getPosition().z + wd.z);
     
-    // printf("e:%f%f%f\n", c->getPosition().at(0), c->getPosition().at(1), c->getPosition().at(2));
-    // printf("w:%f%f%f\n", c->w.at(0), c->w.at(1), c->w.at(2));
-    // printf("u:%f%f%f\n", c->u.at(0), c->u.at(1), c->u.at(2));
-    // printf("v:%f%f%f\n", c->v.at(0), c->v.at(1), c->v.at(2));
-    // printf("Center of image pane is: (%f,%f,%f)\n", m.at(0), m.at(1), m.at(2));
+    printf("e:%f%f%f\n", c->getPosition().x, c->getPosition().y, c->getPosition().z);
+    printf("w:%f%f%f\n", c->w.x, c->w.y, c->w.z);
+    printf("u:%f%f%f\n", c->u.x, c->u.y, c->u.z);
+    printf("v:%f%f%f\n", c->v.x, c->v.y, c->v.z);
+    printf("Center of image pane is: (%f,%f,%f)\n", m.x, m.y, m.z);
 
     // center of (0,0) indexed pixels
     Vec3  q = (m + (c->u * l)) + (c->v * t);
@@ -41,13 +41,15 @@ ImagePane::ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Ca
    {
     this->sValues[i] = new Vec3[dimy];
     for (int j = 0; j < dimy; j++)
-    {
-        float su  = (i+0.5) * (r - l) / dimx;
-        float sv = (j+0.5) * (t - b) / dimy;
+    {   
+        std::cout << "i: " << i << ", j:" << j << ", r: " << r << ", l " << ", l " << l << "\n";
+        float su = (float(i) + 0.5f) * (float(r) - float(l)) / float(dimx);
+        float sv = (float(j) + 0.5f) * (float(t) - float(b)) / float(dimy);
 
+        std::cout << su  <<  "," << sv  << "\n";
         Vec3  s = (q + (c->u * su)) + (c->v * -sv);
         sValues[i][j] = s;
-        // printf("S(%f,%f,%f) of i,j: %d,%d\n", s.at(0), s.at(1), s.at(2), i, j);
+        printf("S(%f,%f,%f) of i,j: %d,%d\n", s.x, s.y, s.z, i, j);
     }
    }
    

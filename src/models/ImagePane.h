@@ -5,17 +5,17 @@
 class ImagePane
 {
 private:
-    int l;
-    int r;
-    int b;
-    int t;
+    float l;
+    float r;
+    float b;
+    float t;
     float d;
     Vec3** sValues;
     Camera* c;
 public:
     int dimx;
     int dimy;
-    ImagePane(int dimx, int dimy, int l, int r, int b, int t, float d, Camera* c);
+    ImagePane(int dimx, int dimy, float l, float r, float b, float t, float d, Camera* c);
     Ray rayFromCamera(int i, int j);
 };
 

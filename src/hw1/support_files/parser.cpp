@@ -41,7 +41,7 @@ void parser::Scene::loadFromXml(const std::string &filepath)
     }
     else
     {
-        stream << "0.001" << std::endl;
+        stream << "0.0001" << std::endl;
     }
     stream >> shadow_ray_epsilon;
 

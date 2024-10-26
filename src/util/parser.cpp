@@ -93,13 +93,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     //Get BackgroundColor
     auto element = root->FirstChildElement("BackgroundColor");
     if (element)
-    {
         stream << element->GetText() << std::endl;
-    }
     else
-    {
         stream << "0 0 0" << std::endl;
-    }
+    
     stream >> background_color.x >> background_color.y >> background_color.z;
     
     stream.clear();
