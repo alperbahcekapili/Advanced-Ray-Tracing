@@ -13,6 +13,7 @@
 #include "../models/Sphere.h"
 #include "../models/ImagePane.h"
 #include "../scene/Scene.h"
+#include "data_structures.h"
 
 
 std::vector<Scene*> loadFromXml(const std::string &filepath)
@@ -22,49 +23,47 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     
     auto res = file.LoadFile(filepath.c_str());
     float shadow_ray_eps = 0;
-    std::vector<int> background_color = {0,0,0};
+
+    // Main variables with Vec3 where appropriate
+    Vec3 background_color(0, 0, 0);
     int max_recursion_depth = 0;
 
-    std::vector<float> cam_position = {0,0,0};
-    std::vector<float> cam_gaze = {0,0,0};
-    std::vector<float> cam_up = {0,0,0};
-    std::vector<float> cam_near_plane = {0,0,0,0};
+    Vec3 cam_position(0, 0, 0);
+    Vec3 cam_gaze(0, 0, 0);
+    Vec3 cam_up(0, 0, 0);
+    Vec4 cam_near_plane(0, 0, 0, 0);
     float cam_near_distance = 0;
     int img_width;
     int img_height;
     std::string camera_name;
     std::vector<Camera*> cameras;
 
-
-    std::vector<int> ambient_light = {0,0,0};
-    std::vector<PointLight*> lights; 
-    std::vector<float> light_position = {0,0,0};
-    std::vector<float> light_intensity = {0,0,0};
-
-
+    Vec3 ambient_light(0, 0, 0);
+    std::vector<PointLight*> lights;
+    Vec3 light_position(0, 0, 0);
+    Vec3 light_intensity(0, 0, 0);
 
     std::vector<Material*> materials;
     MaterialType material_type;
-    std::vector<float> ambient_reflectance = {0,0,0};
-    std::vector<float> diffuse_reflectance = {0,0,0};
-    std::vector<float> specular_reflectance = {0,0,0};
-    std::vector<float> mirror_reflectance = {0,0,0};
-    std::vector<float> absorption_coefficent = {0,0,0};
+    Vec3 ambient_reflectance(0, 0, 0);
+    Vec3 diffuse_reflectance(0, 0, 0);
+    Vec3 specular_reflectance(0, 0, 0);
+    Vec3 mirror_reflectance(0, 0, 0);
+    Vec3 absorption_coefficient(0, 0, 0);
     float absorption_index;
     bool is_mirror;
     float phong_exponent;
     float refraction_index;
 
+    std::vector<Vec3> vertices;      // Each vertex can be a Vec3
+    Vec3 cur_vertex(1, 1, 1);
 
-    std::vector<std::vector<float>> vertices;
-    std::vector<float> cur_vertex = {1,1,1};
+    std::vector<int> mesh_vertex_ids = {0, 0, 0};
 
-
-    std::vector<int> mesh_vertex_ids = {0,0,0};
     Material* mesh_material;
     int mesh_material_id;
     int facevid1, facevid2, facevid3;
-    std::vector<std::array<std::array<float, 3>, 3>> mesh_faces;
+    std::vector<Vec3> mesh_faces;
     int mesh_numfaces = 0;
     std::vector<Mesh*> meshes;
 
@@ -101,7 +100,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     {
         stream << "0 0 0" << std::endl;
     }
-    stream >> background_color.at(0) >> background_color.at(1) >> background_color.at(2);
+    stream >> background_color.x >> background_color.y >> background_color.z;
     
     stream.clear();
     stream.str("");
@@ -152,10 +151,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         child = element->FirstChildElement("ImageName");
         stream << child->GetText() << std::endl;
 
-        stream >>  cam_position.at(0) >> cam_position.at(1) >> cam_position.at(2);
-        stream >> cam_gaze.at(0) >> cam_gaze.at(1) >> cam_gaze.at(2);
-        stream >> cam_up.at(0) >> cam_up.at(1) >> cam_up.at(2);
-        stream >> cam_near_plane.at(0) >> cam_near_plane.at(1) >> cam_near_plane.at(2) >> cam_near_plane.at(3);
+        stream >>  cam_position.x >> cam_position.y >> cam_position.z;
+        stream >> cam_gaze.x >> cam_gaze.y >> cam_gaze.z;
+        stream >> cam_up.x >> cam_up.y >> cam_up.z;
+        stream >> cam_near_plane.x >> cam_near_plane.y >> cam_near_plane.z >> cam_near_plane.h;
         stream >> cam_near_distance;
         stream >> img_width >> img_height;
         stream >> camera_name;
@@ -171,7 +170,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     element = root->FirstChildElement("Lights");
     auto child = element->FirstChildElement("AmbientLight");
     stream << child->GetText() << std::endl;
-    stream >> ambient_light.at(0) >> ambient_light.at(1) >> ambient_light.at(2);
+    stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;
     element = element->FirstChildElement("PointLight");
 
 
@@ -182,8 +181,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         child = element->FirstChildElement("Intensity");
         stream << child->GetText() << std::endl;
 
-        stream >> light_position.at(0) >> light_position.at(1) >> light_position.at(2);
-        stream >> light_intensity.at(0) >> light_intensity.at(1) >> light_intensity.at(2);
+        stream >> light_position.x >> light_position.y >> light_position.z;
+        stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
         PointLight* l = new PointLight(light_intensity, light_position);
         lights.push_back(l);
         element = element->NextSiblingElement("PointLight");
@@ -252,16 +251,16 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream << 1 << std::endl;
 
 
-        stream >> ambient_reflectance.at(0) >> ambient_reflectance.at(1) >> ambient_reflectance.at(2);
-        stream >> diffuse_reflectance.at(0) >> diffuse_reflectance.at(1) >> diffuse_reflectance.at(2);
-        stream >> specular_reflectance.at(0) >>  specular_reflectance.at(1) >>  specular_reflectance.at(2);
+        stream >> ambient_reflectance.x >> ambient_reflectance.y >> ambient_reflectance.z;
+        stream >> diffuse_reflectance.x >> diffuse_reflectance.y >> diffuse_reflectance.z;
+        stream >> specular_reflectance.x >>  specular_reflectance.y >>  specular_reflectance.z;
         stream >> refraction_index;
-        stream >> absorption_coefficent.at(0) >>  absorption_coefficent.at(1) >>  absorption_coefficent.at(2);
+        stream >> absorption_coefficient.x >>  absorption_coefficient.y >>  absorption_coefficient.z;
         stream >> absorption_index;
-        stream >> mirror_reflectance.at(0) >> mirror_reflectance.at(1)>> mirror_reflectance.at(2);
+        stream >> mirror_reflectance.x >> mirror_reflectance.y>> mirror_reflectance.z;
         
         stream >> phong_exponent;
-        Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficent);
+        Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficient);
         materials.push_back(material);
         element = element->NextSiblingElement("Material");
     }
@@ -272,7 +271,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     element = root->FirstChildElement("VertexData");
     stream << element->GetText() << std::endl;
     
-    while (stream >> cur_vertex.at(0) >> cur_vertex.at(1) >> cur_vertex.at(2))
+    while (stream >> cur_vertex.x >> cur_vertex.y >> cur_vertex.z)
     {
         vertices.push_back(cur_vertex);
     }
@@ -296,17 +295,20 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         while (!(stream >> facevid1).eof())
         {
             stream >> facevid2 >> facevid3;
-            std::array<std::array<float, 3>, 3>  mesh_face = {{
-                {vertices.at(facevid1-1).at(0),vertices.at(facevid1-1).at(1),vertices.at(facevid1-1).at(2)},
-                {vertices.at(facevid2-1).at(0),vertices.at(facevid2-1).at(1),vertices.at(facevid2-1).at(2)},
-                {vertices.at(facevid3-1).at(0),vertices.at(facevid3-1).at(1),vertices.at(facevid3-1).at(2)}
-            }};
-            mesh_faces.push_back(mesh_face);
+            mesh_faces.push_back(Vec3(vertices.at(facevid1-1).x,vertices.at(facevid1-1).y,vertices.at(facevid1-1).z));
+            mesh_faces.push_back(Vec3(vertices.at(facevid2-1).x,vertices.at(facevid2-1).y,vertices.at(facevid2-1).z));
+            mesh_faces.push_back(Vec3(vertices.at(facevid3-1).x,vertices.at(facevid3-1).y,vertices.at(facevid3-1).z));
             mesh_numfaces ++;
         }
 
         stream.clear();
-        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces, mesh_numfaces);
+        // convert vector to list
+        Vec3* mesh_faces_ar = new Vec3[mesh_numfaces*3];
+        for (int i = 0; i < mesh_numfaces*3; i++)
+        {
+            mesh_faces_ar[i] = mesh_faces.at(i);
+        }
+        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces);
         mesh_numfaces = 0;
         meshes.push_back(m);
         mesh_faces.clear();
@@ -340,9 +342,9 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             stream >> trianglev1 >> trianglev2 >> trianglev3;
 
 
-        float triv1[3] = {vertices.at(trianglev1-1).at(0),vertices.at(trianglev1-1).at(1),vertices.at(trianglev1-1).at(2)};
-        float triv2[3] = {vertices.at(trianglev2-1).at(0),vertices.at(trianglev2-1).at(1),vertices.at(trianglev2-1).at(2)};
-        float triv3[3] = {vertices.at(trianglev3-1).at(0),vertices.at(trianglev3-1).at(1),vertices.at(trianglev3-1).at(2)};
+        Vec3 triv1(vertices.at(trianglev1-1).x,vertices.at(trianglev1-1).y,vertices.at(trianglev1-1).z);
+        Vec3 triv2(vertices.at(trianglev2-1).x,vertices.at(trianglev2-1).y,vertices.at(trianglev2-1).z);
+        Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
         
         triangles.push_back(new Triangle(
             materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3
@@ -371,9 +373,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream >> shpere_radius;
 
         Sphere* s = new Sphere(
-        vertices.at(sphere_center_id-1).at(0),
-        vertices.at(sphere_center_id-1).at(1),
-        vertices.at(sphere_center_id-1).at(2),
+        vertices.at(sphere_center_id-1),
         shpere_radius,  
         materials.at(sphere_material_id-1),
         ObjectType::SphereType);
@@ -410,15 +410,15 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     {
         
         ImagePane* imagePane = new ImagePane(
-            img_height , img_width, cam_near_plane.at(0), cam_near_plane.at(1),  cam_near_plane.at(2), cam_near_plane.at(3), cameras.at(i)->mint , cameras.at(i)
+            img_height , img_width, cam_near_plane.x, cam_near_plane.y,  cam_near_plane.z, cam_near_plane.h, cameras.at(i)->mint , cameras.at(i)
         );
         Light** lights_array = new Light*[lights.size()];
         for (size_t i = 0; i < lights.size(); i++)
         {
             lights_array[i] = lights.at(i);
         }
-        int bg[3] = {background_color.at(0),background_color.at(1),background_color.at(2)};
-        int ambli[3] = {ambient_light.at(0), ambient_light.at(1), ambient_light.at(2)};
+        Vec3 bg(background_color.x,background_color.y,background_color.z);
+        Vec3 ambli(ambient_light.x, ambient_light.y, ambient_light.z);
         // TODO refraction index not give thus leaving none
         Scene* s = new Scene(
             objlist, 

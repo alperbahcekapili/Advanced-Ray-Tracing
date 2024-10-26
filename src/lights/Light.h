@@ -1,5 +1,6 @@
-#include <vector>
 #pragma once
+#include <vector>
+#include "../util/data_structures.h"
 
 
 
@@ -9,9 +10,9 @@ class Light
 private:
     
 public:
-    std::vector<float> location;
-    std::vector<float> intensity;
-    virtual std::vector<float> irradianceAt(std::vector<float> location) = 0;
+    Vec3  location;
+    Vec3  intensity;
+    virtual Vec3  irradianceAt(Vec3  location) = 0;
 
     virtual ~Light() = default;
 };

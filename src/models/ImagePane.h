@@ -10,7 +10,7 @@ private:
     int b;
     int t;
     float d;
-    vector<float>** sValues;
+    Vec3** sValues;
     Camera* c;
 public:
     int dimx;

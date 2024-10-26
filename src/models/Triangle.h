@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../util/data_structures.h"
 #include "Object.h"
 class Triangle : public Object
 {
@@ -11,14 +11,15 @@ private:
 
 public:
 
-    float v1[3];
-    float v2[3];
-    float v3[3];
-    std::vector<float> normal = {0,0,0};
-    Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3]);
+    Vec3 v1;
+    Vec3 v2;
+    Vec3 v3;
+    Vec3 normal;
+    Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3);
     float Intersects(Ray ray) override ;
     float getArea(void);
-    vector<float> getSurfaceNormal(vector<float> location) override;
-    Material* getMaterial() override;
+    Vec3 getSurfaceNormal(Vec3 location) override;
+    Triangle();
+    Material *getMaterial() override;
     ObjectType getObject() override;
 };

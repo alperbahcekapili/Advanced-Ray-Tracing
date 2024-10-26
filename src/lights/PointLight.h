@@ -5,7 +5,7 @@ class PointLight : public Light
 private:
     /* data */
 public:
-    PointLight(std::vector<float> intensity, std::vector<float> location);
+    PointLight(Vec3  intensity, Vec3  location);
     
-    std::vector<float> irradianceAt(std::vector<float> location) override;
+    Vec3  irradianceAt(Vec3  location) override;
 };

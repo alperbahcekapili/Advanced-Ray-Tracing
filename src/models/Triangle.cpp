@@ -6,35 +6,35 @@
 
 
 float Triangle::Intersects(Ray ray){
-    vector<float> d = ray.d;
-    vector<float> o = ray.o;
+    Vec3 d = ray.d;
+    Vec3 o = ray.o;
     /*
     
     */ 
 
 
     float gamma_top[3][3] = {
-        {this->v1[0] - this->v2[0], this->v1[0] - o.at(0), d.at(0)},
-        {this->v1[1] - this->v2[1], this->v1[1] - o.at(1), d.at(1)},
-        {this->v1[2] - this->v2[2], this->v1[2] - o.at(2), d.at(2)}
+        {this->v1.x - this->v2.x, this->v1.x - o.x, d.x},
+        {this->v1.y - this->v2.y, this->v1.y - o.y, d.y},
+        {this->v1.z - this->v2.z, this->v1.z - o.z, d.z}
     };
 
     float beta_top[3][3] = {
-        {this->v1[0] - o.at(0), this->v1[0] - this->v3[0], d.at(0)},
-        {this->v1[1] - o.at(1), this->v1[1] - this->v3[1], d.at(1)},
-        {this->v1[2] - o.at(2), this->v1[2] - this->v3[2], d.at(2)}
+        {this->v1.x - o.x, this->v1.x - this->v3.x, d.x},
+        {this->v1.y - o.y, this->v1.y - this->v3.y, d.y},
+        {this->v1.z - o.z, this->v1.z - this->v3.z, d.z}
     };
 
     float t_top[3][3] = {
-        {this->v1[0] - this->v2[0], this->v1[0] - this->v3[0], this->v1[0] - o.at(0)},
-        {this->v1[1] - this->v2[1], this->v1[1] - this->v3[1], this->v1[1] - o.at(1)},
-        {this->v1[2] - this->v2[2], this->v1[2] - this->v3[2], this->v1[2] - o.at(2)}
+        {this->v1.x - this->v2.x, this->v1.x - this->v3.x, this->v1.x - o.x},
+        {this->v1.y - this->v2.y, this->v1.y - this->v3.y, this->v1.y - o.y},
+        {this->v1.z - this->v2.z, this->v1.z - this->v3.z, this->v1.z - o.z}
     };
 
     float A[3][3] = {
-        {this->v1[0] - this->v2[0],this->v1[0] - this->v3[0],d.at(0)},
-        {this->v1[1] - this->v2[1],this->v1[1] - this->v3[1],d.at(1)},
-        {this->v1[2] - this->v2[2],this->v1[2] - this->v3[2],d.at(2)}
+        {this->v1.x - this->v2.x,this->v1.x - this->v3.x,d.x},
+        {this->v1.y - this->v2.y,this->v1.y - this->v3.y,d.y},
+        {this->v1.z - this->v2.z,this->v1.z - this->v3.z,d.z}
     };
 
     float beta_ = det3x3(beta_top) / det3x3(A);
@@ -50,39 +50,27 @@ float Triangle::Intersects(Ray ray){
 
 }
 
-vector<float> Triangle::getSurfaceNormal(vector<float> location){
+Vec3 Triangle::getSurfaceNormal(Vec3 location){
     return this->normal;
 }
 
-Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float v2[3], float v3[3])
+Triangle::Triangle(){
+
+}
+
+Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3)
 {
     this->material = material;
     this->objectType = objectType;
-    this->v1[0] = v1[0];
-    this->v1[1] = v1[1];
-    this->v1[2] = v1[2];
-    this->v2[0] = v2[0];
-    this->v2[1] = v2[1];
-    this->v2[2] = v2[2];
-    this->v3[0] = v3[0];
-    this->v3[1] = v3[1];
-    this->v3[2] = v3[2];
-    // std::cout << this->v1[0];
-    // std::cout << this->v1[1];
-    // std::cout << this->v1[2];
-    vector<float> scaled_n = vectorCrossProduct3D(
-        {this->v2[0] - this->v1[0], 
-        this->v2[1] - this->v1[1], 
-        this->v2[2] - this->v1[2]}, 
-    {this->v3[0] - this->v1[0], 
-    this->v3[1] - this->v1[1], 
-    this->v3[2] - this->v1[2]} );
+    this->v1 = v1;
+    this->v2 = v2;
+    this->v3 = v3;
+    // std::cout << this->v1.x;
+    // std::cout << this->v1.y;
+    // std::cout << this->v1.z;
+    Vec3 scaled_n = (this->v2 - this->v1).cross(this->v3 - this->v2);
+    this->normal = scaled_n.normalize();
     
-    std::vector<float> n = normalize(scaled_n);
-    this->normal =  std::vector<float>(3,0);
-    this->normal.at(0) = n.at(0);
-    this->normal.at(1) = n.at(1);
-    this->normal.at(2) = n.at(2);
     
 
 };
@@ -91,14 +79,14 @@ Triangle::Triangle(Material* material, ObjectType objectType, float v1[3], float
 float Triangle::getArea(void) {
     // Vectors AB and AC
     
-    std::vector<float> AB = { this->v2[0] - this->v1[0], this->v2[1] - this->v1[1], this->v2[2] - this->v1[2] };
-    std::vector<float> AC = { this->v3[0] - this->v1[0], this->v3[1] - this->v1[1], this->v3[2] - this->v1[2] };
+    Vec3 AB(this->v2.x - this->v1.x, this->v2.y - this->v1.y, this->v2.z - this->v1.z);
+    Vec3 AC(this->v3.x - this->v1.x, this->v3.y - this->v1.y, this->v3.z - this->v1.z);
 
     // Cross product of AB and AC
-    std::vector<float> cross = vectorCrossProduct3D(AB, AC);
+    Vec3 cross = AB.cross(AC);
 
     // Area is half the magnitude of the cross product
-    return 0.5 * getMagnitude(cross);
+    return 0.5 * cross.magnitude();
 }
 
 Material* Triangle::getMaterial(){

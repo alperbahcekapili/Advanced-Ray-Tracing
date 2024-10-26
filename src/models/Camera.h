@@ -2,18 +2,19 @@
 
 #include <vector>
 #include <string>
+#include "../util/data_structures.h"
 class Camera
 {
 private:
     // in camera space
-    std::vector<float> position; // e
+    Vec3  position; // e
     
 public:
-    Camera(std::vector<float> v, std::vector<float> w, std::vector<float> position, float maxt, float mint, std::string name);
-    std::vector<float> getPosition();
-    std::vector<float> w; // I use w as the gaze direction
-    std::vector<float> u;
-    std::vector<float> v;
+    Camera(Vec3  v, Vec3  w, Vec3  position, float maxt, float mint, std::string name);
+    Vec3  getPosition();
+    Vec3  w; // I use w as the gaze direction
+    Vec3  u;
+    Vec3  v;
     std::string name;
     float mint;
     float maxt;

@@ -11,13 +11,14 @@ private:
 
 public:
 
-    std::vector<Triangle> faces;
+    Triangle* faces;
     Material* material;
     ObjectType objectType;
     int num_faces;
-    Mesh(Material* material, ObjectType objectType, std::vector< std::array<std::array<float, 3>, 3>>  faces, int numfaces);
+    Mesh(Material* material, ObjectType objectType,  Vec3* faces, int numfaces);
+    ~Mesh();
     float Intersects(Ray ray) override ;
-    vector<float> getSurfaceNormal(vector<float> location) override;
+    Vec3 getSurfaceNormal(Vec3 location) override;
     Material* getMaterial() override;
     ObjectType getObject() override;
 

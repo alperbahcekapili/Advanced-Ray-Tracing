@@ -4,16 +4,16 @@
 #include <iostream>
 
 
-Camera::Camera(std::vector<float> v, std::vector<float> w, std::vector<float> position, float mint, float maxt, string name):mint(mint), maxt(maxt)
+Camera::Camera(Vec3  v, Vec3  w, Vec3  position, float mint, float maxt, string name):mint(mint), maxt(maxt)
 {
 this->v = v;
 // calculate and store w
 this->w = w;
-this->u = vectorCrossProduct3D(w,v);
+this->u = w.cross(v);
 this->position = position;
 this->name = name;
 }
 
-std::vector<float> Camera::getPosition(){
+Vec3  Camera::getPosition(){
     return this->position;
 }

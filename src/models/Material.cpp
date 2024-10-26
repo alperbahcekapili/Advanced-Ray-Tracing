@@ -1,7 +1,9 @@
 #include "Material.h"
 #include <vector>
 #include <iostream>
-Material::Material(MaterialType type, std::vector<float>ambientProp, std::vector<float>diffuseProp, std::vector<float>specularProp, float phong_exponent, std::vector<float> mirrorReflectance, float refraction_index, float absorbtion_index, std::vector<float> absorption_coef):
+#include "../util/data_structures.h"
+
+Material::Material(MaterialType type, Vec3 ambientProp, Vec3 diffuseProp, Vec3 specularProp, float phong_exponent, Vec3  mirrorReflectance, float refraction_index, float absorbtion_index, Vec3  absorption_coef):
 phong_exponent(phong_exponent){
     this->materialType = type;
     this->ambientProp = ambientProp;
