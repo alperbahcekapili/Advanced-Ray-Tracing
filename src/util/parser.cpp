@@ -295,22 +295,25 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         while (!(stream >> facevid1).eof())
         {
             stream >> facevid2 >> facevid3;
-            mesh_faces.push_back(Vec3(vertices.at(facevid1-1).x,vertices.at(facevid1-1).y,vertices.at(facevid1-1).z));
-            mesh_faces.push_back(Vec3(vertices.at(facevid2-1).x,vertices.at(facevid2-1).y,vertices.at(facevid2-1).z));
-            mesh_faces.push_back(Vec3(vertices.at(facevid3-1).x,vertices.at(facevid3-1).y,vertices.at(facevid3-1).z));
-            mesh_numfaces ++;
+            triangles.push_back( new Triangle(
+            materials.at(mesh_material_id-1), ObjectType::TriangleType, 
+            Vec3(vertices.at(facevid1-1).x,vertices.at(facevid1-1).y,vertices.at(facevid1-1).z)
+            , Vec3(vertices.at(facevid2-1).x,vertices.at(facevid2-1).y,vertices.at(facevid2-1).z),
+             Vec3(vertices.at(facevid3-1).x,vertices.at(facevid3-1).y,vertices.at(facevid3-1).z)
+            ));
+                ;
         }
 
         stream.clear();
         // convert vector to list
-        Vec3* mesh_faces_ar = new Vec3[mesh_numfaces*3];
-        for (int i = 0; i < mesh_numfaces*3; i++)
-        {
-            mesh_faces_ar[i] = mesh_faces.at(i);
-        }
-        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces);
+        // Vec3* mesh_faces_ar = new Vec3[mesh_numfaces*3];
+        // for (int i = 0; i < mesh_numfaces*3; i++)
+        // {
+        //     mesh_faces_ar[i] = mesh_faces.at(i);
+        // }
+        //Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces);
         mesh_numfaces = 0;
-        meshes.push_back(m);
+        // meshes.push_back(m);
         mesh_faces.clear();
         element = element->NextSiblingElement("Mesh");
     }

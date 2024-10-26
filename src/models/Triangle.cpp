@@ -1,6 +1,7 @@
 
 #include "Triangle.h"
 #include "../util/util.h"
+#include "../util/data_structures.h"
 #include <math.h>
 
 
@@ -65,10 +66,24 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
     this->v1 = v1;
     this->v2 = v2;
     this->v3 = v3;
-    // std::cout << this->v1.x;
-    // std::cout << this->v1.y;
-    // std::cout << this->v1.z;
-    Vec3 scaled_n = (this->v2 - this->v1).cross(this->v3 - this->v2);
+    
+
+    Vec3 center = Vec3::centroid(v1, v2, v3);
+    Vec3 normal = (v2 - v1).cross(v3 - v1);  // Calculate the normal for orientation
+
+    // Sort vertices based on signed angle with respect to the centroid and normal
+    std::array<Vec3, 3> vertices = {v1, v2, v3};
+    std::sort(vertices.begin(), vertices.end(), [&](const Vec3& a, const Vec3& b) {
+        return Vec3::signedAngle(center, a, normal) < Vec3::signedAngle(center, b, normal);
+    });
+
+    // Update v1, v2, v3 with sorted vertices
+    v1 = vertices[0];
+    v2 = vertices[1];
+    v3 = vertices[2];
+
+
+    Vec3 scaled_n = (this->v2-this->v1).cross(this->v3 - this->v1);
     this->normal = scaled_n.normalize();
     
     

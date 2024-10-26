@@ -54,8 +54,8 @@ int main(int argc, char const *argv[])
         for (int i = 0; i < imgWidth; i++)
         {   
             image[i] = new Vec3[imgHeight];
-            if(total_progress % 10 == 0)
-            // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
+            
+            printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
 
             for (int j = 0; j < imgHeight; j++)
             {
@@ -144,8 +144,8 @@ int main(int argc, char const *argv[])
         std::vector<unsigned char> image_mat(width * height * 4, 255); // White image
 
         // Set some pixels to black
-        for (int y = 0; y < imgWidth; ++y) {
-            for (int x = 0; x < imgHeight; ++x) {
+        for (int x = 0; x < imgWidth; ++x) {
+            for (int y = 0; y < imgHeight; ++y) {
                 int idx = 4 * (y * width + x);
                 image_mat[idx + 0] = static_cast<uint8_t>(clamp(image[x][y].x, 0.0f, 255.0f));
                 image_mat[idx + 1] = static_cast<uint8_t>(clamp(image[x][y].y, 0.0f, 255.0f)); 
