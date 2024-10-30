@@ -16,6 +16,8 @@ public:
     Vec3 getSurfaceNormal(Vec3 location) override;
     Material* getMaterial() override;
     ObjectType getObject() override;
+    Vec3 getBoundingBox(bool isMax) override;
+    Vec3  getCenter() override;
 
     
     

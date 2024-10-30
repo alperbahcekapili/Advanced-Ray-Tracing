@@ -11,7 +11,7 @@ this->v = v;
 this->w = w;
 this->u = w.cross(v);
 this->position = position;
-std::cout << position.x << ", " << position.y << ", " << position.z << "\n";
+// std::cout << position.x << ", " << position.y << ", " << position.z << "\n";
 this->name = name;
 }
 

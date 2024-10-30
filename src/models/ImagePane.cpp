@@ -42,14 +42,14 @@ ImagePane::ImagePane(int dimx, int dimy, float l, float r, float b, float t, flo
     this->sValues[i] = new Vec3[dimy];
     for (int j = 0; j < dimy; j++)
     {   
-        std::cout << "i: " << i << ", j:" << j << ", r: " << r << ", l " << ", l " << l << "\n";
+        // std::cout << "i: " << i << ", j:" << j << ", r: " << r << ", l " << ", l " << l << "\n";
         float su = (float(i) + 0.5f) * (float(r) - float(l)) / float(dimx);
         float sv = (float(j) + 0.5f) * (float(t) - float(b)) / float(dimy);
 
-        std::cout << su  <<  "," << sv  << "\n";
+        // std::cout << su  <<  "," << sv  << "\n";
         Vec3  s = (q + (c->u * su)) + (c->v * -sv);
         sValues[i][j] = s;
-        printf("S(%f,%f,%f) of i,j: %d,%d\n", s.x, s.y, s.z, i, j);
+        // printf("S(%f,%f,%f) of i,j: %d,%d\n", s.x, s.y, s.z, i, j);
     }
    }
    

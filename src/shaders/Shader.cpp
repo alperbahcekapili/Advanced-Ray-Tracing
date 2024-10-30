@@ -312,7 +312,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
         cosTheta = 0;
     Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
 
-    std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
+    // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
     
     Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
     pixel = pixel + tmp;

@@ -8,6 +8,17 @@ Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType)
     this->center = center;
     this->material = material;
     this->objectType = objectType;
+    
+
+    this->min = Vec3(center.x-R, center.y-R, center.z-R);
+    this->max = Vec3(center.x+R, center.y+R, center.z+R);
+
+}
+
+Vec3 Sphere::getBoundingBox(bool isMax){
+    if(isMax)
+        return this->min;
+    return this->max;
 }
 Material* Sphere::getMaterial(){
     return this->material;
@@ -15,6 +26,12 @@ Material* Sphere::getMaterial(){
 ObjectType Sphere::getObject(){
     return this->objectType;
 }
+
+Vec3  Sphere::getCenter(){
+    return this->center;
+}
+
+
 float Sphere::Intersects(Ray ray){
     Vec3 d = ray.d;
     Vec3 o = ray.o;

@@ -22,4 +22,6 @@ public:
     Triangle();
     Material *getMaterial() override;
     ObjectType getObject() override;
+    Vec3 getBoundingBox(bool isMax) override;
+    Vec3  getCenter() override;
 };

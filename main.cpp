@@ -9,9 +9,8 @@
 #include "src/shaders/Shader.h"
 #include "src/util/util.h"
 #include "src/util/lodepng.h"
-
 #include "src/util/parser.h"
-
+#include "src/acceleration/BVH.h"
 
 #include <algorithm>
 
@@ -37,6 +36,9 @@ int main(int argc, char const *argv[])
     std::cout << "File path: " << fp << std::endl;
 
     std::vector<Scene*> scenes = loadFromXml(fp);
+
+    BVH* bvh = new BVH(scenes.at(0)->sceneObjects, scenes.at(0)->numObjects, 0);
+
     std::cout << "xml loaded\n";
     for (size_t i = 0; i < scenes.size(); i++)
     {   
@@ -120,7 +122,7 @@ int main(int argc, char const *argv[])
 
                 
                 // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
-                std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
+                // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
                 // std::cout << "Specular Intensity: \n" << specular_intensity.x << ", " << specular_intensity.y << ", " << specular_intensity.z << "\n";
                 // std::cout << "Specular Reflectance: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
                 
