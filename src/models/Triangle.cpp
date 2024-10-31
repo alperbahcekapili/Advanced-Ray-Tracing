@@ -90,8 +90,8 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
 
 Vec3 Triangle::getBoundingBox(bool isMax){
     if(isMax)
-        return this->min;
-    return this->max;
+        return this->max;
+    return this->min;
 }
 
 Vec3  Triangle::getCenter(){

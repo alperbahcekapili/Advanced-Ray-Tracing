@@ -17,8 +17,8 @@ Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType)
 
 Vec3 Sphere::getBoundingBox(bool isMax){
     if(isMax)
-        return this->min;
-    return this->max;
+        return this->max;
+    return this->min;
 }
 Material* Sphere::getMaterial(){
     return this->material;

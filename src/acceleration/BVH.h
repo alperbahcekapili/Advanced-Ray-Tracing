@@ -29,7 +29,7 @@ public:
     }
 
     BVH(Object** objects, int num_objects, int depth);
-    bool intersectObject(Ray ray, Object* to_fill);
+    bool intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax);
     bool intersects(Ray r, float& tNear, float& tFar);
     ~BVH();
     void visualize(int level) const;

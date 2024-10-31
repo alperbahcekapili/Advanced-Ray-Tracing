@@ -304,7 +304,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
     
     bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
     if (!ligth_hits){        
-        printf("Light does not hit obejct\n");
+        // printf("Light does not hit obejct\n");
         continue;}
 
     float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(location) );

@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
     std::vector<Scene*> scenes = loadFromXml(fp);
 
     BVH* bvh = new BVH(scenes.at(0)->sceneObjects, scenes.at(0)->numObjects, 0);
-
+    bvh->visualize(0);
     std::cout << "xml loaded\n";
     for (size_t i = 0; i < scenes.size(); i++)
     {   
@@ -72,17 +72,40 @@ int main(int argc, char const *argv[])
                 // now iterate over the objects to find first object that hits this ray
                 // add fov in future to exclude object that are too far away from the camera
                 float minTValue = 9999999;
+                float maxTValue = -1;
                 int intersectingObjIndex = -1;
                 
-                for (int k = 0; k < curscene.numObjects; k++)
+                // for (int k = 0; k < curscene.numObjects; k++)
+                // {
+                //     float tvalue = curscene.sceneObjects[k]->Intersects(cameraRay);
+                //     // printf("Intersecing t val%f\n", tvalue);
+                //     if (tvalue > 0 && tvalue < minTValue){
+                //         minTValue = tvalue;
+                //         intersectingObjIndex = k;
+                //     }
+                // }
+                Object* tofill = nullptr;
+                bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
+                if(!intersected)
+                continue;
+
+                // TODO: replace get intersecting obj index here
+                std::cout << tofill->getMaterial()->materialType << "\n";
+
+                for (int i = 0; i < curscene.numObjects; i++)
                 {
-                    float tvalue = curscene.sceneObjects[k]->Intersects(cameraRay);
-                    // printf("Intersecing t val%f\n", tvalue);
-                    if (tvalue > 0 && tvalue < minTValue){
-                        minTValue = tvalue;
-                        intersectingObjIndex = k;
-                    }
+                    if(curscene.sceneObjects[i]->getCenter() == tofill->getCenter())
+                        intersectingObjIndex = i;
                 }
+
+                if(intersectingObjIndex == -1)
+                    std::cout << "There is a problem with indexing... \n";
+                
+
+                // std::cout << intersectingObjIndex << "\n";
+
+                
+
                 // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.x, cameraRay.o.y, cameraRay.o.z ,cameraRay.d.x, cameraRay.d.y, cameraRay.d.z);
             
                 if (minTValue > curscene.camera->maxt){

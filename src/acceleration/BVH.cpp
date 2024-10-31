@@ -58,6 +58,8 @@ BVH::BVH(Object** objects, int num_objects, int depth)
     if (num_objects == 1){
         this->is_leaf = true;
         this->leaf_object = objects[0];
+        left = nullptr;
+        right = nullptr;
         return;
     }
 
@@ -140,34 +142,84 @@ bool BVH::intersects(Ray ray, float& tNear, float& tFar){
 }
 
 
-bool BVH::intersectObject(Ray ray, Object* to_fill){
-    float tmin;
-    float tmax;
+bool BVH::intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax){
     if(!this->intersects(ray, tmin, tmax)){
         return false;
     }
 
     if(this->is_leaf){
         // if current node is leaf then return obj
-        to_fill = this->leaf_object;
-        return true;
+        // if current bbox intersects with the object then we need to test wheter ray intersects with the object
+        float tval = this->leaf_object->Intersects(ray);
+        if(tval != -1){
+            tmin=tval;
+            to_fill = this->leaf_object;
+            // std::cout << "Intersection detected at leaf, returning true...\n";
+            return true;
+        }
+        return false;
     }
 
     // the ray intersects with current box now we need to test both left and light child and recurse on smaller tval
-    float tminl, tmaxl, tminr, tmaxr;
+    float tminl = std::numeric_limits<float>::lowest();
+    float tmaxl = std::numeric_limits<float>::max(); 
+    float tminr = std::numeric_limits<float>::lowest();
+    float tmaxr = std::numeric_limits<float>::max();
+
+
     bool left_intersects = this->left->intersects(ray, tminl, tmaxl);
     bool right_intersects = this->right->intersects(ray, tminr, tmaxr);
-
+    if(!left_intersects && !right_intersects)
+        return false;
     if (left_intersects && !right_intersects)
-        return this->left->intersectObject(ray, to_fill);
+        return this->left->intersectObject(ray, to_fill, tmin, tmax);
     else if (!left_intersects && right_intersects)
-        return this->right->intersectObject(ray, to_fill);
+        return this->right->intersectObject(ray, to_fill, tmin, tmax);
     
-    // then the only option is they both intersect
-    if(tminl < tminr){
-        return this->left->intersectObject(ray, to_fill);
-    }else{
-        return this->right->intersectObject(ray, to_fill);
+
+    // std::cout << "Both of the boxes intersect. tmin for l: " <<  tminl << ", tmin for r: " << tminr << "\n";
+    // Then we need to test up until the leave for these two
+
+    Object* to_fill_l = nullptr; 
+    Object* to_fill_r = nullptr;
+    
+    tminl = std::numeric_limits<float>::lowest();
+    tmaxl = std::numeric_limits<float>::max(); 
+    tminr = std::numeric_limits<float>::lowest();
+    tmaxr = std::numeric_limits<float>::max();
+
+    bool lintersects = this->left->intersectObject(ray, to_fill_l, tminl, tmaxl);
+    bool rintersects = this->right->intersectObject(ray, to_fill_r, tminr, tmaxr);
+    
+    // std::cout << "Tminl: " << tminl << ", tmaxl: " << tmaxl << ", tminr: " << tminr << ", tmaxr: " << tmaxr << "\n";
+    if(lintersects && rintersects){
+        if(tminl < tminr){
+            tmin = tminl;
+            tmax = tmaxl;
+            to_fill = to_fill_l;
+            return true;
+        }
+        tmin = tminr;
+        tmax = tmaxr;
+        to_fill = to_fill_r;
+        return true;
+    }else if (!lintersects && rintersects)
+    {
+        tmin = tminr;
+        tmax = tmaxr;
+        to_fill = to_fill_r;
+        return true;
+    }else if (lintersects && !rintersects)
+    {
+        tmin = tminl;
+        tmax = tmaxl;
+        to_fill = to_fill_l;
+        return true;
     }
+    return false;
+    
+    
+    
+    
 
 }
