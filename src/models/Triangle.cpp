@@ -51,7 +51,7 @@ float Triangle::Intersects(Ray ray){
 
 }
 
-Vec3 Triangle::getSurfaceNormal(Vec3 location){
+Vec3 Triangle::getSurfaceNormal(Ray r){
     return this->normal;
 }
 
@@ -59,28 +59,50 @@ Triangle::Triangle(){
 
 }
 
-Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3)
+Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm)
 {
     this->material = material;
     this->objectType = objectType;
-    this->v1 = v1;
-    this->v2 = v2;
-    this->v3 = v3;
+
+    this->mesh = nullptr;
+
+    // before setting tm we need to move the center to origin then move back
+    this->tm = new TransformationMatrix();
+
+    // Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
+    // TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
+    // TransformationMatrix* from_center = new TransformationMatrix(center, 't');
+    // *(this->tm) = (*from_center) * (*tm) * (*to_center);
+    *(this->tm) =  (*tm);
     
 
+    this->v1 = this->tm->transform(v1);
+    this->v2 = this->tm->transform(v2);
+    this->v3 = this->tm->transform(v3);
+    
+    Vec3 new_center = (this->v1 +  this->v2 + this->v3 ) / 3.0f;
 
     Vec3 scaled_n = (this->v2-this->v1).cross(this->v3 - this->v1);
+    bool det_negative = this->tm->determinant() < 0;
+    if(det_negative)
+        scaled_n = (this->v3 - this->v1).cross(this->v2-this->v1);
+
+    TransformationMatrix tm_t = this->tm->transpose();
+    TransformationMatrix tm__t_i = tm_t.inverse();
+    scaled_n = tm__t_i.transform(scaled_n);
     this->normal = scaled_n.normalize();
+
     Vec3 minBound;
     Vec3 maxBound;
-    minBound.x = std::min({v1.x, v2.x, v3.x});
-    minBound.y = std::min({v1.y, v2.y, v3.y});
-    minBound.z = std::min({v1.z, v2.z, v3.z});
+    minBound.x = std::min({this->v1.x, this->v2.x, this->v3.x});
+    minBound.y = std::min({this->v1.y, this->v2.y, this->v3.y});
+    minBound.z = std::min({this->v1.z, this->v2.z, this->v3.z});
 
     // Calculate maximum bounds for x, y, z
-    maxBound.x = std::max({v1.x, v2.x, v3.x});
-    maxBound.y = std::max({v1.y, v2.y, v3.y});
-    maxBound.z = std::max({v1.z, v2.z, v3.z});
+    maxBound.x = std::max({this->v1.x, this->v2.x, this->v3.x});
+    maxBound.y = std::max({this->v1.y, this->v2.y, this->v3.y});
+    maxBound.z = std::max({this->v1.z, this->v2.z, this->v3.z});
+
 
     this->min = minBound;
     this->max = maxBound;

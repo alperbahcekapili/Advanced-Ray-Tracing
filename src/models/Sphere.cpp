@@ -2,13 +2,28 @@
 #include "../util/util.h"
 #include <cmath>  // For sqrt function
 
-Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType)
+Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm)
 {
     this->R = R;
     this->center = center;
     this->material = material;
     this->objectType = objectType;
+    this->tm = new TransformationMatrix();
+    Vec3 point_on_sphere = Vec3(center.x + R, center.y, center.z);
+    TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
+    TransformationMatrix* from_center = new TransformationMatrix(center, 't');
+
+    // We apply the same transformation to a point on the sphere then calculate new R
     
+
+    *(this->tm) = (*from_center) * (*tm) * (*to_center);
+    
+    center = this->tm->transform(this->center);
+    this->center = center;
+    
+    Vec3 new_pointon = this->tm->transform(point_on_sphere);
+    R = (new_pointon-center).magnitude();
+    this->R = R;
 
     this->min = Vec3(center.x-R, center.y-R, center.z-R);
     this->max = Vec3(center.x+R, center.y+R, center.z+R);
@@ -76,13 +91,13 @@ float Sphere::Intersects(Ray ray){
     return -1.0;
 }
 
-Vec3 Sphere::getSurfaceNormal(Vec3 location){
-    // surface normal can be calculated via getting normal vector that is in the direction from center to the location
+Vec3 Sphere::getSurfaceNormal(Ray r){
+    float mint = this->Intersects(r);
+    if(mint < 0)
+        return Vec3(-1,-1,-1);
+    Vec3 location = r.locationAtT(mint);
     Vec3 scaledVector = (this->center * -1) + location ;
     Vec3 unitVector = scaledVector.normalize();
-    // if location is inside the sphere then we need to negate the normal
-    // if (getMagnitude(vectorSubstract(this->center , location)) < this->R)
-    //     unitVector = vectorScale(unitVector, -1);
     return unitVector;
 }
 

@@ -11,9 +11,9 @@ public:
     Material* material;
     ObjectType objectType; 
     
-    Sphere(Vec3 center, float R, Material* material, ObjectType objectType);
+    Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm);
     float Intersects(Ray ray) override ;
-    Vec3 getSurfaceNormal(Vec3 location) override;
+    Vec3 getSurfaceNormal(Ray r) override;
     Material* getMaterial() override;
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;

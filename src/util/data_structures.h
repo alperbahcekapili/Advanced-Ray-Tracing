@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <array>
+#include <iostream>
 #include <algorithm>
 
 
@@ -127,4 +128,196 @@ struct Vec3 {
 struct Vec4 {
     float x, y, z, h;
     Vec4(float x = 0, float y = 0, float z = 0, float h = 0) : x(x), y(y), z(z), h(h) {}
+};
+
+
+struct TransformationMatrix {
+    float matrix[4][4];
+
+    // Constructor to initialize the matrix
+    TransformationMatrix() {
+        std::cout << "Inside the constructor...\n";
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                matrix[i][j] = 0.0f;
+    }
+
+    TransformationMatrix(const Vec3 vec, char type) {
+        
+        if(type == 's')
+            for (int i = 0; i < 4; ++i)
+                for (int j = 0; j < 4; ++j)
+                    if(i == 0 && j == 0)
+                        matrix[i][j] = vec.x;
+                    else if(i == 1 && j == 1)
+                        matrix[i][j] = vec.y;
+                    else if(i == 2 && j == 2)
+                        matrix[i][j] = vec.z;
+                    else if (i == 3 && j == 3)
+                        matrix[i][j] = 1;
+                    else
+                        matrix[i][j] = 0;
+        else if (type == 't')
+        {
+            // Setting the translation matrix
+            matrix[0][0] = 1; matrix[0][1] = 0; matrix[0][2] = 0; matrix[0][3] = vec.x;
+            matrix[1][0] = 0; matrix[1][1] = 1; matrix[1][2] = 0; matrix[1][3] = vec.y;
+            matrix[2][0] = 0; matrix[2][1] = 0; matrix[2][2] = 1; matrix[2][3] = vec.z; 
+            matrix[3][0] = 0; matrix[3][1] = 0; matrix[3][2] = 0; matrix[3][3] = 1;
+        }else if (type == 'r')
+        {
+            // Rotation around the x, y, and z axes
+            float cosX = cos(vec.x/90);
+            float sinX = sin(vec.x/90);
+            float cosY = cos(vec.y/90);
+            float sinY = sin(vec.y/90);
+            float cosZ = cos(vec.z/90);
+            float sinZ = sin(vec.z/90);
+
+            // Create individual rotation matrices
+            float rotX[4][4] = {
+                {1,      0,       0,      0},
+                {0, cosX, -sinX,   0},
+                {0, sinX,  cosX,   0},
+                {0,      0,       0,      1}
+            };
+
+            float rotY[4][4] = {
+                { cosY, 0, sinY, 0},
+                {     0, 1,    0, 0},
+                {-sinY, 0, cosY, 0},
+                {     0, 0,    0, 1}
+            };
+
+            float rotZ[4][4] = {
+                {cosZ, -sinZ, 0, 0},
+                {sinZ,  cosZ, 0, 0},
+                {    0,     0, 1, 0},
+                {    0,     0, 0, 1}
+            };
+
+            // Combine the rotations: R = Rz * Ry * Rx
+            // Start with identity matrix for the final rotation
+            float temp[4][4] = {0};
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    temp[i][j] = 0;
+                    for (int k = 0; k < 4; ++k) {
+                        temp[i][j] += rotZ[i][k] * rotY[k][j];
+                    }
+                }
+            }
+
+            // Now multiply by rotX
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    matrix[i][j] = 0;
+                    for (int k = 0; k < 4; ++k) {
+                        matrix[i][j] += temp[i][k] * rotX[k][j];
+                    }
+                }
+            }
+        }
+        
+        
+    }
+    
+    Vec3 transform(const Vec3& vec) const {
+        Vec3 result;
+
+        result.x = matrix[0][0] * vec.x + matrix[0][1] * vec.y + matrix[0][2] * vec.z + matrix[0][3] * 1.0f;
+        result.y = matrix[1][0] * vec.x + matrix[1][1] * vec.y + matrix[1][2] * vec.z + matrix[1][3] * 1.0f;
+        result.z = matrix[2][0] * vec.x + matrix[2][1] * vec.y + matrix[2][2] * vec.z + matrix[2][3] * 1.0f;
+
+        return result;
+    }
+
+
+    // Function to multiply two matrices
+    TransformationMatrix operator*(TransformationMatrix other) const {
+        TransformationMatrix result;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.matrix[i][j] = 0.0f;
+                for (int k = 0; k < 4; ++k) {
+                    result.matrix[i][j] += matrix[i][k] * other.matrix[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    // Function to add two matrices
+    TransformationMatrix operator+( TransformationMatrix other) const {
+        TransformationMatrix result;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.matrix[i][j] = matrix[i][j] + other.matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    // Function to transpose the matrix
+    TransformationMatrix transpose() const {
+        TransformationMatrix result;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.matrix[j][i] = matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    // Function to compute the determinant of the matrix
+    float determinant() const {
+        float det = 0.0f;
+        for (int i = 0; i < 4; ++i) {
+            det += (matrix[0][i] * cofactor(0, i));
+        }
+        return det;
+    }
+
+    // Function to compute the cofactor of an element
+    float cofactor(int row, int col) const {
+        float minor[3][3];
+        int minorRow = 0, minorCol = 0;
+
+        // Fill in the 3x3 minor matrix by skipping the specified `row` and `col`
+        for (int i = 0; i < 4; ++i) {
+            if (i == row) continue;
+            minorCol = 0;
+            for (int j = 0; j < 4; ++j) {
+                if (j == col) continue;
+                minor[minorRow][minorCol] = matrix[i][j];
+                minorCol++;
+            }
+            minorRow++;
+        }
+
+        // Calculate the cofactor, applying the correct sign
+        return determinant3x3(minor) * ((row + col) % 2 == 0 ? 1 : -1);
+    }
+
+    // Function to compute the determinant of a 3x3 matrix
+    float determinant3x3(const float mat[3][3]) const {
+        return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
+             - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
+             + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
+    }
+
+
+    
+    // Function to compute the inverse of the matrix
+    TransformationMatrix inverse() const {
+        float det = determinant();
+        TransformationMatrix result;
+
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.matrix[j][i] = cofactor(i, j) / det;
+            }
+        }
+        return result;
+    }
 };

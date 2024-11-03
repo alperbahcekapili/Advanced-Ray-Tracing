@@ -21,13 +21,16 @@ Vec3  Shader::radianceAt(Vec3  location, Object* intersectingObject, int interse
     Vec3  radiance(0,0,0);
     for (int i = 0; i < this->scene->numlights; i++)
         {
+
+            
             Ray lightRay = createRayFrom(this->scene->lights[i]->location, location);
+            
             bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
             if (!ligth_hits)
                 continue;
-
+            Vec3 n = intersectingObject->getSurfaceNormal(lightRay);
             // If we got so far then it means ith light source hits this surface thus we can calculate illumination
-            float cosTheta = lightRay.d.dot(intersectingObject->getSurfaceNormal(location));
+            float cosTheta = lightRay.d.dot(n);
             Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
             radiance = irradiance + radiance;
         }
@@ -42,6 +45,12 @@ This function calculates refraction and transmission
 Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, int remaining_hop, int intersect_index){
     float intersecting_t = target_obj->Intersects(r);
     Vec3  intersecting_location = r.locationAtT(intersecting_t);
+
+
+    // The reflected ray direction is same in conductor and dielectric types
+    Vec3  n = target_obj->getSurfaceNormal(r);
+
+
 
     Vec3  diffuse_intensity = this->diffuseShadingAt(intersecting_location, target_obj, intersect_index);
     Vec3  ambient_intensity = this->ambientShadingAt(intersecting_location, target_obj, intersect_index);
@@ -62,9 +71,6 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
     Vec3 reflected_return(0,0,0);
     Vec3 transmitted_return(0,0,0);
     Vec3 reflected_return2(0,0,0);
-
-    // The reflected ray direction is same in conductor and dielectric types
-    Vec3  n = target_obj->getSurfaceNormal(intersecting_location);
     // std::cout << "n: " << n.x  << ", "<< n.y  << ", " << n.z  << "\n";
     float cos_theta = (r.d * -1).dot(n);
     // costhetat should not be negative here
@@ -116,7 +122,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
         Ray outgoing_ray = Ray(inside_hit_location, transmitted_ray.d);
         // now let us calculate attenuation magnitude
 
-        Vec3 inside_normal = target_obj->getSurfaceNormal(inside_hit_location);
+        Vec3 inside_normal = target_obj->getSurfaceNormal(transmitted_ray);
         float inside_cos = (transmitted_ray.d * -1).dot(inside_normal); // we negate the normal TODO need remove negate ?
         float before_sqrt_internal = 1-(pow(n2/n1, 2)*(1-pow(inside_cos,2)));
         outgoing_ray = Ray(inside_hit_location, (1+this->scene->shadow_ray_eps)*(transmitted_ray.d+n*inside_cos)*(n2/n1) - n*sqrt(before_sqrt_internal));
@@ -152,7 +158,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
             coeff = coeff * ft ;
             // std::cout << "\n ft: " << ft << "\n";
             // std::cout << "I am dielectric, I multiply transmission recursion output with: " << coeff.x  << "," << coeff.y  << "," << coeff.z  << "\n" ;
-            transmitted_return = refractionTransmission(outgoing_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index) * coeff;
+            transmitted_return = refractionTransmission(outgoing_ray, scene, tofill, remaining_hop-1, next_intersecting_index) * coeff;
             // std::cout << "Transmission output: " << transmitted_return.x << ", " << transmitted_return.y << ", " << transmitted_return.z << "\n";
         }
 
@@ -169,7 +175,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
             Vec3  coeff = Vec3(fr,fr,fr);
             // printf("Fr: %f\n", fr);
             // std::cout << "I am dielectric, I multiply reflection recursion output with: " << coeff.x  << "," << coeff.y  << "," << coeff.z  << "\n" ;
-            reflected_return = refractionTransmission(reflected_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index) * coeff;
+            reflected_return = refractionTransmission(reflected_ray, scene, tofill2, remaining_hop-1, next_intersecting_index) * coeff;
         }
         return pixel_val + transmitted_return + reflected_return ;
     }
@@ -200,7 +206,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
         // std::cout << "I am conductor fr: " << fr << "\n";
         // std::cout << "I am conductor , mirror reflectance: " << target_obj->getMaterial()->mirrorReflectance.x  << "," << target_obj->getMaterial()->mirrorReflectance.y  << ","<< target_obj->getMaterial()->mirrorReflectance.z  << "\n";
         // std::cout << "I am conductor, I multiply reflection recursion output with: " << coeff.x  << "," << coeff.y  << "," << coeff.z  << "\n" ;
-        return pixel_val + (refractionTransmission(reflected_ray, scene, this->scene->sceneObjects[next_intersecting_index], remaining_hop-1, next_intersecting_index) * coeff);
+        return pixel_val + (refractionTransmission(reflected_ray, scene, tofill, remaining_hop-1, next_intersecting_index) * coeff);
             
     }
 
@@ -208,14 +214,6 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
 }
 
 Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int remaining_hop, int intersect_index){
-    /*
-    Sends recursive rays in order to make reflection. First Calculates if given ray hits an object if so returns coef * {color of given location}
-
-    1. move ray a little to its direction
-    2. Find the intersection
-    3. Calculate the shading at location
-    4. return coef*calculation with remaining_hop decremented
-    */
     Vec3  diffuse_intensity = this->diffuseShadingAt(r.locationAtT(target_obj->Intersects(r)), target_obj, intersect_index);
     Vec3  ambient_intensity = this->ambientShadingAt(r.locationAtT(target_obj->Intersects(r)), target_obj, intersect_index);
     Vec3  specular_intensity = this->specularShadingAt(r, r.locationAtT(target_obj->Intersects(r)) ,scene->sceneObjects[intersect_index], intersect_index);
@@ -227,17 +225,15 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
         // std::cout << "Target is dielectric \n";
         return refractionTransmission(r, scene, target_obj, remaining_hop-1, intersect_index);
     }
-                    
-    
+                
     if (remaining_hop == 0 || target_obj->getMaterial()->materialType != MaterialType::Mirror){
         // std::cout << "I return: " << current_pixel_val.x  << ", " << current_pixel_val.y  << ", " << current_pixel_val.z  << "\n";
         return current_pixel_val;
     }
 
     // std::cout << "Target is mirror!";
-
     
-    Vec3  n = scene->sceneObjects[intersect_index]->getSurfaceNormal(r.locationAtT(target_obj->Intersects(r)));
+    Vec3  n = scene->sceneObjects[intersect_index]->getSurfaceNormal(r);
     // TODO: is this r correct ? 
     float cos_theta = n.dot( r.d * -1);
     Ray new_r = Ray(r.locationAtT(target_obj->Intersects(r)),  r.d + ( n * 2 * cos_theta));
@@ -320,7 +316,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
         // printf("Light does not hit obejct\n");
         continue;}
 
-    float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(location) );
+    float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
     if (cosTheta < 0)
         cosTheta = 0;
     Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
@@ -355,7 +351,7 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
         if (!ligth_hits)
             continue;
 
-        Vec3  surface_normal = intersectingObject->getSurfaceNormal(location);
+        Vec3  surface_normal = intersectingObject->getSurfaceNormal(lightRay);
         // std::cout <<  "Lightray in specular " <<lightRay.d.x  << "," << lightRay.d.z  << "," << lightRay.d.z  << "\n" ;
         
         Vec3  h = (cameraRay.d + lightRay.d).normalize();

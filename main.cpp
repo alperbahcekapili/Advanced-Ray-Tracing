@@ -115,24 +115,24 @@ int main(int argc, char const *argv[])
 
                // std::cout << i << "," << j << "\n";
                 
-                Object** objList = curscene.sceneObjects;
-                Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
-                Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), objList[intersectingObjIndex], intersectingObjIndex);
-                Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) ,objList[intersectingObjIndex], intersectingObjIndex);
+                
+                Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
                 // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
                 
                 Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
                 
-                if(objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Mirror){
-                    Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,objList[intersectingObjIndex], 6, intersectingObjIndex);
+                if(tofill->getMaterial()->materialType == MaterialType::Mirror){
+                    Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
                     pixel_val = specular_reflection + pixel_val;
                     // std::cout << "Type is mirror \n";
                     // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
 
 
                 }
-                else if (objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Dielectric || objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Conductor){
-                    Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, objList[intersectingObjIndex], 6, intersectingObjIndex);
+                else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
+                    Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, tofill, 6, intersectingObjIndex);
                     pixel_val = refrac_transmission + pixel_val;
                     // std::cout << "refrac_transmission: \n" << refrac_transmission.x << ", " << refrac_transmission.y << ", " << refrac_transmission.z << "\n";
 

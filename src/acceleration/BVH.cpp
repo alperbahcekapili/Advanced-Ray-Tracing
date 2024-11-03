@@ -155,7 +155,7 @@ bool BVH::intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax){
         // if current node is leaf then return obj
         // if current bbox intersects with the object then we need to test wheter ray intersects with the object
         float tval = this->leaf_object->Intersects(ray);
-        if(tval != -1){
+        if(tval > 0){
             tmin=tval;
             to_fill = this->leaf_object;
             // std::cout << "Intersection detected at leaf, returning true...\n";

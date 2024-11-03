@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -Wextra -pedantic -ansi -O3 -g  -std=c++11   
-# CXXFLAGS = -Wall -Wextra -pedantic -ansi   -std=c++11 
+# CXXFLAGS = -Wall -Wextra -pedantic -ansi -O3 -g  -std=c++11   
+CXXFLAGS = -Wall -Wextra -pedantic -ansi -g -O0   -std=c++11 
 # Define the source files
 MAIN = main.cpp
 
