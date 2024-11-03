@@ -3,8 +3,10 @@
 #include <vector>
 #include <cassert>
 #include "../models/Ray.h"
+#include "../models/Object.h"
 #include "util.h"
 #include <math.h>
+
 using namespace std;
 
 #define assertm(exp, msg) assert(((void)msg, exp))
@@ -34,3 +36,13 @@ Ray createRayFrom(Vec3 start, Vec3 destination){
     return Ray(start, scaledRay);
 }
 
+
+
+void printObjectList(Object** l, int len){
+    for (size_t i = 0; i < len; i++)
+    {
+        std::cout << i << ": " <<l[i]->getCenter().x << ", " << l[i]->getCenter().y << ", " << l[i]->getCenter().z << "\n";
+    }
+    std::cout << "\n\n";
+    
+}

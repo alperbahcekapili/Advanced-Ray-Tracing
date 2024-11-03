@@ -21,6 +21,7 @@ public:
     ObjectType objectType;
     Vec3 min;
     Vec3 max;
+    int id; // Used as unqiue id 
     virtual float Intersects(Ray ray)  = 0;
     virtual Vec3 getSurfaceNormal(Vec3 location) = 0;
     virtual ~Object() = default ;

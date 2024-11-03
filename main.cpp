@@ -37,11 +37,21 @@ int main(int argc, char const *argv[])
 
     std::vector<Scene*> scenes = loadFromXml(fp);
 
-    BVH* bvh = new BVH(scenes.at(0)->sceneObjects, scenes.at(0)->numObjects, 0);
-    bvh->visualize(0);
+    
     std::cout << "xml loaded\n";
     for (size_t i = 0; i < scenes.size(); i++)
     {   
+
+        BVH* bvh = new BVH(scenes.at(i)->sceneObjects, scenes.at(i)->numObjects, 0);
+        for (int j = 0; j < scenes.at(i)->numObjects; j++)
+        {
+            scenes.at(i)->sceneObjects[j]->id = j;
+        }
+        // bvh->visualize(0);
+        scenes.at(i)->bvh = bvh;
+
+
+
         Scene curscene = *(scenes.at(i));
         Shader shader = Shader(
             scenes.at(i)
@@ -57,7 +67,7 @@ int main(int argc, char const *argv[])
         {   
             image[i] = new Vec3[imgHeight];
             
-            printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
+            //  printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
 
             for (int j = 0; j < imgHeight; j++)
             {
@@ -73,34 +83,15 @@ int main(int argc, char const *argv[])
                 // add fov in future to exclude object that are too far away from the camera
                 float minTValue = 9999999;
                 float maxTValue = -1;
-                int intersectingObjIndex = -1;
                 
-                // for (int k = 0; k < curscene.numObjects; k++)
-                // {
-                //     float tvalue = curscene.sceneObjects[k]->Intersects(cameraRay);
-                //     // printf("Intersecing t val%f\n", tvalue);
-                //     if (tvalue > 0 && tvalue < minTValue){
-                //         minTValue = tvalue;
-                //         intersectingObjIndex = k;
-                //     }
-                // }
+
+
                 Object* tofill = nullptr;
                 bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
                 if(!intersected)
                 continue;
-
-                // TODO: replace get intersecting obj index here
-                std::cout << tofill->getMaterial()->materialType << "\n";
-
-                for (int i = 0; i < curscene.numObjects; i++)
-                {
-                    if(curscene.sceneObjects[i]->getCenter() == tofill->getCenter())
-                        intersectingObjIndex = i;
-                }
-
-                if(intersectingObjIndex == -1)
-                    std::cout << "There is a problem with indexing... \n";
-                
+                int intersectingObjIndex = tofill -> id;
+               
 
                 // std::cout << intersectingObjIndex << "\n";
 
@@ -135,6 +126,10 @@ int main(int argc, char const *argv[])
                 if(objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Mirror){
                     Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,objList[intersectingObjIndex], 6, intersectingObjIndex);
                     pixel_val = specular_reflection + pixel_val;
+                    // std::cout << "Type is mirror \n";
+                    // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
+
+
                 }
                 else if (objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Dielectric || objList[intersectingObjIndex]->getMaterial()->materialType == MaterialType::Conductor){
                     Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, objList[intersectingObjIndex], 6, intersectingObjIndex);

@@ -17,3 +17,7 @@ Vec3 clipValues(Vec3 v, float clip_val);
 float det3x3(float m[3][3]);
 
 #endif // VECTOR_UTILS_H
+
+
+#include "../models/Object.h"
+void printObjectList(Object** l, int len);

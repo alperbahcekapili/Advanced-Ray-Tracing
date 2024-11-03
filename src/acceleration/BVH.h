@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../models/Object.h"
 #include "../util/data_structures.h"
 

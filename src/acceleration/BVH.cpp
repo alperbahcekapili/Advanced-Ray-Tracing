@@ -3,12 +3,13 @@
 #include <limits>
 #include <utility> // For std::swap
 #include <vector>
-
+#include "../util/util.h"
 
 void swap(Object** list, int i, int j) {
     Object* temp = list[i];  // Store the pointer in a temp variable
     list[i] = list[j];           // Assign the value of b to a
     list[j] = temp;        // Assign the temp variable to b
+    // std::cout << "In swapping function i:" << i << ", j: " << j << "\n";
 }
 
 
@@ -34,13 +35,14 @@ int BVH::partition(Object** objects, int low, int high, int axis) {
                              
         if (currentValue < pivotValue) {
             i++; // Increment index of smaller element
+            //printObjectList(objects, high - low);
             swap(objects, i, j); // Use custom swap
+            //printObjectList(objects, high - low);
 
             
         }
     }
-    swap(objects, i, high); // Use custom swap for pivot
-
+    swap(objects, i + 1, high); // Use custom swap for pivot
     return i + 1; // Return the index of the pivot
 }
 
@@ -51,8 +53,8 @@ BVH::BVH(Object** objects, int num_objects, int depth)
     this->is_leaf = false;
 
      // Calculate bounds for current node
-    min = calculateBounds(objects, num_objects, false);
-    max = calculateBounds(objects, num_objects, true);
+    this->min = calculateBounds(objects, num_objects, false);
+    this->max = calculateBounds(objects, num_objects, true);
 
     // Base case: create a leaf node if there's only one object
     if (num_objects == 1){
@@ -67,6 +69,7 @@ BVH::BVH(Object** objects, int num_objects, int depth)
     int axis = depth % 3;
 
     // Sort objects by their center along the splitting axis using QuickSort
+    
     quickSort(objects, 0, num_objects - 1, axis);
 
 
@@ -76,7 +79,8 @@ BVH::BVH(Object** objects, int num_objects, int depth)
     // Recursively build the left and right subtrees
     left = new BVH(objects, mid, depth + 1);
     right = new BVH(objects + mid, num_objects - mid, depth + 1);
-
+    
+    
 
 }
 
@@ -90,7 +94,7 @@ void BVH::visualize(int level) const {
     std::string indent(level * 4, ' '); // Indent by 4 spaces per level
 
     // Print the bounding box of the current node
-    std::cout << indent << "Node Bounding Box: ["
+    std::cout << indent << "Is leaf: " << this->is_leaf <<", Node Bounding Box: ["
               << "Min: (" << min.x << ", " << min.y << ", " << min.z << "), "
               << "Max: (" << max.x << ", " << max.y << ", " << max.z << ")]"
               << std::endl;

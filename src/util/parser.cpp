@@ -394,14 +394,18 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     for (size_t i = 0; i < meshes.size(); i++)
     {
         objlist[i] = meshes.at(i);
+        objlist[i]->id = i;
     }
     for (size_t i = 0; i < spheres.size(); i++)
     {
         objlist[i+meshes.size()] = spheres.at(i);
+        objlist[i+meshes.size()]->id = i+meshes.size();
     }
     for (size_t i = 0; i < triangles.size(); i++)
     {
         objlist[i+meshes.size()+spheres.size()] = triangles.at(i);
+        objlist[i+meshes.size()+spheres.size()]->id = i+meshes.size()+spheres.size();
+
     }
 
     std::vector<Scene*> scenes;

@@ -9,7 +9,7 @@
            <Position>0 0 0</Position>
            <Gaze>0 0 -1</Gaze>
            <Up>0 1 0</Up>
-           <NearPlane>-1 1 -1 1 10</NearPlane>
+           <NearPlane>-1 1 -1 1</NearPlane>
            <NearDistance>10</NearDistance>
            <ImageResolution>720 720</ImageResolution>
            <ImageName>spheres_mirror.png</ImageName>
