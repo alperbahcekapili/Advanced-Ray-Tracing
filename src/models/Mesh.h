@@ -15,6 +15,7 @@ public:
     Object* faces;
     Material* material;
     ObjectType objectType;
+    TransformationMatrix* tm;
     int num_faces;
     Object* last_intersected_obj;
     Mesh(Material* material, ObjectType objectType,  Vec3* faces, int numfaces, TransformationMatrix* tm);
@@ -27,6 +28,7 @@ public:
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;
     Vec3  getCenter() override;
+    Vec3 getMotionBlur() override;
     Vec3 center;
 
 };

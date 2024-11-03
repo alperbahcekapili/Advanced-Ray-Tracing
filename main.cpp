@@ -18,6 +18,7 @@
 
 #include <cmath> // For fmod
 #include "src/models/Material.h"
+#include <stdio.h>
 
 
 template <typename T>
@@ -68,23 +69,30 @@ int main(int argc, char const *argv[])
         {
             image[i] = new Vec3[imgHeight];
 
-            printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
+            // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
 
             for (int j = 0; j < imgHeight; j++)
             {
 
             total_progress++;
                 
-                // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
                 
-                // shoot ray from camera to ImagePane
-                Ray cameraRay = curscene.imagePane->rayFromCamera(i, j);
+                // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
+                Vec3 cumulative_pixel = Vec3(0,0,0);
+                for (int rayindex = 0; rayindex < curscene.camera->numsamples; rayindex++)
+                {
+                    // shoot ray from camera to ImagePane
+                Ray cameraRay = curscene.imagePane->rayFromCamera(i, j, rayindex);
 
                 // now iterate over the objects to find first object that hits this ray
                 // add fov in future to exclude object that are too far away from the camera
                 float minTValue = 9999999;
                 float maxTValue = -1;
 
+                if(i == 100  && j == 100){
+                    int abc = 0;
+                    std::cout << "a" << std::endl;
+                }
 
                 Object* tofill = nullptr;
                 bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
@@ -108,12 +116,25 @@ int main(int argc, char const *argv[])
                     continue;
                 }
 
-               // std::cout << i << "," << j << "\n";
+            //    // std::cout << i << "," << j << "\n";
+            //     if(tofill->getMotionBlur().z == 4.0){
+            //         int abc = -1;
+            //         printf("%d", abc);
 
+            //     }
+                    if(i==99 && j==134){
+                        int abc = -1;
+                        printf("%d", abc);
+                    }
 
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
+
+                // if(tofill->getMotionBlur().z!= 0){
+                //     int b = -1;
+                //     printf("%d", b);
+                // }
                 // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
 
                 Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
@@ -122,7 +143,6 @@ int main(int argc, char const *argv[])
                     Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
                     pixel_val = specular_reflection + pixel_val;
                     // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
-
 
                 }
                 else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
@@ -138,11 +158,16 @@ int main(int argc, char const *argv[])
                 // std::cout << "Specular Intensity: \n" << specular_intensity.x << ", " << specular_intensity.y << ", " << specular_intensity.z << "\n";
 
 
-
-                image[i][j] = clipValues(pixel_val, 255.0);
+                cumulative_pixel = cumulative_pixel + (pixel_val/curscene.camera->numsamples);
+                
                 // std::cout << image[i][j].x << ", " << image[i][j].y << ", " << image[i][j].z << "\n";
 
                 // fg_pixel_count++;
+                }
+
+                image[i][j] = clipValues(cumulative_pixel, 255.0);
+                
+                
 
             }
 

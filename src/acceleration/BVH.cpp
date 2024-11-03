@@ -114,8 +114,8 @@ void BVH::visualize(int level) const {
 
 bool BVH::intersects(Ray ray, float& tNear, float& tFar){
     // Initialize near and far intersection distances
-    tNear = std::numeric_limits<float>::max();
-    tFar = std::numeric_limits<float>::lowest();
+    tNear = std::numeric_limits<float>::lowest();
+    tFar = std::numeric_limits<float>::max();
 
     // Iterate over each axis (x, y, z)
     for (int axis = 0; axis < 3; ++axis) {
@@ -136,8 +136,8 @@ bool BVH::intersects(Ray ray, float& tNear, float& tFar){
         if (t2 < t1) std::swap(t1, t2);
 
         // Update tNear and tFar for this axis
-        tNear = std::min(tNear, t1);
-        tFar = std::max(tFar, t2);
+        tNear = std::max(tNear, t1);
+        tFar = std::min(tFar, t2);
 
         
     }

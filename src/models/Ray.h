@@ -15,7 +15,9 @@ class Ray{
     Vec3 locationAtT(float t);
     Vec3 o;
     Vec3 d;
-    
+    Vec3** getTangentVectors();
+    float time;
+
     private:
 
 };

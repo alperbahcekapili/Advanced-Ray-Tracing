@@ -60,6 +60,9 @@ Vec3 Triangle::getSurfaceNormal(Ray r){
 Triangle::Triangle(){
 
 }
+Vec3 Triangle::getMotionBlur(){
+    return this->motionBlur;
+}
 
 Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm, Mesh* mesh)
 {
@@ -97,9 +100,6 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
     if(det_negative)
         scaled_n = (this->v3 - this->v1).cross(this->v2-this->v1);
 
-    TransformationMatrix tm_t = this->tm->transpose();
-    TransformationMatrix tm__t_i = tm_t.inverse();
-    scaled_n = tm__t_i.transform(scaled_n);
     this->normal = scaled_n.normalize();
 
     Vec3 minBound;

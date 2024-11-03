@@ -4,6 +4,7 @@
 #include <cassert>
 #include "../models/Ray.h"
 #include "../models/Object.h"
+#include "../lights/Light.h"
 #include "util.h"
 #include <math.h>
 
@@ -36,6 +37,11 @@ Ray createRayFrom(Vec3 start, Vec3 destination){
     return Ray(start, scaledRay);
 }
 
+
+Ray createLightRay(Light* light, Vec3 destination){
+    Vec3 start = light->getPointOn();
+    return createRayFrom(start, destination);
+}
 
 
 void printObjectList(Object** l, int len){

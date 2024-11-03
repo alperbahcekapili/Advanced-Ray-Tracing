@@ -9,17 +9,27 @@ TransformationMatrix* ObjectInstance::gettm() {
 }
 
 
-ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm, Material* material)
+Vec3 ObjectInstance::getMotionBlur(){
+    return this->motionBlur;
+}
+
+
+
+
+ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm, Material* material, Vec3 motionBlur)
 {
-this->parent = parent;
-this->reset = reset;
-std::cout << "I am creating an instance...";
-this->tm = new TransformationMatrix();
-this->material = material;
-if(reset){
-    *(this->tm) = *(tm) * (parent->gettm()->inverse()) ;
-}else
-*(this->tm) = *(tm);
+    this->parent = parent;
+    this->reset = reset;
+    this->motionBlur.x = motionBlur.x;
+    this->motionBlur.y = motionBlur.y;
+    this->motionBlur.z = motionBlur.z;
+    std::cout << "I am creating an instance...";
+    this->tm = new TransformationMatrix();
+    this->material = material;
+    if(reset){
+        *(this->tm) = *(tm) * (parent->gettm()->inverse()) ;
+    }else
+    *(this->tm) = *(tm);
 
 
 
@@ -54,10 +64,6 @@ if(reset){
         newMax.z = std::max(newMax.z, transformed.z);
     }
 
-    // this->min = {-5,-5,-5};
-    // this->max = {5,5,5};
-
-
     this->min.x = newMin.x;
     this->min.y = newMin.y;
     this->min.z = newMin.z;
@@ -65,6 +71,8 @@ if(reset){
     this->max.y = newMax.y;
     this->max.z = newMax.z;
 
+
+    std::cout << "My top coordinates (MMesh Instance): " << this->max.x << ", " << this->max.y << ", " << this->max.z << "\n";
 
 }
 

@@ -15,5 +15,4 @@ struct Face {
     std::vector<int> vertex_indices;
 };
 
-std::vector<Vec3> read_binary_ply(const std::string& filename);
-void read_ascii_ply(const std::string& filename);
+std::vector<Vec3> read_ply(const std::string& filename);

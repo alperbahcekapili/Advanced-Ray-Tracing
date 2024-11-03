@@ -1,4 +1,4 @@
-
+#include <chrono>
 
 #include "Mesh.h"
 #include "../util/util.h"
@@ -71,7 +71,18 @@ float Mesh::Intersects(Ray ray){
 // if a face of mesh intersects with the  ray return that
 float mint, maxt;
 Object* tofill;
+
+
+auto start = std::chrono::high_resolution_clock::now();
 bool intersects = this->bvh_faces->intersectObject(ray, tofill, mint, maxt);
+auto end = std::chrono::high_resolution_clock::now();
+
+// Calculate duration
+std::chrono::duration<double> duration = end - start;
+
+// Print result
+// std::cout << "Function took " << duration.count() << " seconds." << std::endl;
+
     // std::cout << "Mint for mesh: " << mint << ", Intersecting face index: " << intersecting_face_index <<"\n";
 if(intersects){
     this->last_intersected_obj = tofill;
@@ -84,6 +95,9 @@ TransformationMatrix* Mesh::gettm() {
     return this->tm;
 }
 
+Vec3 Mesh::getMotionBlur(){
+    return this->motionBlur;
+}
 
 Vec3 Mesh::getSurfaceNormal(Ray r) {
     // get closest triangle and calculate normal of that triangle

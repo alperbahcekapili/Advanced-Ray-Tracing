@@ -19,7 +19,7 @@ public:
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;
     Vec3  getCenter() override;
-
+Vec3 getMotionBlur() override;
     
     
 };

@@ -8,6 +8,7 @@
 #include "../models/Camera.h"
 #include "../lights/Light.h"
 #include "../lights/PointLight.h"
+#include "../lights/AreaLight.h"
 #include "../models/Material.h"
 #include "../models/Mesh.h"
 #include "../models/Sphere.h"
@@ -43,7 +44,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     std::vector<Camera*> cameras;
 
     Vec3 ambient_light(0, 0, 0);
-    std::vector<PointLight*> lights;
+    std::vector<Light*> lights;
     Vec3 light_position(0, 0, 0);
     Vec3 light_intensity(0, 0, 0);
 
@@ -147,6 +148,9 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
     while (element)
     {
+        float numsamples;
+        float focus_distance=-1;
+        float aperture_size=-1;
         tinyxml2::XMLElement* child = element->FirstChildElement("Position");
         stream << child->GetText() << std::endl;
         child = element->FirstChildElement("Gaze");
@@ -157,21 +161,41 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream << child->GetText() << std::endl;
         child = element->FirstChildElement("NearDistance");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("ImageResolution");
-        stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("ImageName");
-        stream << child->GetText() << std::endl;
 
         stream >>  cam_position.x >> cam_position.y >> cam_position.z;
         stream >> cam_gaze.x >> cam_gaze.y >> cam_gaze.z;
         stream >> cam_up.x >> cam_up.y >> cam_up.z;
         stream >> cam_near_plane.x >> cam_near_plane.y >> cam_near_plane.z >> cam_near_plane.h;
         stream >> cam_near_distance;
+
+
+        child = element->FirstChildElement("FocusDistance");
+        if(child){
+            stream << child->GetText() << std::endl;
+            stream >> focus_distance;
+            child = element->FirstChildElement("ApertureSize");
+            stream << child->GetText() << std::endl;
+            stream >> aperture_size;
+        }
+
+        child = element->FirstChildElement("ImageResolution");
+        stream << child->GetText() << std::endl;
+        child = element->FirstChildElement("NumSamples");
+        if(child)
+            stream << child->GetText() << std::endl;
+        else
+            stream << "1" << std::endl;
+        child = element->FirstChildElement("ImageName");
+        stream << child->GetText() << std::endl;
+
+        
+        
         stream >> img_width >> img_height;
+        stream >> numsamples;
         stream >> camera_name;
         // max t hardcoded
         Camera* camera = new Camera(
-            cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name
+            cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name, numsamples, focus_distance, aperture_size
         );
         cameras.push_back(camera);
         element = element->NextSiblingElement("Camera");
@@ -182,22 +206,49 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     tinyxml2::XMLElement* child = element->FirstChildElement("AmbientLight");
     stream << child->GetText() << std::endl;
     stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;
-    element = element->FirstChildElement("PointLight");
+    auto lchild = element->FirstChildElement("PointLight");
 
 
-    while (element)
+    while (lchild)
     {
-        child = element->FirstChildElement("Position");
+        child = lchild->FirstChildElement("Position");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("Intensity");
+        child = lchild->FirstChildElement("Intensity");
         stream << child->GetText() << std::endl;
 
         stream >> light_position.x >> light_position.y >> light_position.z;
         stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
-        PointLight* l = new PointLight(light_intensity, light_position);
+        Light* l = new PointLight(light_intensity, light_position);
         lights.push_back(l);
-        element = element->NextSiblingElement("PointLight");
+        lchild = lchild->NextSiblingElement("PointLight");
     }
+
+
+
+    element = element->FirstChildElement("AreaLight");
+    while (element)
+    {
+        Vec3 areal_normal ;
+        float areal_size;
+        child = element->FirstChildElement("Position");
+        stream << child->GetText() << std::endl;
+        child = element->FirstChildElement("Normal");
+        stream << child->GetText() << std::endl;
+        child = element->FirstChildElement("Radiance");
+        stream << child->GetText() << std::endl;
+        child = element->FirstChildElement("Size");
+        stream << child->GetText() << std::endl;
+
+        stream >> light_position.x >> light_position.y >> light_position.z;
+        stream >> areal_normal.x >> areal_normal.y >> areal_normal.z;
+        stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
+        stream >> areal_size;
+        Light* l = new AreaLight(areal_size, light_position, areal_normal, light_intensity);
+        lights.push_back(l);
+        element = element->NextSiblingElement("AreaLight");
+    }
+
+
 
 
     element = root->FirstChildElement("Materials");
@@ -221,20 +272,17 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
         child = element->FirstChildElement("AmbientReflectance");
         stream << child->GetText() << std::endl;
-
         child = element->FirstChildElement("DiffuseReflectance");
         stream << child->GetText() << std::endl;
         child = element->FirstChildElement("SpecularReflectance");
         stream << child->GetText() << std::endl;
 
 
-        //
         child = element->FirstChildElement("RefractionIndex");
         if(child)
             stream << child->GetText() << std::endl;
         else
             stream << 0 << std::endl;
-
 
         child = element->FirstChildElement("AbsorptionCoefficient");
         if (child)
@@ -255,13 +303,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }else{
             stream << "0 0 0 \n" << std::endl;
         }
-        child = element->FirstChildElement("PhongExponent");
-        if(child)
-        stream << child->GetText() << std::endl;
-        else
-        stream << 1 << std::endl;
-
-
+        
         stream >> ambient_reflectance.x >> ambient_reflectance.y >> ambient_reflectance.z;
         stream >> diffuse_reflectance.x >> diffuse_reflectance.y >> diffuse_reflectance.z;
         stream >> specular_reflectance.x >>  specular_reflectance.y >>  specular_reflectance.z;
@@ -270,8 +312,24 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream >> absorption_index;
         stream >> mirror_reflectance.x >> mirror_reflectance.y>> mirror_reflectance.z;
         
+
+        float roughness = 0;
+        child = element->FirstChildElement("Roughness");
+        if(child){
+            stream << child->GetText() << std::endl;
+            stream >> roughness;
+        }
+
+
+        child = element->FirstChildElement("PhongExponent");
+        if(child)
+        stream << child->GetText() << std::endl;
+        else
+        stream << 1 << std::endl;
+
+
         stream >> phong_exponent;
-        Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficient);
+        Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficient, roughness);
         materials.push_back(material);
         element = element->NextSiblingElement("Material");
     }
@@ -309,7 +367,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         rotate_elem = rotate_elem->NextSiblingElement("Rotation");
     }}
     
-    
+    stream.clear();
+    stream.str("");
 
     element = root->FirstChildElement("VertexData");
     stream << element->GetText() << std::endl;
@@ -331,6 +390,17 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream << tmp << std::endl;
         stream >> mesh_material_id;
         mesh_material = materials.at(mesh_material_id-1);
+
+        Vec3 motionBlur;
+        child = element->FirstChildElement("MotionBlur");
+        if(child){
+            stream << child->GetText();
+            stream >> motionBlur.x;
+            stream >> motionBlur.y;
+            stream >> motionBlur.z;
+        }
+
+        
 
         std::vector<TransformationMatrix*> tms;
         child = element->FirstChildElement("Transformations");
@@ -364,7 +434,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }
             
         
-        TransformationMatrix* resulting_tm_copy;
+        TransformationMatrix* resulting_tm_copy ;
         child = element->FirstChildElement("Faces");
         stream.clear();
         int numfaces;
@@ -382,7 +452,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             }
             // Construct the new path: part before the first '/' + '/' + new filename
             plyFilePath = filepath.substr(0, firstSlashPos + 1) + plyFilePath;
-            std::vector<Vec3> tmp_l = read_binary_ply(plyFilePath);
+            std::vector<Vec3> tmp_l = read_ply(plyFilePath);
             mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end());
 		}
 		else
@@ -411,6 +481,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }
         mesh_numfaces = int(mesh_faces.size()/3);
         Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces, resulting_tm);
+
         meshes.push_back(m);
 
         mesh_faces.clear();
@@ -590,6 +661,18 @@ while(element){
     stream >> mesh_material_id;
     mesh_material = materials.at(mesh_material_id-1);
 
+
+    Vec3 motionBlur(0,0,0);
+    child = element->FirstChildElement("MotionBlur");
+    if(child){
+        stream << child->GetText();
+        stream >> motionBlur.x;
+        stream >> motionBlur.y;
+        stream >> motionBlur.z;
+    }
+
+
+    stream.clear();
     
     std::vector<TransformationMatrix*> tms;
     child = element->FirstChildElement("Transformations");
@@ -631,10 +714,13 @@ while(element){
 
 
     
-    string reset = element->Attribute("resetTransform", NULL) ;
+    string reset = "false";
+    if (element->Attribute("resetTransform"))
+    reset = element->Attribute("resetTransform");
+
     reset_transform = (reset == "true");
 
-    ObjectInstance* new_obj  = new ObjectInstance(meshes.at(parent_id-1), reset_transform, resulting_tm, materials.at(mesh_material_id-1));
+    ObjectInstance* new_obj  = new ObjectInstance(meshes.at(parent_id-1), reset_transform, resulting_tm, materials.at(mesh_material_id-1), motionBlur);
     meshes.push_back(new_obj);
     all_objects.push_back(new_obj);
     element = element->NextSiblingElement("MeshInstance");

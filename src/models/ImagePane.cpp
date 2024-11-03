@@ -59,11 +59,53 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
 };
 
 
-Ray ImagePane::rayFromCamera(int i, int j){
-    this->c->getPosition();
+Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
+    // i and j already specify jitter
+    // 
+    float offsetx = 0;//generate_random_01();
+    float offsety = 0;//generate_random_01();
+    rayindex = 0;
+    
+
+    int num_sample_axis =  int(sqrt(this->c->numsamples));
+    float subregion_width = 1 / float(num_sample_axis);
+    Vec3 pixel_center = this->sValues[i][j];
+    
+    int xgrid = int(rayindex%num_sample_axis);
+    int ygrid = int(rayindex/num_sample_axis);
+    
+    float pixel_start_x = pixel_center.x;
+    float pixel_start_y = pixel_center.y;
+
+    // first go to relevant subgrid then add random offset
+    float samplex = pixel_start_x + xgrid*subregion_width + offsetx*subregion_width;
+    float sampley = pixel_start_y + ygrid*subregion_width + offsety*subregion_width;
+
+    // below is pixel sample
+    Vec3 sampled_pos = Vec3(samplex, sampley, pixel_center.z);
+    Vec3 direction = (pixel_center - this->c->getPosition()).normalize();
+    // need to generate below for aperture
+    if(this->c->aperture_size!= -1){
+
+        float ap_offsetx = (generate_random_01()-0.5)*this->c->aperture_size;
+        float ap_offsety = (generate_random_01()-0.5)*this->c->aperture_size;
+
+        // aperture center is assumed to be on camera center
+        Vec3 campos = this->c->getPosition();
+        Vec3 a(campos.x + ap_offsetx, campos.y + ap_offsety, campos.z);
+        Vec3 dir = (sampled_pos - campos).normalize();
+        float t = this->c->focus_distance/dir.dot(this->c->w);// because I use w as gaze I do not *-1
+        Vec3 p = campos + (dir*t);
+        Vec3 d = (p - a).normalize();
+        direction = d;
+        sampled_pos = a;
+    }
+
+
     Ray resultingRay = Ray(
         this->c->getPosition(),
-        this->sValues[i][j] + (this->c->getPosition() * -1)
+        direction
     );
+
     return resultingRay;
 }

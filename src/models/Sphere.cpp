@@ -107,3 +107,7 @@ Vec3 Sphere::getSurfaceNormal(Ray r){
     return unitVector;
 }
 
+Vec3 Sphere::getMotionBlur(){
+    return this->motionBlur;
+}
+

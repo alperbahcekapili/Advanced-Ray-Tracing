@@ -6,12 +6,13 @@
 #include <cassert>
 #include "../models/Ray.h"
 #include "data_structures.h"
+#include "../lights/Light.h"
 
 // Macro for assertions with messages
 #define assertm(exp, msg) assert(((void)msg, exp))
 
 Ray createRayFrom(Vec3 start, Vec3 destination);
-
+Ray createLightRay(Light* light, Vec3 destination);
 Vec3 clipValues(Vec3 v, float clip_val);
 
 float det3x3(float m[3][3]);

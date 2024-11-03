@@ -4,6 +4,7 @@
 #include "../models/Material.h"
 #include "../util/util.h"
 #include <math.h>
+#include <stdio.h>
 
 Shader::Shader(Scene* scene)
 {
@@ -23,7 +24,7 @@ Vec3  Shader::radianceAt(Vec3  location, Object* intersectingObject, int interse
         {
 
             
-            Ray lightRay = createRayFrom(this->scene->lights[i]->location, location);
+            Ray lightRay = createLightRay(this->scene->lights[i], location);
             
             bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
             if (!ligth_hits)
@@ -31,7 +32,7 @@ Vec3  Shader::radianceAt(Vec3  location, Object* intersectingObject, int interse
             Vec3 n = intersectingObject->getSurfaceNormal(lightRay);
             // If we got so far then it means ith light source hits this surface thus we can calculate illumination
             float cosTheta = lightRay.d.dot(n);
-            Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
+            Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
             radiance = irradiance + radiance;
         }
 
@@ -49,7 +50,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
 
     // The reflected ray direction is same in conductor and dielectric types
     Vec3  n = target_obj->getSurfaceNormal(r);
-
+    Material* target_mat = target_obj->getMaterial();
 
 
     Vec3  diffuse_intensity = this->diffuseShadingAt(intersecting_location, target_obj, intersect_index);
@@ -61,7 +62,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
         // std::cout << "Remanining hop is over I return my color : " << pixel_val.x  << ", "  << pixel_val.y  << ", "  << pixel_val.z  << "\n" ;
         return pixel_val;          
     }
-    if(target_obj->getMaterial()->materialType != MaterialType::Dielectric && target_obj->getMaterial()->materialType != MaterialType::Conductor){
+    if(target_mat->materialType != MaterialType::Dielectric && target_mat->materialType != MaterialType::Conductor){
         // std::cout << "I am not dielectric or conductor : " << pixel_val.x  << ", "  << pixel_val.y  << ", "  << pixel_val.z  << "\n" ;
         // std::cout << "My index is : " << intersect_index << "\n";
         return pixel_val;}
@@ -81,6 +82,15 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
     Ray reflected_ray = Ray(intersecting_location, r.d + (n * 2 * cos_theta));
     // TODO replace this with shadow eps
     reflected_ray.o = reflected_ray.o + (reflected_ray.d * scene->shadow_ray_eps);
+    // If roughness parameter is other than zero then we need to deviate from original direction a little
+    if(target_mat->roughness != 0){
+        float deviation_magnx = generate_random_01();
+        float deviation_magny = generate_random_01();
+        Vec3 ** tangents = reflected_ray.getTangentVectors();
+        Vec3 dev1 = target_mat->roughness * deviation_magnx * (*tangents[0]);
+        Vec3 dev2 = target_mat->roughness * deviation_magny * (*tangents[1]);
+        reflected_ray.d = reflected_ray.d + dev1 + dev2;
+    }
     // We need to move reflected ray along its direction in order to prevent self intersection
 
     if (target_obj->getMaterial()->materialType == MaterialType::Dielectric){
@@ -126,7 +136,14 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
         float inside_cos = (transmitted_ray.d * -1).dot(inside_normal); // we negate the normal TODO need remove negate ?
         float before_sqrt_internal = 1-(pow(n2/n1, 2)*(1-pow(inside_cos,2)));
         outgoing_ray = Ray(inside_hit_location, (1+this->scene->shadow_ray_eps)*(transmitted_ray.d+n*inside_cos)*(n2/n1) - n*sqrt(before_sqrt_internal));
-        
+        if(target_mat->roughness != 0){
+            float deviation_magnx = generate_random_01();
+            float deviation_magny = generate_random_01();
+            Vec3 ** tangents = outgoing_ray.getTangentVectors();
+            Vec3 dev1 = target_mat->roughness * deviation_magnx * (*tangents[0]);
+            Vec3 dev2 = target_mat->roughness * deviation_magny * (*tangents[1]);
+            outgoing_ray.d = outgoing_ray.d + dev1 + dev2;
+        }
 
 
         
@@ -220,13 +237,13 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
     Vec3  current_pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
 
     // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
-    
-    if(target_obj->getMaterial()->materialType == MaterialType::Dielectric || target_obj->getMaterial()->materialType == MaterialType::Conductor){
+    Material* target_mat = target_obj->getMaterial();
+    if(target_mat->materialType == MaterialType::Dielectric || target_mat->materialType == MaterialType::Conductor){
         // std::cout << "Target is dielectric \n";
         return refractionTransmission(r, scene, target_obj, remaining_hop-1, intersect_index);
     }
                 
-    if (remaining_hop == 0 || target_obj->getMaterial()->materialType != MaterialType::Mirror){
+    if (remaining_hop == 0 || target_mat->materialType != MaterialType::Mirror){
         // std::cout << "I return: " << current_pixel_val.x  << ", " << current_pixel_val.y  << ", " << current_pixel_val.z  << "\n";
         return current_pixel_val;
     }
@@ -238,6 +255,19 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
     float cos_theta = n.dot( r.d * -1);
     Ray new_r = Ray(r.locationAtT(target_obj->Intersects(r)),  r.d + ( n * 2 * cos_theta));
     new_r.o = new_r.o + (new_r.d * scene->shadow_ray_eps);
+
+    // If roughness parameter is other than zero then we need to deviate from original direction a little
+    if(target_mat->roughness != 0){
+        float deviation_magnx = generate_random_01();
+        float deviation_magny = generate_random_01();
+        Vec3 ** tangents = new_r.getTangentVectors();
+        Vec3 dev1 = target_mat->roughness * deviation_magnx * (*tangents[0]);
+        Vec3 dev2 = target_mat->roughness * deviation_magny * (*tangents[1]);
+        new_r.d = new_r.d + dev1 + dev2;
+    }
+
+
+    
     
     // 2
     float mint_value = 999999;
@@ -271,29 +301,25 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
-    // Vec3  lightHitLocation = light_ray.o + (light_ray.d * intersectingTvalue);
+    Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
     // float errorMargin = 0.01;
-    // if(((lightHitLocation + (location * -1))).magnitude() > errorMargin){
+    // if(((lightHitLocation - location ))).magnitude() > errorMargin){
     //     // This means the light is in the other side of the object
     //     // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
     //     return false;
     // }
-    bool in_shadow = false;
-    for (int j = 0; j < numobj; j++)
-    {
-        if (j == intersectingObjIndex)
-        continue;
 
-        float tvalue = other_objects[j]->Intersects(light_ray);
-        if( tvalue < intersectingTvalue &&  tvalue > 0){
-            // std::cout << intersectingObjIndex << " intersecting: " << intersectingTvalue << ", "<< j<<" interle. " << tvalue << "\n";
-            // then this means light hits another object before hitting this location than we can retun 0 directly
-            // std::cout << "Ligth is cut by another object, object camera sees: "<<  intersectingObjIndex <<" \n";
-            in_shadow = true;
-            break;
-        }
-        
+
+    if(intersectingObject->getMotionBlur().z!= 0){
+        int b = -1;
+        printf("%d", b);
     }
+    bool in_shadow = false;
+    float new_tmin, new_tmax;
+    Object* tmp;
+    // bool bvh_int = this->scene->bvh->intersectObject(light_ray, tmp, new_tmin, new_tmax);
+    // if(new_tmin < intersectingTvalue)
+    //     in_shadow=true;
     return !in_shadow;
 
        
@@ -309,7 +335,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
    Vec3  pixel(0,0,0);
    for (int i = 0; i < this->scene->numlights; i++)
    {
-    Ray lightRay = createRayFrom(this->scene->lights[i]->location, location);
+    Ray lightRay = createLightRay(this->scene->lights[i], location);
     
     bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
     if (!ligth_hits){        
@@ -318,8 +344,8 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 
     float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
     if (cosTheta < 0)
-        cosTheta = 0; // TODO: update here
-    Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
+        cosTheta*=-1; // TODO: update here
+    Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
 
     // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
     
@@ -346,7 +372,7 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
     for (int i = 0; i < this->scene->numlights; i++)
     {
         // create a ray from the lightsource to destination
-        Ray lightRay = createRayFrom(this->scene->lights[i]->location, location);
+        Ray lightRay = createLightRay(this->scene->lights[i], location);
         bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
         if (!ligth_hits)
             continue;
@@ -364,7 +390,7 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
         }
 
 
-        resultingMagnitude = resultingMagnitude + (intersectingObject->getMaterial()->specularProp * (this->scene->lights[i]->irradianceAt(location) * costheta));
+        resultingMagnitude = resultingMagnitude + (intersectingObject->getMaterial()->specularProp * (this->scene->lights[i]->irradianceAt(lightRay, location) * costheta));
     }
 
     return resultingMagnitude;

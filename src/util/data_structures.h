@@ -3,7 +3,9 @@
 #include <array>
 #include <iostream>
 #include <algorithm>
+#include <random>
 
+float generate_random_01();
 
 struct Vec3 {
     float x, y, z;
@@ -221,7 +223,7 @@ struct TransformationMatrix {
         
     }
     
-    Vec3 transform(Vec3 vec) const {
+    Vec3 transform(Vec3 vec) {
         Vec3 result;
 
         result.x = matrix[0][0] * vec.x + matrix[0][1] * vec.y + matrix[0][2] * vec.z + matrix[0][3] * 1.0f;
@@ -258,7 +260,7 @@ struct TransformationMatrix {
     }
 
     // Function to transpose the matrix
-    TransformationMatrix transpose() const {
+    TransformationMatrix transpose()  {
         TransformationMatrix result;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
@@ -269,7 +271,7 @@ struct TransformationMatrix {
     }
 
     // Function to compute the determinant of the matrix
-    float determinant() const {
+    float determinant()  {
         float det = 0.0f;
         for (int i = 0; i < 4; ++i) {
             det += (matrix[0][i] * cofactor(0, i));
@@ -278,7 +280,7 @@ struct TransformationMatrix {
     }
 
     // Function to compute the cofactor of an element
-    float cofactor(int row, int col) const {
+    float cofactor(int row, int col)  {
         float minor[3][3];
         int minorRow = 0, minorCol = 0;
 
@@ -308,7 +310,7 @@ struct TransformationMatrix {
 
     
     // Function to compute the inverse of the matrix
-    TransformationMatrix inverse() const {
+    TransformationMatrix inverse()  {
         float det = determinant();
         TransformationMatrix result;
 
@@ -320,7 +322,7 @@ struct TransformationMatrix {
         return result;
     }
 
- TransformationMatrix inverseUpperLeft3x3() const {
+ TransformationMatrix inverseUpperLeft3x3()  {
     // Create a 3x3 matrix for the upper left portion
     float subMatrix[3][3];
     for (int i = 0; i < 3; ++i) {
