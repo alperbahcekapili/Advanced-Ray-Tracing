@@ -49,7 +49,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
         Triangle* tmp_triangle = new Triangle(
             material, ObjectType::TriangleType, 
             faces[i*3], faces[i*3+1], faces[i*3+2], 
-            resulting_tm
+            resulting_tm, this
         );
         tmp_triangle->mesh = this;
         triangles[i] = tmp_triangle;

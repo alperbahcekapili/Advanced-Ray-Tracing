@@ -2,11 +2,19 @@
 #include "ObjectInstance.h"
 #include "Object.h"
 
-ObjectInstance::ObjectInstance(Object* parent, bool reset)
+ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm)
 {
 this->parent = parent;
 this->reset = reset;
 std::cout << "I am creating an instance...";
+this->tm = tm;
+
+if(reset){
+    *(this->tm) = *(this->tm) * (parent->tm->inverse()) ;
+}
+this->max = this->tm->transform(parent->getBoundingBox(true));
+this->min = this->tm->transform(parent->getBoundingBox(false));
+
 }
 
 ObjectInstance::~ObjectInstance()
@@ -24,7 +32,7 @@ ObjectInstance::~ObjectInstance()
    
     Vec3 ObjectInstance::getSurfaceNormal(Ray r){
         r.o = this->tm->inverse().transform(r.o);
-        r.d = this->tm->inverse().transform(r.o);
+        r.d = this->tm->inverse().transform(r.d);
         // for normalization
         Ray * new_ray = new Ray(r.o, r.d);
         Vec3 parent_normal = parent->getSurfaceNormal(*new_ray);
@@ -34,13 +42,16 @@ ObjectInstance::~ObjectInstance()
 
     }
     Material * ObjectInstance::getMaterial(){
-        return this->material;
+        return this->parent->getMaterial();
     }
     ObjectType ObjectInstance::getObject() {
         return parent->getObject();
     }
     Vec3 ObjectInstance::getBoundingBox(bool isMax){
-        return this->tm->transform(parent->getBoundingBox(isMax));
+
+    if(isMax)
+        return this->max;
+    return this->min;
     }
     Vec3  ObjectInstance::getCenter(){
         return this->tm->transform(parent->getCenter());

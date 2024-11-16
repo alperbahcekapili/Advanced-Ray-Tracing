@@ -482,7 +482,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
     
     triangles.push_back(new Triangle(
-        materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm
+        materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm, nullptr
     ));
     element = element->NextSiblingElement("Triangle");
 }
@@ -579,7 +579,7 @@ element = root->FirstChildElement("Objects");
 element = element->FirstChildElement("MeshInstance");
 while(element){
     float parent_id;
-    bool reset_transform;
+    bool reset_transform = false;
 
 
     
@@ -603,6 +603,16 @@ while(element){
             }
         }
     }
+     // Initialize resulting tm as identity matrix so that it means no transformation
+    TransformationMatrix* resulting_tm = new TransformationMatrix();
+    resulting_tm->matrix[0][0] = 1;
+    resulting_tm->matrix[1][1] = 1;
+    resulting_tm->matrix[2][2] = 1;
+    resulting_tm->matrix[3][3] = 1;
+    for (int i = 0; i < tms.size(); i++)
+    {
+        *resulting_tm = *resulting_tm * (*tms.at( tms.size() - i - 1));
+    }
 
     
     stream.clear();
@@ -611,11 +621,13 @@ while(element){
     stream << element->Attribute("baseMeshId", NULL) << std::endl; 
     stream >> parent_id;
 
-    stream << element->Attribute("resetTransform", NULL) << std::endl;
-    stream >> reset_transform;
+
+    
+    string reset = element->Attribute("resetTransform", NULL) ;
+    reset_transform = (reset == "true");
 
 
-    all_objects.push_back(new ObjectInstance(all_objects.at(parent_id-1), reset_transform));
+    all_objects.push_back(new ObjectInstance(all_objects.at(parent_id-1), reset_transform, resulting_tm));
     element = element->NextSiblingElement("MeshInstance");
 }
 
@@ -656,7 +668,7 @@ for (size_t i = 0; i < cameras.size(); i++)
     // TODO refraction index not give thus leaving none
     Scene* s = new Scene(
         objlist, 
-        meshes.size()+spheres.size()+triangles.size(),
+        num_objects,
         cameras.at(i), 
         imagePane, 
         lights_array, 

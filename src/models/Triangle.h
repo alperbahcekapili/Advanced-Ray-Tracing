@@ -21,7 +21,7 @@ public:
     Vec3 normal;
     Mesh* mesh;
     TransformationMatrix* tm;
-    Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3, TransformationMatrix* tm);
+    Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3, TransformationMatrix* tm, Mesh* mesh);
     float Intersects(Ray ray) override ;
     float getArea(void);
     Vec3 getSurfaceNormal(Ray r) override;

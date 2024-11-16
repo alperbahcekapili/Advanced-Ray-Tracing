@@ -96,7 +96,12 @@ int main(int argc, char const *argv[])
 
                 // std::cout << intersectingObjIndex << "\n";
 
+                if(intersectingObjIndex==0){
+                    int a = 1;
+                    std::cout << intersectingObjIndex << "\n";
 
+                }
+                    
 
                 // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.x, cameraRay.o.y, cameraRay.o.z ,cameraRay.d.x, cameraRay.d.y, cameraRay.d.z);
 

@@ -59,21 +59,25 @@ Triangle::Triangle(){
 
 }
 
-Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm)
+Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm, Mesh* mesh)
 {
     this->material = material;
     this->objectType = objectType;
 
-    this->mesh = nullptr;
+    this->mesh = mesh;
 
     // before setting tm we need to move the center to origin then move back
     this->tm = new TransformationMatrix();
     Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
     // std::cout << "Triangle before transform center: " << center.x << ", " << center.y << ", " << center.z << "\n";
-    // Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
-    // TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
-    // TransformationMatrix* from_center = new TransformationMatrix(center, 't');
-    // *(this->tm) = (*from_center) * (*tm) * (*to_center);
+
+    // if this is not a face then do op. relative to center
+    if(this->mesh == nullptr){
+        Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
+        TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
+        TransformationMatrix* from_center = new TransformationMatrix(center, 't');
+        *(this->tm) = (*from_center) * (*tm) * (*to_center);}
+    else
     *(this->tm) =  (*tm);
     
 
