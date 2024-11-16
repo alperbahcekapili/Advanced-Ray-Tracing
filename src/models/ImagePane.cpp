@@ -6,7 +6,7 @@
 
 
 
-ImagePane::ImagePane(int dimx, int dimy, float l, float r, float b, float t, float d, Camera* c)
+ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, float d, Camera* c)
 {
     this->dimx = dimx;
     this->dimy = dimy;
@@ -26,6 +26,7 @@ ImagePane::ImagePane(int dimx, int dimy, float l, float r, float b, float t, flo
     printf("u:%f%f%f\n", c->u.x, c->u.y, c->u.z);
     printf("v:%f%f%f\n", c->v.x, c->v.y, c->v.z);
     printf("Center of image pane is: (%f,%f,%f)\n", m.x, m.y, m.z);
+    printf("xdim:%d, ydim:%d\n", dimx, dimy);
 
     // center of (0,0) indexed pixels
     Vec3  q = (m + (c->u * l)) + (c->v * t);

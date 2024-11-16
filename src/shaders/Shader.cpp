@@ -74,7 +74,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
     // std::cout << "n: " << n.x  << ", "<< n.y  << ", " << n.z  << "\n";
     float cos_theta = (r.d * -1).dot(n);
     // costhetat should not be negative here
-    cos_theta = abs(cos_theta);
+    // cos_theta = abs(cos_theta);
     float n1 = scene->refraction_index;
     float n2 = target_obj->getMaterial()->refraction_index;
     float before_sqrt = 1 - (pow(n1 / n2, 2) * (1 - pow(cos_theta, 2)));

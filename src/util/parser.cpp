@@ -12,8 +12,12 @@
 #include "../models/Mesh.h"
 #include "../models/Sphere.h"
 #include "../models/ImagePane.h"
+#include "../models/ObjectInstance.h"
 #include "../scene/Scene.h"
 #include "data_structures.h"
+#include "ply.h"
+#include "read_ply.h"
+
 
 
 std::vector<Scene*> loadFromXml(const std::string &filepath)
@@ -143,7 +147,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
     while (element)
     {
-        auto child = element->FirstChildElement("Position");
+        tinyxml2::XMLElement* child = element->FirstChildElement("Position");
         stream << child->GetText() << std::endl;
         child = element->FirstChildElement("Gaze");
         stream << child->GetText() << std::endl;
@@ -175,7 +179,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
     
     element = root->FirstChildElement("Lights");
-    auto child = element->FirstChildElement("AmbientLight");
+    tinyxml2::XMLElement* child = element->FirstChildElement("AmbientLight");
     stream << child->GetText() << std::endl;
     stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;
     element = element->FirstChildElement("PointLight");
@@ -275,28 +279,35 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     stream.str(""); // Clear the stream content
     
     element = root->FirstChildElement("Transformations");
+    if(element){
+        
+    stream.clear();  // Clear any potential error state flags
+    stream.str(""); // Clear the stream content
     float transformation_buf1, transformation_buf2, transformation_buf3, transformation_buf4;
     auto scale_elem = element->FirstChildElement("Scaling");
     while(scale_elem){
-        stream << scale_elem->GetText() << std::endl;
+        string tmp = scale_elem->GetText();
+        stream << tmp << std::endl;
         stream >> transformation_buf1 >> transformation_buf2 >> transformation_buf3;
         scale.push_back(Vec3(transformation_buf1, transformation_buf2, transformation_buf3));
         scale_elem = scale_elem->NextSiblingElement("Scaling");
     }
     auto translate_elem = element->FirstChildElement("Translation");
     while(translate_elem){
-        stream << translate_elem->GetText() << std::endl;
+        string tmp = translate_elem->GetText();
+        stream << tmp << std::endl;
         stream >> transformation_buf1 >> transformation_buf2 >> transformation_buf3;
         translate.push_back(Vec3(transformation_buf1, transformation_buf2, transformation_buf3));
         translate_elem = translate_elem->NextSiblingElement("Translation");
     }
     auto rotate_elem = element->FirstChildElement("Rotation");
     while(rotate_elem){
-        stream << rotate_elem->GetText() << std::endl;
+        string tmp = rotate_elem->GetText();
+        stream << tmp << std::endl;
         stream >> transformation_buf1 >> transformation_buf2 >> transformation_buf3 >>  transformation_buf4;
         rotate.push_back(Vec3(transformation_buf2*transformation_buf1, transformation_buf3*transformation_buf1, transformation_buf4*transformation_buf1));
         rotate_elem = rotate_elem->NextSiblingElement("Rotation");
-    }
+    }}
     
     
 
@@ -316,7 +327,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     {
         child = element->FirstChildElement("Material");
         stream.clear();
-        stream << child->GetText() << std::endl;
+        string tmp = child->GetText();
+        stream << tmp << std::endl;
         stream >> mesh_material_id;
         mesh_material = materials.at(mesh_material_id-1);
 
@@ -340,40 +352,62 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             }
         }
         // Initialize resulting tm as identity matrix so that it means no transformation
-        std::cout << "Creating new transformation \n" ;
+        
         TransformationMatrix* resulting_tm = new TransformationMatrix();
-        std::cout << "Created new one \n";
         resulting_tm->matrix[0][0] = 1;
         resulting_tm->matrix[1][1] = 1;
         resulting_tm->matrix[2][2] = 1;
         resulting_tm->matrix[3][3] = 1;
-        for (size_t i = 0; i < tms.size(); i++)
+        for (int i = tms.size()-1; i >= 0; i--)
         {
-            *resulting_tm = *resulting_tm * (*tms.at(i));
+            *resulting_tm =   (*resulting_tm) * (*tms.at(i));
         }
             
         
         TransformationMatrix* resulting_tm_copy;
         child = element->FirstChildElement("Faces");
         stream.clear();
-        stream << child->GetText() << std::endl;
-        while (!(stream >> facevid1).eof())
-        {   
-            stream >> facevid2 >> facevid3;
+        int numfaces;
+        char *** elem_names;
+        int ftype;
+        float version;
+        
+        char* plyattr = "plyFile";
+		if (child->Attribute(plyattr))
+		{
+			std::string plyFilePath = child->Attribute("plyFile");
+            std::size_t firstSlashPos = filepath.rfind('/');
+                if (firstSlashPos == std::string::npos) {
+            firstSlashPos = -1;
+            }
+            // Construct the new path: part before the first '/' + '/' + new filename
+            plyFilePath = filepath.substr(0, firstSlashPos + 1) + plyFilePath;
+            std::vector<Vec3> tmp_l = read_binary_ply(plyFilePath);
+            mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end());
+		}
+		else
+		{
+			stream << child->GetText() << std::endl;
+            while (!(stream >> facevid1).eof())
+            {   
+                stream >> facevid2 >> facevid3;
 
-            // here create mesh
-            mesh_faces.push_back(vertices.at(facevid1-1));
-            mesh_faces.push_back(vertices.at(facevid2-1));
-            mesh_faces.push_back(vertices.at(facevid3-1));
-                
-        }
+                // here create mesh
+                mesh_faces.push_back(vertices.at(facevid1-1));
+                mesh_faces.push_back(vertices.at(facevid2-1));
+                mesh_faces.push_back(vertices.at(facevid3-1));
+                    
+            }
 
-        stream.clear();
+		}
+       
+      stream.clear();
         // convert vector to list
         Vec3* mesh_faces_ar = new Vec3[mesh_faces.size()];
         for (int i = 0; i < mesh_faces.size(); i++)
         {
             mesh_faces_ar[i] = mesh_faces.at(i);
+            // std::cout << i << "\n" ;
         }
         mesh_numfaces = int(mesh_faces.size()/3);
         Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces, resulting_tm);
@@ -382,97 +416,26 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         mesh_faces.clear();
         element = element->NextSiblingElement("Mesh");
     }
-
-        // //Get Triangles
-        element = root->FirstChildElement("Objects");
-        element = element->FirstChildElement("Triangle");
-
-        while (element)
-        {
-            child = element->FirstChildElement("Material");
-            stream <<  child->GetText() << std::endl;
-            stream >> triangle_material_id;
-        
-            
-            // create 4x4 trasformation matrix for each of the transformation
-           std::vector<TransformationMatrix*> tms;
-            child = element->FirstChildElement("Transformations");
-            if(child){
-                stream << child->GetText() << std::endl;
-                string transformation_buffer;
-                while(stream >> transformation_buffer){
-                    char op = transformation_buffer.at(0);
-                    int id = std::stoi(transformation_buffer.substr(1));
-                    if(op=='r'){
-                        tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
-                    }else if (op=='t')
-                    {
-                        tms.push_back(new TransformationMatrix(translate.at(id-1), op));
-                    }else if (op=='s')
-                    {
-                        tms.push_back(new TransformationMatrix(scale.at(id-1), op));
-                    }
-                }
-            }
-            // Initialize resulting tm as identity matrix so that it means no transformation
-            TransformationMatrix* resulting_tm = new TransformationMatrix();
-            resulting_tm->matrix[0][0] = 1;
-            resulting_tm->matrix[1][1] = 1;
-            resulting_tm->matrix[2][2] = 1;
-            resulting_tm->matrix[3][3] = 1;
-            for (size_t i = 0; i < tms.size(); i++)
-            {
-                *resulting_tm = *resulting_tm * (*tms.at(i));
-            }
-            
+    
 
 
 
-            child = element->FirstChildElement("Indices");
-            std::string indices_text = child->GetText(); // Get the indices text as a string
 
-            // Clear the stream and load the new string
-            stream.str(indices_text); // Set the string in the stream
-            stream.clear();           // Clear the stream state
-            
-            // Extract the three vertex indices from the stream
-            stream >> trianglev1 >> trianglev2 >> trianglev3;
-
-
-        Vec3 triv1(vertices.at(trianglev1-1).x,vertices.at(trianglev1-1).y,vertices.at(trianglev1-1).z);
-        Vec3 triv2(vertices.at(trianglev2-1).x,vertices.at(trianglev2-1).y,vertices.at(trianglev2-1).z);
-        Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
-        
-        triangles.push_back(new Triangle(
-            materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm
-        ));
-        element = element->NextSiblingElement("Triangle");
-    }
-    stream.str("");
-    stream.clear();
-
-
-    // //Get Spheres
+    // //Get Triangles
     element = root->FirstChildElement("Objects");
-    element = element->FirstChildElement("Sphere");
+    element = element->FirstChildElement("Triangle");
+
     while (element)
     {
         child = element->FirstChildElement("Material");
-        stream << child->GetText() << std::endl;
-        stream >> sphere_material_id;
-
-        child = element->FirstChildElement("Center");
-        stream << child->GetText() << std::endl;
-        stream >> sphere_center_id;
-
-        child = element->FirstChildElement("Radius");
-        stream << child->GetText() << std::endl;
-        stream >> shpere_radius;
-
+        stream <<  child->GetText() << std::endl;
+        stream >> triangle_material_id;
+    
+        
+        // create 4x4 trasformation matrix for each of the transformation
         std::vector<TransformationMatrix*> tms;
         child = element->FirstChildElement("Transformations");
         if(child){
-            stream.clear();
             stream << child->GetText() << std::endl;
             string transformation_buffer;
             while(stream >> transformation_buffer){
@@ -495,74 +458,219 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         resulting_tm->matrix[1][1] = 1;
         resulting_tm->matrix[2][2] = 1;
         resulting_tm->matrix[3][3] = 1;
-        for (size_t i = 0; i < tms.size(); i++)
+        for (int i = tms.size()-1; i >=0 ; i--)
         {
-            *resulting_tm = *resulting_tm * (*tms.at( tms.size() - i - 1));
+            *resulting_tm =   (*resulting_tm) * (*tms.at(i));
         }
         
 
-        Sphere* s = new Sphere(
-        vertices.at(sphere_center_id-1),
-        shpere_radius,  
-        materials.at(sphere_material_id-1),
-        ObjectType::SphereType, resulting_tm);
-        element = element->NextSiblingElement("Sphere");
-        spheres.push_back(s);
-    }
 
-    // Now that we have read the file we can convert it to our format
-    int num_objects = meshes.size() + spheres.size() + triangles.size();
-    Object** objlist = new Object*[num_objects];
-    for (size_t i = 0; i < meshes.size(); i++)
-    {
-        objlist[i] = meshes.at(i);
-        objlist[i]->id = i;
-    }
-    for (size_t i = 0; i < spheres.size(); i++)
-    {
-        objlist[i+meshes.size()] = spheres.at(i);
-        objlist[i+meshes.size()]->id = i+meshes.size();
-    }
-    for (size_t i = 0; i < triangles.size(); i++)
-    {
-        objlist[i+meshes.size()+spheres.size()] = triangles.at(i);
-        objlist[i+meshes.size()+spheres.size()]->id = i+meshes.size()+spheres.size();
 
-    }
+        child = element->FirstChildElement("Indices");
+        std::string indices_text = child->GetText(); // Get the indices text as a string
 
-    std::vector<Scene*> scenes;
-    // for each camera we need to define a image pane
-    for (size_t i = 0; i < cameras.size(); i++)
-    {
+        // Clear the stream and load the new string
+        stream.str(indices_text); // Set the string in the stream
+        stream.clear();           // Clear the stream state
         
-        ImagePane* imagePane = new ImagePane(
-            img_height , img_width, cam_near_plane.x, cam_near_plane.y,  cam_near_plane.z, cam_near_plane.h, cameras.at(i)->mint , cameras.at(i)
-        );
-        Light** lights_array = new Light*[lights.size()];
-        for (size_t i = 0; i < lights.size(); i++)
-        {
-            lights_array[i] = lights.at(i);
+        // Extract the three vertex indices from the stream
+        stream >> trianglev1 >> trianglev2 >> trianglev3;
+
+
+    Vec3 triv1(vertices.at(trianglev1-1).x,vertices.at(trianglev1-1).y,vertices.at(trianglev1-1).z);
+    Vec3 triv2(vertices.at(trianglev2-1).x,vertices.at(trianglev2-1).y,vertices.at(trianglev2-1).z);
+    Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
+    
+    triangles.push_back(new Triangle(
+        materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm
+    ));
+    element = element->NextSiblingElement("Triangle");
+}
+stream.str("");
+stream.clear();
+
+
+// //Get Spheres
+element = root->FirstChildElement("Objects");
+element = element->FirstChildElement("Sphere");
+while (element)
+{
+    child = element->FirstChildElement("Material");
+    stream << child->GetText() << std::endl;
+    stream >> sphere_material_id;
+
+    child = element->FirstChildElement("Center");
+    stream << child->GetText() << std::endl;
+    stream >> sphere_center_id;
+
+    child = element->FirstChildElement("Radius");
+    stream << child->GetText() << std::endl;
+    stream >> shpere_radius;
+
+    std::vector<TransformationMatrix*> tms;
+    child = element->FirstChildElement("Transformations");
+    if(child){
+        stream.clear();
+        stream << child->GetText() << std::endl;
+        string transformation_buffer;
+        while(stream >> transformation_buffer){
+            char op = transformation_buffer.at(0);
+            int id = std::stoi(transformation_buffer.substr(1));
+            if(op=='r'){
+                tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
+            }else if (op=='t')
+            {
+                tms.push_back(new TransformationMatrix(translate.at(id-1), op));
+            }else if (op=='s')
+            {
+                tms.push_back(new TransformationMatrix(scale.at(id-1), op));
+            }
         }
-        Vec3 bg(background_color.x,background_color.y,background_color.z);
-        Vec3 ambli(ambient_light.x, ambient_light.y, ambient_light.z);
-        // TODO refraction index not give thus leaving none
-        Scene* s = new Scene(
-            objlist, 
-            meshes.size()+spheres.size()+triangles.size(),
-            cameras.at(i), 
-            imagePane, 
-            lights_array, 
-            lights.size(), 
-            bg, 
-            ambli, shadow_ray_eps, 1
-        );
-        scenes.push_back(s);
     }
+    // Initialize resulting tm as identity matrix so that it means no transformation
+    TransformationMatrix* resulting_tm = new TransformationMatrix();
+    resulting_tm->matrix[0][0] = 1;
+    resulting_tm->matrix[1][1] = 1;
+    resulting_tm->matrix[2][2] = 1;
+    resulting_tm->matrix[3][3] = 1;
+    for (int i = 0; i < tms.size(); i++)
+    {
+        *resulting_tm = *resulting_tm * (*tms.at( tms.size() - i - 1));
+    }
+    
 
-    return scenes;
+    Sphere* s = new Sphere(
+    vertices.at(sphere_center_id-1),
+    shpere_radius,  
+    materials.at(sphere_material_id-1),
+    ObjectType::SphereType, resulting_tm);
+    element = element->NextSiblingElement("Sphere");
+    spheres.push_back(s);
+}
 
 
-    //TODO  burayi desgistir her kamera icin sahne tanimlamana gerek yok
+
+
+
+
+
+
+std::vector<Object*> all_objects;
+// Now that we have read the file we can convert it to our format
+int num_objects = meshes.size() + spheres.size() + triangles.size();
+
+for (size_t i = 0; i < meshes.size(); i++)
+{
+    all_objects.push_back(meshes.at(i));
+}
+for (size_t i = 0; i < spheres.size(); i++)
+{
+    all_objects.push_back(spheres.at(i));
+}
+for (size_t i = 0; i < triangles.size(); i++)
+{
+    all_objects.push_back(triangles.at(i));
+}
+
+
+
+// Get Mesh Instances
+element = root->FirstChildElement("Objects");
+element = element->FirstChildElement("MeshInstance");
+while(element){
+    float parent_id;
+    bool reset_transform;
+
 
     
+    std::vector<TransformationMatrix*> tms;
+    child = element->FirstChildElement("Transformations");
+    if(child){
+        string tmp = child->GetText();
+        stream << tmp << std::endl;
+        string transformation_buffer;
+        while(stream >> transformation_buffer){
+            char op = transformation_buffer.at(0);
+            int id = std::stoi(transformation_buffer.substr(1));
+            if(op=='r'){
+                tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
+            }else if (op=='t')
+            {
+                tms.push_back(new TransformationMatrix(translate.at(id-1), op));
+            }else if (op=='s')
+            {
+                tms.push_back(new TransformationMatrix(scale.at(id-1), op));
+            }
+        }
+    }
+
+    
+    stream.clear();
+    stream.str("");
+
+    stream << element->Attribute("baseMeshId", NULL) << std::endl; 
+    stream >> parent_id;
+
+    stream << element->Attribute("resetTransform", NULL) << std::endl;
+    stream >> reset_transform;
+
+
+    all_objects.push_back(new ObjectInstance(all_objects.at(parent_id-1), reset_transform));
+    element = element->NextSiblingElement("MeshInstance");
+}
+
+
+
+
+
+
+
+
+
+
+num_objects = all_objects.size();
+Object** objlist = new Object*[num_objects];
+for (size_t i = 0; i < all_objects.size(); i++)
+{
+    objlist[i] = all_objects.at(i);
+    objlist[i]->id = i;
+}
+
+
+
+std::vector<Scene*> scenes;
+// for each camera we need to define a image pane
+for (size_t i = 0; i < cameras.size(); i++)
+{
+    
+    ImagePane* imagePane = new ImagePane(
+        img_height , img_width, cam_near_plane.x, cam_near_plane.y,  cam_near_plane.z, cam_near_plane.h, cameras.at(i)->mint , cameras.at(i)
+    );
+    Light** lights_array = new Light*[lights.size()];
+    for (size_t i = 0; i < lights.size(); i++)
+    {
+        lights_array[i] = lights.at(i);
+    }
+    Vec3 bg(background_color.x,background_color.y,background_color.z);
+    Vec3 ambli(ambient_light.x, ambient_light.y, ambient_light.z);
+    // TODO refraction index not give thus leaving none
+    Scene* s = new Scene(
+        objlist, 
+        meshes.size()+spheres.size()+triangles.size(),
+        cameras.at(i), 
+        imagePane, 
+        lights_array, 
+        lights.size(), 
+        bg, 
+        ambli, shadow_ray_eps, 1
+    );
+    scenes.push_back(s);
+}
+
+return scenes;
+
+
+//TODO  burayi desgistir her kamera icin sahne tanimlamana gerek yok
+
+
 }

@@ -136,7 +136,6 @@ struct TransformationMatrix {
 
     // Constructor to initialize the matrix
     TransformationMatrix() {
-        std::cout << "Inside the constructor...\n";
         for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
                 matrix[i][j] = 0.0f;
@@ -160,10 +159,10 @@ struct TransformationMatrix {
         else if (type == 't')
         {
             // Setting the translation matrix
-            matrix[0][0] = 1; matrix[0][1] = 0; matrix[0][2] = 0; matrix[0][3] = vec.x;
-            matrix[1][0] = 0; matrix[1][1] = 1; matrix[1][2] = 0; matrix[1][3] = vec.y;
-            matrix[2][0] = 0; matrix[2][1] = 0; matrix[2][2] = 1; matrix[2][3] = vec.z; 
-            matrix[3][0] = 0; matrix[3][1] = 0; matrix[3][2] = 0; matrix[3][3] = 1;
+            matrix[0][0] = 1.0; matrix[0][1] = 0; matrix[0][2] = 0; matrix[0][3] = vec.x;
+            matrix[1][0] = 0; matrix[1][1] = 1.0; matrix[1][2] = 0; matrix[1][3] = vec.y;
+            matrix[2][0] = 0; matrix[2][1] = 0; matrix[2][2] = 1.0; matrix[2][3] = vec.z; 
+            matrix[3][0] = 0; matrix[3][1] = 0; matrix[3][2] = 0; matrix[3][3] = 1.0;
         }else if (type == 'r')
         {
             // Rotation around the x, y, and z axes
@@ -234,7 +233,7 @@ struct TransformationMatrix {
 
 
     // Function to multiply two matrices
-    TransformationMatrix operator*(TransformationMatrix other) const {
+    TransformationMatrix operator*(TransformationMatrix other) {
         TransformationMatrix result;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
@@ -248,7 +247,7 @@ struct TransformationMatrix {
     }
 
     // Function to add two matrices
-    TransformationMatrix operator+( TransformationMatrix other) const {
+    TransformationMatrix operator+( TransformationMatrix other) {
         TransformationMatrix result;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
@@ -320,4 +319,55 @@ struct TransformationMatrix {
         }
         return result;
     }
+
+
+    TransformationMatrix inverseTransposeUpperLeft3x3() const {
+    // Create a 3x3 matrix for the upper left portion
+    float subMatrix[3][3];
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            subMatrix[i][j] = matrix[i][j];
+        }
+    }
+
+    // Calculate the determinant of the 3x3 submatrix
+    float det = subMatrix[0][0] * (subMatrix[1][1] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][1])
+              - subMatrix[0][1] * (subMatrix[1][0] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][0])
+              + subMatrix[0][2] * (subMatrix[1][0] * subMatrix[2][1] - subMatrix[1][1] * subMatrix[2][0]);
+
+    if (det == 0) {
+        throw std::runtime_error("Matrix is singular, cannot invert.");
+    }
+
+    // Compute the inverse of the 3x3 submatrix
+    float invDet = 1.0f / det;
+    float invSubMatrix[3][3];
+    invSubMatrix[0][0] =  (subMatrix[1][1] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][1]) * invDet;
+    invSubMatrix[0][1] = -(subMatrix[0][1] * subMatrix[2][2] - subMatrix[0][2] * subMatrix[2][1]) * invDet;
+    invSubMatrix[0][2] =  (subMatrix[0][1] * subMatrix[1][2] - subMatrix[0][2] * subMatrix[1][1]) * invDet;
+    invSubMatrix[1][0] = -(subMatrix[1][0] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][0]) * invDet;
+    invSubMatrix[1][1] =  (subMatrix[0][0] * subMatrix[2][2] - subMatrix[0][2] * subMatrix[2][0]) * invDet;
+    invSubMatrix[1][2] = -(subMatrix[0][0] * subMatrix[1][2] - subMatrix[0][2] * subMatrix[1][0]) * invDet;
+    invSubMatrix[2][0] =  (subMatrix[1][0] * subMatrix[2][1] - subMatrix[1][1] * subMatrix[2][0]) * invDet;
+    invSubMatrix[2][1] = -(subMatrix[0][0] * subMatrix[2][1] - subMatrix[0][1] * subMatrix[2][0]) * invDet;
+    invSubMatrix[2][2] =  (subMatrix[0][0] * subMatrix[1][1] - subMatrix[0][1] * subMatrix[1][0]) * invDet;
+
+    // Transpose the inverse of the 3x3 matrix and set it in the result
+    TransformationMatrix result;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            result.matrix[i][j] = invSubMatrix[j][i]; // Transpose during assignment
+        }
+    }
+
+    // Set the remaining elements in the 4x4 result matrix to match the original matrix or 0
+    for (int i = 0; i < 4; ++i) {
+        result.matrix[i][3] = 0.0f;
+        result.matrix[3][i] = 0.0f;
+    }
+    result.matrix[3][3] = 1.0f;
+
+    return result;
+}
+
 };

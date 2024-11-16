@@ -68,7 +68,8 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
 
     // before setting tm we need to move the center to origin then move back
     this->tm = new TransformationMatrix();
-
+    Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
+    // std::cout << "Triangle before transform center: " << center.x << ", " << center.y << ", " << center.z << "\n";
     // Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
     // TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
     // TransformationMatrix* from_center = new TransformationMatrix(center, 't');
@@ -81,6 +82,9 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
     this->v3 = this->tm->transform(v3);
     
     Vec3 new_center = (this->v1 +  this->v2 + this->v3 ) / 3.0f;
+    
+    // std::cout << "Center: " << new_center.x << ", " << new_center.y << ", " << new_center.z << "\n";
+
 
     Vec3 scaled_n = (this->v2-this->v1).cross(this->v3 - this->v1);
     bool det_negative = this->tm->determinant() < 0;

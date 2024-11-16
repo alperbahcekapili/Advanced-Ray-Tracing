@@ -7,36 +7,49 @@
 
 
 Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces, TransformationMatrix* tm):
-material(material), objectType(objectType){
+ objectType(objectType){
+    this->material = material;
+    
+    // std::cout << "Material:"<< material->materialType << std::endl;
     this->tm = new TransformationMatrix();
     *(this->tm) = *(tm);
     this->last_intersected_obj = nullptr;
     Object** triangles = new Object*[numfaces];
 
-    float centerx, centery, centerz;
-    for (size_t i = 0; i < numfaces; i++)
+    float centerx = 0;
+    float centery = 0;
+    float centerz = 0;
+    for (size_t i = 0; i < (numfaces * 3); i++)
     {
-        centerz += faces[i*3+2].x / numfaces;
-        centery += faces[i*3+1].x / numfaces;
-        centerx += faces[i*3].x / numfaces;
+        centerz += faces[i].z / float(numfaces*3);
+        centery += faces[i].y / float(numfaces*3);
+        centerx += faces[i].x / float(numfaces*3);
     }
     
     this->center = Vec3(centerx, centery, centerz);
-
-    TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
-    TransformationMatrix* from_center = new TransformationMatrix(center, 't');
-
+    // std::cout << "Mesh Center Before Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
     
-
-
+    center = center * -1;
+    TransformationMatrix* to_center = new TransformationMatrix(center, 't');
+    center = center * -1;
+    TransformationMatrix* from_center = new TransformationMatrix(center, 't');
+    TransformationMatrix* resulting_tm = new TransformationMatrix();
+    *resulting_tm = (*from_center)  * (*tm) ;
+    *resulting_tm = (*resulting_tm) * (*to_center);
+    //  for (int i = 0; i < 4; i++) {
+    //     for (int j = 0; j < 4; j++) {
+    //         // std::cout << resulting_tm->matrix[i][j] << "\t"; // Tab for spacing
+    //     }
+    //     // std::cout << std::endl; // Newline after each row
+    // }
+    
     for (int i = 0; i < numfaces; i++)
     {
         // Initialize triangles with transformation relative to mesh center
-        TransformationMatrix resulting_tm = ((*from_center)  * (*tm) * (*to_center));
         Triangle* tmp_triangle = new Triangle(
             material, ObjectType::TriangleType, 
             faces[i*3], faces[i*3+1], faces[i*3+2], 
-            &resulting_tm
+            resulting_tm
         );
         tmp_triangle->mesh = this;
         triangles[i] = tmp_triangle;
@@ -45,6 +58,8 @@ material(material), objectType(objectType){
     this->bvh_faces = new BVH(triangles, num_faces, 0);
     
     this->objectType = objectType;
+    this->center = resulting_tm->transform(this->center);
+    // std::cout << "Mesh Center After Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
 }
 
 Mesh::~Mesh(){

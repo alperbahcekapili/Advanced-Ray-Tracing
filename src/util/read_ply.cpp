@@ -1,0 +1,140 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+
+#include <sstream>  // Include this header for istringstream
+#include "read_ply.h"
+#include "data_structures.h"
+
+std::vector<Vec3> read_binary_ply(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    
+
+    std::vector<Vec3> vertices;
+    std::vector<Vec3> faces;
+
+    std::string line;
+    int num_vertices = 0, num_faces = 0;
+
+    // Read header lines until "end_header"
+    while (std::getline(file, line)) {
+        if (line.find("end_header") != std::string::npos) {
+            break;
+        }
+        if (line.find("element vertex") != std::string::npos) {
+            std::istringstream iss(line);
+            std::string word;
+            iss >> word >> word >> num_vertices;
+        }
+        if (line.find("element face") != std::string::npos) {
+            std::istringstream iss(line);
+            std::string word;
+            iss >> word >> word >> num_faces;
+        }
+    }
+
+    // Read vertex data
+    for (int i = 0; i < num_vertices; ++i) {
+        Vec3 vertex;
+        file.read(reinterpret_cast<char*>(&vertex.x), sizeof(vertex.x));
+        file.read(reinterpret_cast<char*>(&vertex.y), sizeof(vertex.y));
+        file.read(reinterpret_cast<char*>(&vertex.z), sizeof(vertex.z));
+
+      
+            // No color, just store the coordinates
+            vertices.push_back(vertex);
+        
+    }
+
+    // Read face data
+    for (int i = 0; i < num_faces; ++i) {
+        Face face;
+        
+        int index;
+        u_char numelems;
+        file.read(reinterpret_cast<char*>(&numelems), sizeof(numelems));  // Read each index
+        face.vertex_indices.resize(numelems);  // Resize the vector to hold 3 indices
+        for (int i = 0; i < numelems; i++)
+        {
+            file.read(reinterpret_cast<char*>(&index), sizeof(index));  // Read each index    
+            face.vertex_indices[i] = index;  // Store the index at the correct position
+            faces.push_back(vertices.at(index)); // TODO: Here if verte
+        }
+        
+    }
+
+    file.close();
+
+    // Now you can work with vertices and faces
+    return faces;
+}
+
+
+
+
+void read_ascii_ply(const std::string& filename) {
+    std::ifstream file(filename);
+    std::string line;
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+        return;
+    }
+
+    std::vector<Vertex> vertices;
+    std::vector<Face> faces;
+
+    bool header_done = false;
+    bool reading_vertices = false;
+    bool reading_faces = false;
+    int num_vertices = 0, num_faces = 0;
+
+    // Read header lines
+    while (std::getline(file, line)) {
+        if (line.find("end_header") != std::string::npos) {
+            header_done = true;
+            break;
+        }
+        if (line.find("element vertex") != std::string::npos) {
+            std::istringstream iss(line);
+            std::string word;
+            iss >> word >> word >> num_vertices;
+        }
+        if (line.find("element face") != std::string::npos) {
+            std::istringstream iss(line);
+            std::string word;
+            iss >> word >> word >> num_faces;
+        }
+    }
+
+    // Now read the elements
+    int vertex_count = 0;
+    int face_count = 0;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        if (vertex_count < num_vertices) {
+            Vertex vertex;
+            iss >> vertex.x >> vertex.y >> vertex.z;
+                vertices.push_back(vertex);
+            
+            ++vertex_count;
+        }
+        else if (face_count < num_faces) {
+            Face face;
+            iss >> face.num_vertices;
+            for (int i = 0; i < face.num_vertices; ++i) {
+                int index;
+                iss >> index;
+                face.vertex_indices.push_back(index);
+            }
+            faces.push_back(face);
+            ++face_count;
+        }
+    }
+
+    file.close();
+
+    // Now you can work with vertices and faces
+    std::cout << "Read " << vertices.size() << " vertices and " << faces.size() << " faces." << std::endl;
+}

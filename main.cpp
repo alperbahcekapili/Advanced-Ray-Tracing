@@ -17,6 +17,7 @@
 
 
 #include <cmath> // For fmod
+#include "src/models/Material.h"
 
 
 template <typename T>
@@ -27,7 +28,7 @@ T clamp(T val, T minVal, T maxVal) {
 }
 
 int main(int argc, char const *argv[])
-{   
+{
     if(argc<1)
         {printf("Please give a xml file...");
             return -1;}
@@ -37,10 +38,10 @@ int main(int argc, char const *argv[])
 
     std::vector<Scene*> scenes = loadFromXml(fp);
 
-    
+
     std::cout << "xml loaded\n";
     for (size_t i = 0; i < scenes.size(); i++)
-    {   
+    {
 
         BVH* bvh = new BVH(scenes.at(i)->sceneObjects, scenes.at(i)->numObjects, 0);
         for (int j = 0; j < scenes.at(i)->numObjects; j++)
@@ -64,10 +65,10 @@ int main(int argc, char const *argv[])
         // // now we need to iterate over the pixels and fill them
         int total_progress = 0;
         for (int i = 0; i < imgWidth; i++)
-        {   
+        {
             image[i] = new Vec3[imgHeight];
-            
-            //  printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
+
+            // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
 
             for (int j = 0; j < imgHeight; j++)
             {
@@ -78,12 +79,12 @@ int main(int argc, char const *argv[])
                 // }
                 // shoot ray from camera to ImagePane
                 Ray cameraRay = curscene.imagePane->rayFromCamera(i, j);
-                
+
                 // now iterate over the objects to find first object that hits this ray
                 // add fov in future to exclude object that are too far away from the camera
                 float minTValue = 9999999;
                 float maxTValue = -1;
-                
+
 
 
                 Object* tofill = nullptr;
@@ -91,21 +92,21 @@ int main(int argc, char const *argv[])
                 if(!intersected)
                 continue;
                 int intersectingObjIndex = tofill -> id;
-               
+
 
                 // std::cout << intersectingObjIndex << "\n";
 
-                
+
 
                 // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.x, cameraRay.o.y, cameraRay.o.z ,cameraRay.d.x, cameraRay.d.y, cameraRay.d.z);
-            
+
                 if (minTValue > curscene.camera->maxt){
                     // printf("Too far or too close\n");
                     // printf("%f",minTValue);
                     image[i][j] = Vec3(float(shader.scene->bg.x),float(shader.scene->bg.y),float(shader.scene->bg.z));
                     continue;
                 }
-                    
+
 
                 if (intersectingObjIndex == -1){
                     // printf("No intersections\n");
@@ -114,19 +115,18 @@ int main(int argc, char const *argv[])
                 }
 
                // std::cout << i << "," << j << "\n";
-                
-                
+
+
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
                 // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
-                
+
                 Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
-                
+
                 if(tofill->getMaterial()->materialType == MaterialType::Mirror){
                     Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
                     pixel_val = specular_reflection + pixel_val;
-                    // std::cout << "Type is mirror \n";
                     // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
 
 
@@ -138,26 +138,25 @@ int main(int argc, char const *argv[])
 
                 }
 
-                
+
                 // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
                 // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
                 // std::cout << "Specular Intensity: \n" << specular_intensity.x << ", " << specular_intensity.y << ", " << specular_intensity.z << "\n";
-                // std::cout << "Specular Reflectance: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
-                
-                
-                    
+
+
+
                 image[i][j] = clipValues(pixel_val, 255.0);
                 // std::cout << image[i][j].x << ", " << image[i][j].y << ", " << image[i][j].z << "\n";
 
                 // fg_pixel_count++;
-                
+
             }
-            
+
         }
         // std::cout << "Outside the loop\n";
-        
 
-        
+
+
 
 
         unsigned width = imgWidth, height = imgHeight;
@@ -168,8 +167,8 @@ int main(int argc, char const *argv[])
             for (int y = 0; y < imgHeight; ++y) {
                 int idx = 4 * (y * width + x);
                 image_mat[idx + 0] = static_cast<uint8_t>(clamp(image[x][y].x, 0.0f, 255.0f));
-                image_mat[idx + 1] = static_cast<uint8_t>(clamp(image[x][y].y, 0.0f, 255.0f)); 
-                image_mat[idx + 2] = static_cast<uint8_t>(clamp(image[x][y].z, 0.0f, 255.0f)); 
+                image_mat[idx + 1] = static_cast<uint8_t>(clamp(image[x][y].y, 0.0f, 255.0f));
+                image_mat[idx + 2] = static_cast<uint8_t>(clamp(image[x][y].z, 0.0f, 255.0f));
                 image_mat[idx + 3] = 255; // Alpha (opaque)
             }
         }
@@ -187,6 +186,6 @@ int main(int argc, char const *argv[])
 
 
     }
-    
+
     return 0;
 }
