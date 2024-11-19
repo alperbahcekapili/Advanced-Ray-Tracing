@@ -62,7 +62,7 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
 Ray ImagePane::rayFromCamera(int i, int j){
     this->c->getPosition();
     Ray resultingRay = Ray(
-        this->sValues[i][j],
+        this->c->getPosition(),
         this->sValues[i][j] + (this->c->getPosition() * -1)
     );
     return resultingRay;

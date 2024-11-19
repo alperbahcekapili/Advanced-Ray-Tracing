@@ -74,9 +74,9 @@ int main(int argc, char const *argv[])
             {
 
             total_progress++;
-                // if (total_progress % 10 == 0){
-                //     // printf("Scene: %d/%ld, Total Progress: %d\n", scenei, scenes.size(), total_progress);
-                // }
+                
+                printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
+                
                 // shoot ray from camera to ImagePane
                 Ray cameraRay = curscene.imagePane->rayFromCamera(i, j);
 
@@ -84,7 +84,6 @@ int main(int argc, char const *argv[])
                 // add fov in future to exclude object that are too far away from the camera
                 float minTValue = 9999999;
                 float maxTValue = -1;
-
 
 
                 Object* tofill = nullptr;
@@ -96,7 +95,7 @@ int main(int argc, char const *argv[])
 
                 // std::cout << intersectingObjIndex << "\n";
 
-                if(intersectingObjIndex==0){
+                if(intersectingObjIndex==2){
                     int a = 1;
                     std::cout << intersectingObjIndex << "\n";
 

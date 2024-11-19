@@ -133,15 +133,16 @@ bool BVH::intersects(Ray ray, float& tNear, float& tFar){
         float t2 = (boxMaxAxis - rayOriginAxis) * invRayDir;
 
         // Swap t1 and t2 if invRayDir is negative
-        if (invRayDir < 0.0f) std::swap(t1, t2);
+        if (t2 < t1) std::swap(t1, t2);
 
         // Update tNear and tFar for this axis
-        tNear = std::max(tNear, t1);
-        tFar = std::min(tFar, t2);
+        tNear = std::min(tNear, t1);
+        tFar = std::max(tFar, t2);
 
-        // If at any point tNear exceeds tFar, there is no intersection
-        if (tNear > tFar) return false;
+        
     }
+    // If at any point tNear exceeds tFar, there is no intersection
+    if (tNear > tFar) return false;
     return true;
 }
 

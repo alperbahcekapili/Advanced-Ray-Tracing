@@ -221,7 +221,7 @@ struct TransformationMatrix {
         
     }
     
-    Vec3 transform(const Vec3& vec) const {
+    Vec3 transform(Vec3 vec) const {
         Vec3 result;
 
         result.x = matrix[0][0] * vec.x + matrix[0][1] * vec.y + matrix[0][2] * vec.z + matrix[0][3] * 1.0f;
@@ -319,6 +319,68 @@ struct TransformationMatrix {
         }
         return result;
     }
+
+ TransformationMatrix inverseUpperLeft3x3() const {
+    // Create a 3x3 matrix for the upper left portion
+    float subMatrix[3][3];
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            subMatrix[i][j] = matrix[i][j];
+        }
+    }
+
+    // Calculate the determinant of the 3x3 submatrix
+    float det = subMatrix[0][0] * (subMatrix[1][1] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][1])
+              - subMatrix[0][1] * (subMatrix[1][0] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][0])
+              + subMatrix[0][2] * (subMatrix[1][0] * subMatrix[2][1] - subMatrix[1][1] * subMatrix[2][0]);
+
+    if (det == 0) {
+        throw std::runtime_error("Matrix is singular, cannot invert.");
+    }
+
+    // Compute the inverse of the 3x3 submatrix
+    float invDet = 1.0f / det;
+    float invSubMatrix[3][3];
+    invSubMatrix[0][0] =  (subMatrix[1][1] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][1]) * invDet;
+    invSubMatrix[0][1] = -(subMatrix[0][1] * subMatrix[2][2] - subMatrix[0][2] * subMatrix[2][1]) * invDet;
+    invSubMatrix[0][2] =  (subMatrix[0][1] * subMatrix[1][2] - subMatrix[0][2] * subMatrix[1][1]) * invDet;
+    invSubMatrix[1][0] = -(subMatrix[1][0] * subMatrix[2][2] - subMatrix[1][2] * subMatrix[2][0]) * invDet;
+    invSubMatrix[1][1] =  (subMatrix[0][0] * subMatrix[2][2] - subMatrix[0][2] * subMatrix[2][0]) * invDet;
+    invSubMatrix[1][2] = -(subMatrix[0][0] * subMatrix[1][2] - subMatrix[0][2] * subMatrix[1][0]) * invDet;
+    invSubMatrix[2][0] =  (subMatrix[1][0] * subMatrix[2][1] - subMatrix[1][1] * subMatrix[2][0]) * invDet;
+    invSubMatrix[2][1] = -(subMatrix[0][0] * subMatrix[2][1] - subMatrix[0][1] * subMatrix[2][0]) * invDet;
+    invSubMatrix[2][2] =  (subMatrix[0][0] * subMatrix[1][1] - subMatrix[0][1] * subMatrix[1][0]) * invDet;
+
+    // Create the resulting 4x4 transformation matrix
+    TransformationMatrix result;
+
+    // Copy the inverse 3x3 submatrix into the upper-left part of the result matrix
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            result.matrix[i][j] = invSubMatrix[i][j];
+        }
+    }
+
+    // Set the remaining elements in the 4x4 result matrix
+    for (int i = 0; i < 4; ++i) {
+        result.matrix[i][3] = 0.0f; // Last column, except the bottom-right
+        result.matrix[3][i] = 0.0f; // Last row, except the bottom-right
+    }
+    result.matrix[3][3] = 1.0f; // Bottom-right element
+
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
     TransformationMatrix inverseTransposeUpperLeft3x3() const {

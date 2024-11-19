@@ -7,13 +7,56 @@ ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix*
 this->parent = parent;
 this->reset = reset;
 std::cout << "I am creating an instance...";
-this->tm = tm;
-
+this->tm = new TransformationMatrix();
 if(reset){
-    *(this->tm) = *(this->tm) * (parent->tm->inverse()) ;
-}
-this->max = this->tm->transform(parent->getBoundingBox(true));
-this->min = this->tm->transform(parent->getBoundingBox(false));
+    *(this->tm) = *(tm) * (parent->tm->inverse()) ;
+}else
+*(this->tm) = *(tm);
+
+
+
+
+    Vec3 originalMin = parent->getBoundingBox(false);
+    Vec3 originalMax = parent->getBoundingBox(true);
+
+    // Get all 8 corners
+    std::vector<Vec3> corners = {
+        Vec3(originalMin.x, originalMin.y, originalMin.z),
+        Vec3(originalMax.x, originalMin.y, originalMin.z),
+        Vec3(originalMin.x, originalMax.y, originalMin.z),
+        Vec3(originalMax.x, originalMax.y, originalMin.z),
+        Vec3(originalMin.x, originalMin.y, originalMax.z),
+        Vec3(originalMax.x, originalMin.y, originalMax.z),
+        Vec3(originalMin.x, originalMax.y, originalMax.z),
+        Vec3(originalMax.x, originalMax.y, originalMax.z),
+    };
+
+    // Transform corners and compute new AABB
+    Vec3 newMin = this->tm->transform(corners[0]);
+    Vec3 newMax = newMin;
+    for (Vec3 corner : corners) {
+        Vec3 transformed = this->tm->transform(corner);
+        
+        newMin.x = std::min(newMin.x, transformed.x);
+        newMin.y = std::min(newMin.y, transformed.y);
+        newMin.z = std::min(newMin.z, transformed.z);
+
+        newMax.x = std::max(newMax.x, transformed.x);
+        newMax.y = std::max(newMax.y, transformed.y);
+        newMax.z = std::max(newMax.z, transformed.z);
+    }
+
+    // this->min = {-5,-5,-5};
+    // this->max = {5,5,5};
+
+
+    this->min.x = newMin.x;
+    this->min.y = newMin.y;
+    this->min.z = newMin.z;
+    this->max.x = newMax.x;
+    this->max.y = newMax.y;
+    this->max.z = newMax.z;
+
 
 }
 
@@ -21,26 +64,47 @@ ObjectInstance::~ObjectInstance()
 {
 }
 
-    float ObjectInstance::Intersects(Ray ray){
-        // TODO update here
-        ray.o = this->tm->inverse().transform(ray.o);
-        ray.d = this->tm->inverse().transform(ray.o);
-        // for normalization
-        Ray * new_ray = new Ray(ray.o, ray.d);
-        return parent->Intersects(*new_ray);
-    }
+    float ObjectInstance::Intersects(Ray ray) {
+    // Transform ray into the instance's local space
+    Vec3 new_o = this->tm->inverse().transform(ray.o);
+    Vec3 new_d = this->tm->inverseUpperLeft3x3().transform(ray.d);
+    Ray new_ray(new_o, new_d); // Use stack allocation
+
+    // Check for intersection with the parent object
+    float t_parent = parent->Intersects(new_ray);
+    if (t_parent < 0) return -1;
+
+    // Transform the intersection point back to world space
+    Vec3 parent_int_location = new_ray.locationAtT(t_parent);
+    Vec3 intersecting_location = this->tm->transform(parent_int_location);
+
+    // Calculate the distance from the original ray origin
+    float resulting_t  = (new_o - intersecting_location).magnitude();
+    return resulting_t;
+    
+}
+
    
-    Vec3 ObjectInstance::getSurfaceNormal(Ray r){
-        r.o = this->tm->inverse().transform(r.o);
-        r.d = this->tm->inverse().transform(r.d);
-        // for normalization
-        Ray * new_ray = new Ray(r.o, r.d);
-        Vec3 parent_normal = parent->getSurfaceNormal(*new_ray);
-        return this->tm->inverse().transpose().transform(parent_normal);
-        
+    Vec3 ObjectInstance::getSurfaceNormal(Ray r) {
+    // Transform ray direction into the instance's local space
+    
+    Vec3 new_o = this->tm->inverse().transform(r.o);
+    Vec3 new_d = this->tm->inverseUpperLeft3x3().transform(r.d);
+    Ray new_ray(new_o, new_d); // Use stack allocation
 
 
-    }
+    // Get the surface normal from the parent object
+    Vec3 parent_normal = parent->getSurfaceNormal(new_ray);
+
+    // Transform the normal back to world space using the inverse transpose
+    TransformationMatrix inv_tra = this->tm->inverseTransposeUpperLeft3x3();
+    Vec3 world_normal = inv_tra.transform(parent_normal);
+
+    // Normalize the world-space normal
+    // return world_normal.normalize();
+    return world_normal.normalize();
+}
+
     Material * ObjectInstance::getMaterial(){
         return this->parent->getMaterial();
     }
