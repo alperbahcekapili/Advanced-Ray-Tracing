@@ -22,6 +22,7 @@ public:
     BVH* bvh_faces;
     float Intersects(Ray ray) override ;
     Vec3 getSurfaceNormal(Ray r) override;
+    TransformationMatrix* gettm() override;
     Material* getMaterial() override;
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;

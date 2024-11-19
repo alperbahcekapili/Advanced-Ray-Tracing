@@ -318,7 +318,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 
     float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
     if (cosTheta < 0)
-        return pixel; // TODO: update here
+        cosTheta = 0; // TODO: update here
     Vec3  irradiance = this->scene->lights[i]->irradianceAt(location) * cosTheta;
 
     // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";

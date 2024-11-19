@@ -80,6 +80,10 @@ if(intersects){
 return -1.0;
 }
 
+TransformationMatrix* Mesh::gettm() {
+    return this->tm;
+}
+
 
 Vec3 Mesh::getSurfaceNormal(Ray r) {
     // get closest triangle and calculate normal of that triangle

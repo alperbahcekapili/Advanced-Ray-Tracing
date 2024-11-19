@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
 
             total_progress++;
                 
-                printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
+                // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
                 
                 // shoot ray from camera to ImagePane
                 Ray cameraRay = curscene.imagePane->rayFromCamera(i, j);
@@ -90,17 +90,7 @@ int main(int argc, char const *argv[])
                 bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
                 if(!intersected)
                 continue;
-                int intersectingObjIndex = tofill -> id;
-
-
-                // std::cout << intersectingObjIndex << "\n";
-
-                if(intersectingObjIndex==2){
-                    int a = 1;
-                    std::cout << intersectingObjIndex << "\n";
-
-                }
-                    
+                int intersectingObjIndex = tofill -> id;                    
 
                 // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.x, cameraRay.o.y, cameraRay.o.z ,cameraRay.d.x, cameraRay.d.y, cameraRay.d.z);
 

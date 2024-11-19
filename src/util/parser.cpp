@@ -69,7 +69,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     int facevid1, facevid2, facevid3;
     std::vector<Vec3> mesh_faces;
     int mesh_numfaces = 0;
-    std::vector<Mesh*> meshes;
+    std::vector<Object*> meshes;
 
 
     int triangle_material_id;
@@ -582,6 +582,14 @@ while(element){
     bool reset_transform = false;
 
 
+
+    child = element->FirstChildElement("Material");
+    stream.clear();
+    string tmp = child->GetText();
+    stream << tmp << std::endl;
+    stream >> mesh_material_id;
+    mesh_material = materials.at(mesh_material_id-1);
+
     
     std::vector<TransformationMatrix*> tms;
     child = element->FirstChildElement("Transformations");
@@ -626,8 +634,9 @@ while(element){
     string reset = element->Attribute("resetTransform", NULL) ;
     reset_transform = (reset == "true");
 
-
-    all_objects.push_back(new ObjectInstance(all_objects.at(parent_id-1), reset_transform, resulting_tm));
+    ObjectInstance* new_obj  = new ObjectInstance(meshes.at(parent_id-1), reset_transform, resulting_tm, materials.at(mesh_material_id-1));
+    meshes.push_back(new_obj);
+    all_objects.push_back(new_obj);
     element = element->NextSiblingElement("MeshInstance");
 }
 

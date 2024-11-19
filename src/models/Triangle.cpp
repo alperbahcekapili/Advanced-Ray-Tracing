@@ -5,7 +5,9 @@
 #include <math.h>
 
 
-
+TransformationMatrix* Triangle::gettm(){
+    return this->tm;
+}
 float Triangle::Intersects(Ray ray){
     Vec3 d = ray.d;
     Vec3 o = ray.o;

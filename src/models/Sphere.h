@@ -15,6 +15,7 @@ public:
     float Intersects(Ray ray) override ;
     Vec3 getSurfaceNormal(Ray r) override;
     Material* getMaterial() override;
+    TransformationMatrix* gettm() override;
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;
     Vec3  getCenter() override;

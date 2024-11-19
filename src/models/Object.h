@@ -28,6 +28,7 @@ public:
     virtual ObjectType getObject() = 0;
     virtual Vec3 getBoundingBox(bool isMax) = 0;
     virtual Vec3  getCenter() = 0;
+    virtual TransformationMatrix* gettm() = 0;
     // virtual void transform(TransformationMatrix tm) = 0;
     
     

@@ -2,6 +2,12 @@
 #include "../util/util.h"
 #include <cmath>  // For sqrt function
 
+
+TransformationMatrix* Sphere::gettm(){
+    return this->tm;
+}
+
+
 Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm)
 {
     this->R = R;

@@ -2,14 +2,22 @@
 #include "ObjectInstance.h"
 #include "Object.h"
 
-ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm)
+
+
+TransformationMatrix* ObjectInstance::gettm() {
+    return this->tm;
+}
+
+
+ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm, Material* material)
 {
 this->parent = parent;
 this->reset = reset;
 std::cout << "I am creating an instance...";
 this->tm = new TransformationMatrix();
+this->material = material;
 if(reset){
-    *(this->tm) = *(tm) * (parent->tm->inverse()) ;
+    *(this->tm) = *(tm) * (parent->gettm()->inverse()) ;
 }else
 *(this->tm) = *(tm);
 
@@ -106,7 +114,7 @@ ObjectInstance::~ObjectInstance()
 }
 
     Material * ObjectInstance::getMaterial(){
-        return this->parent->getMaterial();
+        return this->material;
     }
     ObjectType ObjectInstance::getObject() {
         return parent->getObject();

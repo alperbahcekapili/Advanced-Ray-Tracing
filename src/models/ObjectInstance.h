@@ -20,6 +20,7 @@ public:
     ObjectType getObject() override;
     Vec3 getBoundingBox(bool isMax) override;
     Vec3  getCenter() override;
-    ObjectInstance(Object* parent, bool reset, TransformationMatrix* resulting_tm);
+    TransformationMatrix* gettm() override;
+    ObjectInstance(Object* parent, bool reset, TransformationMatrix* resulting_tm, Material* material);
     ~ObjectInstance();
 };
