@@ -79,7 +79,7 @@ BVH::BVH(Object** objects, int num_objects, int depth)
     // Recursively build the left and right subtrees
     left = new BVH(objects, mid, depth + 1);
     right = new BVH(objects + mid, num_objects - mid, depth + 1);
-    
+    this->total_depth = std::max(left->total_depth, right->total_depth) + 1;
     
 
 }
@@ -114,8 +114,8 @@ void BVH::visualize(int level) const {
 
 bool BVH::intersects(Ray ray, float& tNear, float& tFar){
     // Initialize near and far intersection distances
-    tNear = std::numeric_limits<float>::lowest();
-    tFar = std::numeric_limits<float>::max();
+    tNear = std::numeric_limits<float>::max();
+    tFar = std::numeric_limits<float>::lowest();
 
     // Iterate over each axis (x, y, z)
     for (int axis = 0; axis < 3; ++axis) {
@@ -165,33 +165,16 @@ bool BVH::intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax){
         return false;
     }
 
-    // the ray intersects with current box now we need to test both left and light child and recurse on smaller tval
-    float tminl = std::numeric_limits<float>::lowest();
-    float tmaxl = std::numeric_limits<float>::max(); 
-    float tminr = std::numeric_limits<float>::lowest();
-    float tmaxr = std::numeric_limits<float>::max();
-
-
-    bool left_intersects = this->left->intersects(ray, tminl, tmaxl);
-    bool right_intersects = this->right->intersects(ray, tminr, tmaxr);
-    if(!left_intersects && !right_intersects)
-        return false;
-    if (left_intersects && !right_intersects)
-        return this->left->intersectObject(ray, to_fill, tmin, tmax);
-    else if (!left_intersects && right_intersects)
-        return this->right->intersectObject(ray, to_fill, tmin, tmax);
-    
-
     // std::cout << "Both of the boxes intersect. tmin for l: " <<  tminl << ", tmin for r: " << tminr << "\n";
     // Then we need to test up until the leave for these two
 
     Object* to_fill_l = nullptr; 
     Object* to_fill_r = nullptr;
     
-    tminl = std::numeric_limits<float>::lowest();
-    tmaxl = std::numeric_limits<float>::max(); 
-    tminr = std::numeric_limits<float>::lowest();
-    tmaxr = std::numeric_limits<float>::max();
+    float tminl = std::numeric_limits<float>::lowest();
+    float tmaxl = std::numeric_limits<float>::max(); 
+    float tminr = std::numeric_limits<float>::lowest();
+    float tmaxr = std::numeric_limits<float>::max();
 
     bool lintersects = this->left->intersectObject(ray, to_fill_l, tminl, tmaxl);
     bool rintersects = this->right->intersectObject(ray, to_fill_r, tminr, tmaxr);

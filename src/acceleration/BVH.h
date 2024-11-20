@@ -16,7 +16,7 @@ public:
     Vec3 max;
     bool is_leaf;
     Object* leaf_object;
-
+    int total_depth;
 
 
     Vec3 calculateBounds(Object** objects, int num_objects, bool isMax) {

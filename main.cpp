@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
         {
             image[i] = new Vec3[imgHeight];
 
-            // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
+            printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
 
             for (int j = 0; j < imgHeight; j++)
             {

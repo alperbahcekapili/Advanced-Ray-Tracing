@@ -92,7 +92,6 @@ Vec3 Mesh::getSurfaceNormal(Ray r) {
     if(mint == -1)
         return Vec3(-1,-1,-1);
 
-    Vec3 location = r.locationAtT(mint);
     return this->last_intersected_obj->getSurfaceNormal(r);
 }
 
