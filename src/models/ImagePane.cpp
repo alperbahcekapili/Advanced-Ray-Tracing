@@ -107,5 +107,7 @@ Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
         direction
     );
 
+    resultingRay.time = generate_random_01();
+
     return resultingRay;
 }

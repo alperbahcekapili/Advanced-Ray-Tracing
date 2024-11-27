@@ -25,6 +25,7 @@ ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix*
     this->motionBlur.z = motionBlur.z;
     std::cout << "I am creating an instance...";
     this->tm = new TransformationMatrix();
+    TransformationMatrix blur_tra = TransformationMatrix(motionBlur, 't');
     this->material = material;
     if(reset){
         *(this->tm) = *(tm) * (parent->gettm()->inverse()) ;
@@ -58,7 +59,6 @@ ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix*
         newMin.x = std::min(newMin.x, transformed.x);
         newMin.y = std::min(newMin.y, transformed.y);
         newMin.z = std::min(newMin.z, transformed.z);
-
         newMax.x = std::max(newMax.x, transformed.x);
         newMax.y = std::max(newMax.y, transformed.y);
         newMax.z = std::max(newMax.z, transformed.z);
@@ -72,7 +72,19 @@ ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix*
     this->max.z = newMax.z;
 
 
+    Vec3 transformed_min = blur_tra.transform(min);
+    Vec3 transformed_max = blur_tra.transform(max);
+    this->min.x = std::min(this->min.x, transformed_min.x);
+    this->min.y = std::min(this->min.y, transformed_min.y);
+    this->min.z = std::min(this->min.z, transformed_min.z);
+
+    this->max.x = std::max(this->max.x, transformed_max.x);
+    this->max.y = std::max(this->max.y, transformed_max.y);
+    this->max.z = std::max(this->max.z, transformed_max.z);
+
+
     std::cout << "My top coordinates (MMesh Instance): " << this->max.x << ", " << this->max.y << ", " << this->max.z << "\n";
+    std::cout << "My bottom coordinates (MMesh Instance): " << this->min.x << ", " << this->min.y << ", " << this->min.z << "\n";
 
 }
 
@@ -81,8 +93,15 @@ ObjectInstance::~ObjectInstance()
 }
 
     float ObjectInstance::Intersects(Ray ray) {
+        TransformationMatrix* temp_tm = new TransformationMatrix();
+        if(this->motionBlur.x != 0 || this->motionBlur.y != 0 || this->motionBlur.z != 0)
+            temp_tm = new TransformationMatrix(this->motionBlur*ray.time,'t');
+        
+        
     // Transform ray into the instance's local space
-    Vec3 new_o = this->tm->inverse().transform(ray.o);
+    Vec3 new_o = temp_tm->inverse().transform(ray.o);
+    new_o = this->tm->inverse().transform(new_o);
+    
     Vec3 new_d = this->tm->inverseUpperLeft3x3().transform(ray.d);
     Ray new_ray(new_o, new_d); // Use stack allocation
 
@@ -93,9 +112,12 @@ ObjectInstance::~ObjectInstance()
     // Transform the intersection point back to world space
     Vec3 parent_int_location = new_ray.locationAtT(t_parent);
     Vec3 intersecting_location = this->tm->transform(parent_int_location);
+    intersecting_location = temp_tm->transform(intersecting_location);
+    
 
     // Calculate the distance from the original ray origin
     float resulting_t  = (new_o - intersecting_location).magnitude();
+    
     return resulting_t;
     
 }
@@ -118,6 +140,7 @@ ObjectInstance::~ObjectInstance()
 
     // Normalize the world-space normal
     // return world_normal.normalize();
+    
     return world_normal.normalize();
 }
 

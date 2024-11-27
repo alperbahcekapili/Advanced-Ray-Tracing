@@ -89,10 +89,6 @@ int main(int argc, char const *argv[])
                 float minTValue = 9999999;
                 float maxTValue = -1;
 
-                if(i == 100  && j == 100){
-                    int abc = 0;
-                    std::cout << "a" << std::endl;
-                }
 
                 Object* tofill = nullptr;
                 bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
@@ -122,10 +118,10 @@ int main(int argc, char const *argv[])
             //         printf("%d", abc);
 
             //     }
-                    if(i==99 && j==134){
-                        int abc = -1;
-                        printf("%d", abc);
-                    }
+                    // if(i==99 && j==134){
+                    //     int abc = -1;
+                    //     printf("%d", abc);
+                    // }
 
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);

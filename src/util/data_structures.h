@@ -139,8 +139,10 @@ struct TransformationMatrix {
     // Constructor to initialize the matrix
     TransformationMatrix() {
         for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
+            for (int j = 0; j < 4; ++j){ 
                 matrix[i][j] = 0.0f;
+                if(i==j)
+                    matrix[i][j]=1.0;}
     }
 
     TransformationMatrix(const Vec3 vec, char type) {

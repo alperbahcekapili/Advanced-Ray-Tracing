@@ -309,11 +309,10 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     //     return false;
     // }
 
-
-    if(intersectingObject->getMotionBlur().z!= 0){
-        int b = -1;
-        printf("%d", b);
-    }
+    // if(intersectingObject->getMotionBlur().z!= 0){
+    //     int b = -1;
+    //     printf("%d", b);
+    // }
     bool in_shadow = false;
     float new_tmin, new_tmax;
     Object* tmp;
