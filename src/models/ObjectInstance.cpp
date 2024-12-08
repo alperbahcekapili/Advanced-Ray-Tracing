@@ -159,3 +159,19 @@ ObjectInstance::~ObjectInstance()
     Vec3  ObjectInstance::getCenter(){
         return this->tm->transform(parent->getCenter());
     }
+
+
+
+
+
+    // TODO: Replace below, meshinstances might have their own textures:
+
+int ObjectInstance::get_num_tex_maps(){
+    return this->parent->num_tex_maps;
+}
+TextureMap* ObjectInstance::get_texture_maps() {
+    return this->parent->texture_maps;
+}
+texture_flags ObjectInstance::get_texture_flags(){
+    return this->parent->tex_flags;
+}

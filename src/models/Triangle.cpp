@@ -64,12 +64,38 @@ Vec3 Triangle::getMotionBlur(){
     return this->motionBlur;
 }
 
-Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm, Mesh* mesh)
+Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 , Vec3 v3, TransformationMatrix* tm, Mesh* mesh, int num_tex_maps, TextureMap* texture_maps, std::vector<std::pair<float, float> > uv_coords_triangle)
 {
     this->material = material;
     this->objectType = objectType;
-
     this->mesh = mesh;
+    this->tex_flags = texture_flags();
+    this->num_tex_maps = num_tex_maps;
+    this->uv_coords_triangle = uv_coords_triangle;
+    for (size_t i = 0; i < num_tex_maps; i++)
+    {
+        if (texture_maps[i].decal_mode == replace_kd) {
+            this->tex_flags.replace_kd = true;
+            this->tex_flags.replace_kd_texture = &texture_maps[i];
+        } else if (texture_maps[i].decal_mode == blend_kd) {
+            this->tex_flags.blend_kd = true;
+            this->tex_flags.blend_kd_texture = &texture_maps[i];
+        } else if (texture_maps[i].decal_mode == replace_ks) {
+            this->tex_flags.replace_ks = true;
+            this->tex_flags.replace_ks_texture = &texture_maps[i];
+        } else if (texture_maps[i].decal_mode == bump_normal) {
+            this->tex_flags.bump_normal = true;
+            this->tex_flags.bump_normal_texture = &texture_maps[i];
+        } else if (texture_maps[i].decal_mode == replace_all) {
+            this->tex_flags.replace_all = true;
+            this->tex_flags.replace_all_texture = &texture_maps[i];
+        } else {
+            // Handle any unrecognized decal modes if necessary.
+            std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
+        }
+
+    }
+    
 
     // before setting tm we need to move the center to origin then move back
     this->tm = new TransformationMatrix();
@@ -151,3 +177,14 @@ ObjectType Triangle::getObject(){
     return this->objectType;
 }
 
+
+
+int Triangle::get_num_tex_maps(){
+    return this->num_tex_maps;
+}
+TextureMap* Triangle::get_texture_maps() {
+    return this->texture_maps;
+}
+texture_flags Triangle::get_texture_flags(){
+    return this->tex_flags;
+}

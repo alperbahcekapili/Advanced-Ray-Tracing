@@ -1,9 +1,14 @@
 #include "parser.h"
+#include <cmath> // For tan and M_PI
 #include "tinyxml2.h"
 #include <sstream>
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
+#include <filesystem>
+#include <cstring>  // For strcmp
+#include <cstdlib>  // For atoi
+
 
 #include "../models/Camera.h"
 #include "../lights/Light.h"
@@ -15,9 +20,12 @@
 #include "../models/ImagePane.h"
 #include "../models/ObjectInstance.h"
 #include "../scene/Scene.h"
+#include "../shaders/TextureImage.h"
+#include "../shaders/TextureMap.h"
 #include "data_structures.h"
 #include "ply.h"
 #include "read_ply.h"
+
 
 
 
@@ -91,6 +99,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     std::vector<Vec3> rotate;
 
     
+    int bg_texture_index = -1;
     
 
 
@@ -152,15 +161,54 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         float focus_distance=-1;
         float aperture_size=-1;
         tinyxml2::XMLElement* child = element->FirstChildElement("Position");
-        stream << child->GetText() << std::endl;
+        const char* campos_str = child->GetText();
+        stream << campos_str << std::endl;
+        // gaze or gazepoint
+
         child = element->FirstChildElement("Gaze");
-        stream << child->GetText() << std::endl;
+        if (child)
+            stream << child->GetText() << std::endl;
+        else{
+            
+            std::istringstream iss1(campos_str);
+            std::istringstream iss2(element->FirstChildElement("GazePoint")->GetText());
+
+            // Vectors to store extracted values
+            std::vector<float> values1, values2;
+
+            float val1, val2;
+            // Extract values pairwise
+            while (iss1 >> val1 && iss2 >> val2) {
+                values1.push_back(val1);
+                values2.push_back(val2);
+                
+                }
+            stream << values2[0]-values1[0]  << " " << values2[1]-values1[1]  << " "<< values2[2]-values1[2] << std::endl;
+
+        }
         child = element->FirstChildElement("Up");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("NearPlane");
-        stream << child->GetText() << std::endl;
+        
+        
         child = element->FirstChildElement("NearDistance");
+        const char*  ndist_str = child->GetText();
+        
+
+        child = element->FirstChildElement("NearPlane");
+        if(child)
         stream << child->GetText() << std::endl;
+        else// then fovy is given we can calculate tlrb
+        {
+            child = element->FirstChildElement("FovY");
+            float fovy = std::atoi(child->GetText());
+            // Convert fovy from degrees to radians
+            double fovyRadians = fovy * M_PI / 180.0;
+            double t = atof(ndist_str) * tan(fovyRadians / 2.0);
+            // means symmetric image plane thus we can set l,r,b,t same
+            stream << -t  << " " << t  << " " << -t  << " " << t  << std::endl;
+            }
+
+        stream << ndist_str << std::endl;
 
         stream >>  cam_position.x >> cam_position.y >> cam_position.z;
         stream >> cam_gaze.x >> cam_gaze.y >> cam_gaze.z;
@@ -204,11 +252,13 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     
     element = root->FirstChildElement("Lights");
     tinyxml2::XMLElement* child = element->FirstChildElement("AmbientLight");
-    stream << child->GetText() << std::endl;
-    stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;
+    if(child){
+        stream << child->GetText() << std::endl;
+        stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;        
+    }else{
+        ambient_light = Vec3(0,0,0);
+    }
     auto lchild = element->FirstChildElement("PointLight");
-
-
     while (lchild)
     {
         child = lchild->FirstChildElement("Position");
@@ -247,6 +297,76 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         lights.push_back(l);
         element = element->NextSiblingElement("AreaLight");
     }
+
+
+
+
+
+
+
+    // read texture related stuff
+    std::vector<TextureImage*> image_list;
+    std::vector<TextureMap*> tmap_list;
+    
+    element = root->FirstChildElement("Textures");
+    if(element)
+    {
+        auto child = element->FirstChildElement("Images");
+        child = child->FirstChildElement("Image");
+        while (child)
+        {
+            // Find the last '/' in the path
+            size_t pos = filepath.find_last_of('/');
+            
+            // Extract everything before the last '/'
+            std::string folderPath = (pos != std::string::npos) ? filepath.substr(0, pos+1) : "";
+
+            image_list.push_back(new TextureImage(folderPath + child->GetText()));
+            child = child->NextSiblingElement("Image");
+        }
+
+
+        child = element->FirstChildElement("TextureMap");
+        while (child)
+        {
+            const char*  decal_mode_c = child->FirstChildElement("DecalMode")->GetText();
+            enum DecalMode decal_mode = TextureMap::getDecalMode(decal_mode_c);
+            if(decal_mode == replace_background){
+                const char*  id = child->Attribute("id");
+                bg_texture_index = int(*id-'0') - 1;
+            }
+            auto img_id = child->FirstChildElement("ImageId");
+            if(img_id){
+                stream << img_id->GetText() << std::endl;
+                auto img_index =-1;
+                stream >> img_index;;
+                // read interpolation type as well
+                auto interpol_type = child->FirstChildElement("Interpolation")->GetText();
+                InterploationType itype = TextureMap::getInterpolationType(interpol_type);
+                tmap_list.push_back(new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype));
+            }
+            child = child->NextSiblingElement("TextureMap");
+            // TODO: Add other texture map properties here
+        }
+    
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -380,6 +500,31 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     stream.clear();
     stream.str("");
 
+    bool TEXTURE_COORDS_EXIST = false;
+
+
+
+    // if tex coord data is presend then read that as well
+    std::vector<std::pair<float, float> > uv_coords;
+    element = root->FirstChildElement("TexCoordData");
+    if(element){
+        TEXTURE_COORDS_EXIST = true;
+        stream << element->GetText() << std::endl;
+        float first,second;
+        while (stream >> first >> second)
+        {
+            uv_coords.emplace_back(first, second);
+        }
+
+    }
+
+
+    stream.clear();
+    stream.str("");
+
+
+
+
     element = root->FirstChildElement("Objects");
     element = element->FirstChildElement("Mesh");
     while (element)
@@ -401,6 +546,21 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }
 
         
+
+        
+        // read textures if exist
+        std::vector<TextureMap*> tmaps;
+        child = element->FirstChildElement("Textures");
+        if(child){
+            stream << child->GetText() << std::endl;
+            int texture_buffer;
+            while(stream >> texture_buffer){
+                tmaps.push_back(tmap_list.at(texture_buffer-1));
+            }
+
+        }
+
+
 
         std::vector<TransformationMatrix*> tms;
         child = element->FirstChildElement("Transformations");
@@ -442,6 +602,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         int ftype;
         float version;
         
+        std::vector<std::pair<float, float> > uv_coords_mesh;
+
         char* plyattr = "plyFile";
 		if (child->Attribute(plyattr))
 		{
@@ -453,7 +615,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             // Construct the new path: part before the first '/' + '/' + new filename
             plyFilePath = filepath.substr(0, firstSlashPos + 1) + plyFilePath;
             std::vector<Vec3> tmp_l = read_ply(plyFilePath);
-            mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end());
+            mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end()); // TODO: texture coord with ply ? 
 		}
 		else
 		{
@@ -461,15 +623,22 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             while (!(stream >> facevid1).eof())
             {   
                 stream >> facevid2 >> facevid3;
-
-                // here create mesh
-                mesh_faces.push_back(vertices.at(facevid1-1));
-                mesh_faces.push_back(vertices.at(facevid2-1));
-                mesh_faces.push_back(vertices.at(facevid3-1));
-                    
+                int index_offset = -1;
+                const char* vertex_offset = child->Attribute("vertexOffset");
+                if(vertex_offset){
+                    index_offset += int(*vertex_offset - '0');
+                }
+                // TODO: add -1 here, make use of vertex offset in the xml
+                mesh_faces.push_back(vertices.at(facevid1+index_offset));
+                mesh_faces.push_back(vertices.at(facevid2+index_offset));
+                mesh_faces.push_back(vertices.at(facevid3+index_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid1+index_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid2+index_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid3+index_offset));
             }
 
 		}
+
        
       stream.clear();
         // convert vector to list
@@ -480,10 +649,17 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             // std::cout << i << "\n" ;
         }
         mesh_numfaces = int(mesh_faces.size()/3);
-        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces, resulting_tm);
+
+        TextureMap* tmaps_array = new TextureMap[tmaps.size()];
+        for (size_t i = 0; i < tmaps.size(); i++)
+        {
+            tmaps_array[i] = *(tmaps.at(i));
+        }
+        
+
+        Mesh* m = new Mesh(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces, resulting_tm, tmaps.size(), tmaps_array, uv_coords_mesh); // TODO: replace here
 
         meshes.push_back(m);
-
         mesh_faces.clear();
         element = element->NextSiblingElement("Mesh");
     }
@@ -552,9 +728,9 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     Vec3 triv2(vertices.at(trianglev2-1).x,vertices.at(trianglev2-1).y,vertices.at(trianglev2-1).z);
     Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
     
-    triangles.push_back(new Triangle(
-        materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm, nullptr
-    ));
+    // triangles.push_back(new Triangle( // TODO: Fix here
+    //     materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm, nullptr, -1, nullptr, nullptr
+    // ));
     element = element->NextSiblingElement("Triangle");
 }
 stream.str("");
@@ -744,7 +920,6 @@ for (size_t i = 0; i < all_objects.size(); i++)
 }
 
 
-
 std::vector<Scene*> scenes;
 // for each camera we need to define a image pane
 for (size_t i = 0; i < cameras.size(); i++)
@@ -771,6 +946,12 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+    s->bg_texture_set = false;
+    // if bg_texture is set then set in the scene as well
+    if(bg_texture_index != -1){
+        s->bg_texture = tmap_list[bg_texture_index];
+        s->bg_texture_set = true;
+    }
     scenes.push_back(s);
 }
 

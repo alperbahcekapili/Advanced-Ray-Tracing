@@ -6,9 +6,9 @@
 
 Camera::Camera(Vec3  v, Vec3  w, Vec3  position, float mint, float maxt, string name, float numsamples, float focus_distance, float aperture_size):mint(mint), maxt(maxt)
 {
-this->v = v;
-this->w = w;
-this->u = w.cross(v);
+this->v = v.normalize();
+this->w = w.normalize();
+this->u = w.cross(v).normalize();
 this->position = position;
 // std::cout << position.x << ", " << position.y << ", " << position.z << "\n";
 this->name = name;

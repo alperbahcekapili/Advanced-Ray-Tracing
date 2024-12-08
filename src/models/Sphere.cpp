@@ -111,3 +111,14 @@ Vec3 Sphere::getMotionBlur(){
     return this->motionBlur;
 }
 
+
+
+int Sphere::get_num_tex_maps(){
+    return this->num_tex_maps;
+}
+TextureMap* Sphere::get_texture_maps() {
+    return this->texture_maps;
+}
+texture_flags Sphere::get_texture_flags(){
+    return this->tex_flags;
+}

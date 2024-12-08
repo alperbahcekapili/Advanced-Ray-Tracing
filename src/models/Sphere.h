@@ -10,7 +10,7 @@ public:
     float R;
     Material* material;
     ObjectType objectType; 
-    
+    texture_flags tex_flags;
     Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm);
     float Intersects(Ray ray) override ;
     Vec3 getSurfaceNormal(Ray r) override;
@@ -22,5 +22,8 @@ public:
 Vec3 getMotionBlur() override;
     
     
+    int get_num_tex_maps() override;
+    TextureMap* get_texture_maps() override;
+    texture_flags get_texture_flags() override;
 };
 

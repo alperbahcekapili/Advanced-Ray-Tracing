@@ -92,48 +92,45 @@ int main(int argc, char const *argv[])
 
                 Object* tofill = nullptr;
                 bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
-                if(!intersected)
-                continue;
-                int intersectingObjIndex = tofill -> id;                    
+                int intersectingObjIndex = -1;
+                if(intersected)
+                    intersectingObjIndex = tofill -> id;                    
 
                 // printf("Camera ray at: %d,%d: location: %f,%f,%f direction:%f,%f,%f\n", i, j, cameraRay.o.x, cameraRay.o.y, cameraRay.o.z ,cameraRay.d.x, cameraRay.d.y, cameraRay.d.z);
 
-                if (minTValue > curscene.camera->maxt){
-                    // printf("Too far or too close\n");
-                    // printf("%f",minTValue);
-                    image[i][j] = Vec3(float(shader.scene->bg.x),float(shader.scene->bg.y),float(shader.scene->bg.z));
-                    continue;
-                }
-
-
                 if (intersectingObjIndex == -1){
-                    // printf("No intersections\n");
-                    image[i][j] = Vec3(float(shader.scene->bg.x),float(shader.scene->bg.y),float(shader.scene->bg.z));
+                    // if scene has bg texture then use it
+                    Vec3 bg_pixel_val = Vec3(float(shader.scene->bg.x),float(shader.scene->bg.y),float(shader.scene->bg.z));
+                    if(shader.scene->bg_texture_set){
+                        // if i < imgwidth/2 and j < imgheight/2 then we are on the topleft triangle
+                        bool topleft = false;
+                        if(i < imgWidth/2  && j < imgHeight/2)
+                            topleft = true;
+                        // intersection point is defined by pixel indices
+                        Vec3 intersection_point = Vec3(i, j, 1);
+                        Vec3 v1 = topleft ? Vec3(0,0,0) : Vec3(imgWidth, imgHeight, 1);
+                        Vec3 v2 = Vec3(0, imgHeight, 1);
+                        Vec3 v3 = Vec3(imgWidth, 0, 1);
+                        std::pair<double, double> uv_a = {0, 0}, uv_b = {1, 0}, uv_c = {0, 1};
+                        if(! topleft)
+                            uv_a = {1,1};
+                        uv tmp_uv = uv::calculateUVTriangle(intersection_point, v1, v2, v3, uv_a, uv_b, uv_c);
+                        bg_pixel_val = shader.scene->bg_texture->interpolateAt(tmp_uv, NEAREAST_NEIGHBOR) * 255 ;
+                        
+                    }
+
+                    cumulative_pixel = cumulative_pixel +  (bg_pixel_val/curscene.camera->numsamples);
+                    image[i][j] = clipValues(cumulative_pixel, 255.0);
                     continue;
                 }
-
-            //    // std::cout << i << "," << j << "\n";
-            //     if(tofill->getMotionBlur().z == 4.0){
-            //         int abc = -1;
-            //         printf("%d", abc);
-
-            //     }
-                    // if(i==99 && j==134){
-                    //     int abc = -1;
-                    //     printf("%d", abc);
-                    // }
-
+                
+                
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
 
-                // if(tofill->getMotionBlur().z!= 0){
-                //     int b = -1;
-                //     printf("%d", b);
-                // }
-                // TODO: replace hardcoded max hops, specular reflection also calculates diffuse
-
                 Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
+                
 
                 if(tofill->getMaterial()->materialType == MaterialType::Mirror){
                     Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);

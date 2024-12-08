@@ -11,7 +11,7 @@ public:
 
     Object* parent;
     bool reset; // reset transform of parent object
-
+    texture_flags tex_flags;
     TransformationMatrix* tm;
     float Intersects(Ray ray) override ;
     float getArea(void);
@@ -24,4 +24,12 @@ public:
     TransformationMatrix* gettm() override;
     ObjectInstance(Object* parent, bool reset, TransformationMatrix* resulting_tm, Material* material, Vec3 motionBlur);
     ~ObjectInstance();
+
+
+
+    int get_num_tex_maps() override;
+    TextureMap* get_texture_maps() override;
+    texture_flags get_texture_flags() override;
+
+
 };

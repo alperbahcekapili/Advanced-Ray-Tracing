@@ -35,10 +35,8 @@ Vec3 AreaLight::irradianceAt(Ray light_ray, Vec3  location){
 
 
 Vec3 AreaLight::getPointOn(){
-    // assumes area light is always parallel to axis
-
-    float randompx = 0.5;//generate_random_01();
-    float randompy = 0.5;//generate_random_01();
+    float randompx = generate_random_01();
+    float randompy = generate_random_01();
     
     // map range to [-size/2, size/2]
 

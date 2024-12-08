@@ -13,7 +13,6 @@ public:
     Camera* camera;
     int numObjects;  
     Object** sceneObjects;
-       
     ImagePane* imagePane; 
     Light** lights; 
     int numlights;
@@ -22,7 +21,8 @@ public:
     float refraction_index;
     float shadow_ray_eps;
     BVH* bvh;
-    
+    TextureMap* bg_texture;
+    bool bg_texture_set;    
     Scene(Object** sceneObjects, int numObects, Camera* camera, ImagePane* imagePane, Light** lights, int numlights, Vec3 bg, Vec3 ambient_light, float shadow_ray_eps, float refraction_index);
     ~Scene();
 };

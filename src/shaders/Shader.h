@@ -12,6 +12,7 @@ public:
     Scene* scene;
     Shader(Scene* scene);
     ~Shader();
+    
     Vec3  diffuseShadingAt(Vec3  locationü, Object* intersectingObject, int diffuseShadingAt);
     Vec3  ambientShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     Vec3  specularShadingAt(Ray cameraRay,Vec3  location, Object* intersectingObject, int intersectingObjIndex);

@@ -68,7 +68,7 @@ Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
     
 
     int num_sample_axis =  int(sqrt(this->c->numsamples));
-    float subregion_width = 1 / float(num_sample_axis);
+    float subregion_width = 0.5f / float(num_sample_axis);
     Vec3 pixel_center = this->sValues[i][j];
     
     int xgrid = int(rayindex%num_sample_axis);
@@ -107,7 +107,7 @@ Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
         direction
     );
 
-    resultingRay.time = generate_random_01();
+    // resultingRay.time = generate_random_01();
 
     return resultingRay;
 }

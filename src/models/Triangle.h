@@ -21,7 +21,11 @@ public:
     Vec3 normal;
     Mesh* mesh;
     TransformationMatrix* tm;
-    Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3, TransformationMatrix* tm, Mesh* mesh);
+    texture_flags tex_flags;
+    TextureMap* texture_maps;
+    std::vector<std::pair<float, float> > uv_coords_triangle;
+    int num_tex_maps;
+    Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3, TransformationMatrix* tm, Mesh* mesh, int num_tex_maps, TextureMap* texture_maps, std::vector<std::pair<float, float> > uv_coords_triangle);
     float Intersects(Ray ray) override ;
     TransformationMatrix* gettm() override;
     float getArea(void);
@@ -32,4 +36,8 @@ public:
     Vec3 getBoundingBox(bool isMax) override;
     Vec3  getCenter() override;
     Vec3 getMotionBlur() override;
+
+    int get_num_tex_maps() override;
+    TextureMap* get_texture_maps() override;
+    texture_flags get_texture_flags() override;
 };

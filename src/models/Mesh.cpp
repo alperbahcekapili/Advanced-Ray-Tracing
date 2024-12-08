@@ -6,9 +6,37 @@
 
 
 
-Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces, TransformationMatrix* tm):
+Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces, TransformationMatrix* tm, int num_tex_maps, TextureMap* texture_maps, std::vector<std::pair<float, float> > uv_coords_mesh):
  objectType(objectType){
     this->material = material;
+    this->num_tex_maps = num_tex_maps;
+    // construct tmap_flags objects as well
+    this->tex_flags = texture_flags();
+    this->texture_maps = texture_maps;
+    this->uv_coords_mesh = uv_coords_mesh;
+    for (size_t i = 0; i < num_tex_maps; i++)
+    {
+        if (texture_maps[i].decal_mode == replace_kd) {
+            this->tex_flags.replace_kd = true;
+            this->tex_flags.replace_kd_texture = texture_maps + i;
+        } else if (texture_maps[i].decal_mode == blend_kd) {
+            this->tex_flags.blend_kd = true;
+            this->tex_flags.blend_kd_texture = texture_maps + i;
+        } else if (texture_maps[i].decal_mode == replace_ks) {
+            this->tex_flags.replace_ks = true;
+            this->tex_flags.replace_ks_texture = texture_maps + i;
+        } else if (texture_maps[i].decal_mode == bump_normal) {
+            this->tex_flags.bump_normal = true;
+            this->tex_flags.bump_normal_texture = texture_maps + i;
+        } else if (texture_maps[i].decal_mode == replace_all) {
+            this->tex_flags.replace_all = true;
+            this->tex_flags.replace_all_texture = texture_maps + i;
+        } else {
+            // Handle any unrecognized decal modes if necessary.
+            std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
+        }
+
+    }
     
     // std::cout << "Material:"<< material->materialType << std::endl;
     this->tm = new TransformationMatrix();
@@ -36,20 +64,19 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     TransformationMatrix* resulting_tm = new TransformationMatrix();
     *resulting_tm = (*from_center)  * (*tm) ;
     *resulting_tm = (*resulting_tm) * (*to_center);
-    //  for (int i = 0; i < 4; i++) {
-    //     for (int j = 0; j < 4; j++) {
-    //         // std::cout << resulting_tm->matrix[i][j] << "\t"; // Tab for spacing
-    //     }
-    //     // std::cout << std::endl; // Newline after each row
-    // }
-    
+
     for (int i = 0; i < numfaces; i++)
     {
+
+        std::vector<std::pair<float, float> > uv_coords_triangle;
+        uv_coords_triangle.push_back(uv_coords_mesh.at(i*3));
+        uv_coords_triangle.push_back(uv_coords_mesh.at(i*3+1));
+        uv_coords_triangle.push_back(uv_coords_mesh.at(i*3+2));
         // Initialize triangles with transformation relative to mesh center
         Triangle* tmp_triangle = new Triangle(
             material, ObjectType::TriangleType, 
             faces[i*3], faces[i*3+1], faces[i*3+2], 
-            resulting_tm, this
+            resulting_tm, this, num_tex_maps, texture_maps, uv_coords_triangle
         );
         tmp_triangle->mesh = this;
         triangles[i] = tmp_triangle;
@@ -80,10 +107,6 @@ auto end = std::chrono::high_resolution_clock::now();
 // Calculate duration
 std::chrono::duration<double> duration = end - start;
 
-// Print result
-// std::cout << "Function took " << duration.count() << " seconds." << std::endl;
-
-    // std::cout << "Mint for mesh: " << mint << ", Intersecting face index: " << intersecting_face_index <<"\n";
 if(intersects){
     this->last_intersected_obj = tofill;
     return mint;
@@ -130,3 +153,13 @@ Vec3  Mesh::getCenter(){
     return this->center;
 }
 
+
+int Mesh::get_num_tex_maps(){
+    return this->num_tex_maps;
+}
+TextureMap* Mesh::get_texture_maps() {
+    return this->texture_maps;
+}
+texture_flags Mesh::get_texture_flags(){
+    return this->tex_flags;
+}
