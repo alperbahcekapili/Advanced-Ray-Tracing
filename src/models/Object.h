@@ -10,11 +10,13 @@ struct texture_flags{
     bool replace_ks=false;
     bool bump_normal=false;
     bool replace_all=false;
+    bool replace_normal=false;
     TextureMap* replace_kd_texture;
     TextureMap* blend_kd_texture;
     TextureMap* replace_ks_texture;
     TextureMap* bump_normal_texture;
     TextureMap* replace_all_texture;
+    TextureMap* replace_normal_texture;
 
 };
 

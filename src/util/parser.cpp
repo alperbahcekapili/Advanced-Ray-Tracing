@@ -341,7 +341,12 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 auto img_index =-1;
                 stream >> img_index;;
                 // read interpolation type as well
-                auto interpol_type = child->FirstChildElement("Interpolation")->GetText();
+                auto interpol_elem = child->FirstChildElement("Interpolation");
+                const char * interpol_type = "bilinear";
+                if(interpol_elem)
+                interpol_type = interpol_elem->GetText();
+                
+                
                 InterploationType itype = TextureMap::getInterpolationType(interpol_type);
                 tmap_list.push_back(new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype));
             }
@@ -754,6 +759,19 @@ while (element)
     stream << child->GetText() << std::endl;
     stream >> shpere_radius;
 
+    
+    // read textures if exist
+    std::vector<TextureMap*> tmaps;
+    child = element->FirstChildElement("Textures");
+    if(child){
+        stream << child->GetText() << std::endl;
+        int texture_buffer;
+        while(stream >> texture_buffer){
+            tmaps.push_back(tmap_list.at(texture_buffer-1));
+        }
+
+    }
+
     std::vector<TransformationMatrix*> tms;
     child = element->FirstChildElement("Transformations");
     if(child){
@@ -786,11 +804,17 @@ while (element)
     }
     
 
+    TextureMap* tmaps_array = new TextureMap[tmaps.size()];
+    for (size_t i = 0; i < tmaps.size(); i++)
+    {
+        tmaps_array[i] = *(tmaps.at(i));
+    }
+
     Sphere* s = new Sphere(
     vertices.at(sphere_center_id-1),
     shpere_radius,  
     materials.at(sphere_material_id-1),
-    ObjectType::SphereType, resulting_tm);
+    ObjectType::SphereType, resulting_tm, tmaps.size(), tmaps_array);
     element = element->NextSiblingElement("Sphere");
     spheres.push_back(s);
 }

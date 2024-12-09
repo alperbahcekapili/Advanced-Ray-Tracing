@@ -18,6 +18,9 @@ public:
     Vec3 v1;
     Vec3 v2;
     Vec3 v3;
+    Vec3 T;
+    Vec3 B;
+    bool tbset=false;
     Vec3 normal;
     Mesh* mesh;
     TransformationMatrix* tm;

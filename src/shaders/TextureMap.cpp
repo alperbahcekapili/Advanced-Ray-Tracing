@@ -31,6 +31,9 @@ DecalMode TextureMap::getDecalMode(const char* mode){
         return bump_normal;
     if(strcmp(mode, "replace_all") == 0)
         return replace_all;
+    if(strcmp(mode, "replace_normal") == 0)
+        return replace_normal;
+    
 }
 
 

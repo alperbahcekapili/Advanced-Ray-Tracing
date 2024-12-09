@@ -54,7 +54,53 @@ float Triangle::Intersects(Ray ray){
 }
 
 Vec3 Triangle::getSurfaceNormal(Ray r){
+    if(!this->tex_flags.replace_normal)
     return this->normal;
+
+
+    if(!this->tbset)
+    {
+        Vec3 E1 = this->v2 - this->v1;
+        Vec3 E2 = this->v3 - this->v1;
+
+        // UV edge vectors
+        float  deltaUV1x = this->uv_coords_triangle.at(1).first - this->uv_coords_triangle.at(0).first;
+        float  deltaUV1y = this->uv_coords_triangle.at(1).second - this->uv_coords_triangle.at(0).second;
+        float  deltaUV2x = this->uv_coords_triangle.at(2).first - this->uv_coords_triangle.at(0).first;
+        float  deltaUV2y = this->uv_coords_triangle.at(2).second - this->uv_coords_triangle.at(0).second;
+        
+
+        // Compute the determinant
+        float determinant = deltaUV1x * deltaUV2y - deltaUV1y * deltaUV2x;
+
+        float invDet = 1.0f / determinant;
+
+        // Compute T and B
+        Vec3 T = invDet * (deltaUV2y * E1 - deltaUV1y * E2);
+        Vec3 B = invDet * (-deltaUV2x * E1 + deltaUV1x * E2);
+
+        // Normalize T and B
+        this->T = T.normalize();
+        this->B = B.normalize();
+        this->tbset = true;
+    }
+    
+    // transform normall according to texture value
+    float tval = this->Intersects(r);
+    Vec3 inters_loc = r.locationAtT(tval);
+    uv uv_loc = uv::calculateUVTriangle(inters_loc, this->v1, this->v2, this->v3, this->uv_coords_triangle.at(0), this->uv_coords_triangle.at(1), this->uv_coords_triangle.at(2));
+    Vec3 tex_value = this->tex_flags.replace_normal_texture->interpolateAt(uv_loc, tex_flags.replace_normal_texture->interpolation_type);
+    tex_value = (tex_value * 2) - Vec3(1,1,1);
+    tex_value = tex_value.normalize(); 
+
+    Vec3 nnew = T*tex_value + B*tex_value + this->normal*tex_value;
+    
+    return nnew;
+
+
+
+
+
 }
 
 Triangle::Triangle(){
@@ -89,7 +135,10 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
         } else if (texture_maps[i].decal_mode == replace_all) {
             this->tex_flags.replace_all = true;
             this->tex_flags.replace_all_texture = &texture_maps[i];
-        } else {
+        } else if (texture_maps[i].decal_mode == replace_normal) {
+            this->tex_flags.replace_normal = true;
+            this->tex_flags.replace_normal_texture = texture_maps + i;
+        }else {
             // Handle any unrecognized decal modes if necessary.
             std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
         }

@@ -353,8 +353,8 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
     
     Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
     // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
-    
     Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
+
     if(intersectingObject->get_texture_flags().replace_kd){
         if(intersectingObject->getObject() == MeshType){
             Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
@@ -430,7 +430,8 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
         float costheta  = surface_normal.dot(h*-1);
         if (costheta < 0){
             costheta = 0;
-        }else{
+        }
+        else{
             costheta = pow(costheta, intersectingObject->getMaterial()->phong_exponent);
         }
 

@@ -31,6 +31,9 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
         } else if (texture_maps[i].decal_mode == replace_all) {
             this->tex_flags.replace_all = true;
             this->tex_flags.replace_all_texture = texture_maps + i;
+        } else if (texture_maps[i].decal_mode == replace_normal) {
+            this->tex_flags.replace_normal = true;
+            this->tex_flags.replace_normal_texture = texture_maps + i;
         } else {
             // Handle any unrecognized decal modes if necessary.
             std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;

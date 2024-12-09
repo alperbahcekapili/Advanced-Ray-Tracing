@@ -11,7 +11,9 @@ public:
     Material* material;
     ObjectType objectType; 
     texture_flags tex_flags;
-    Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm);
+    int num_tex_maps;
+    TextureMap* texture_maps;
+    Sphere(Vec3 center, float R, Material* material, ObjectType objectType, TransformationMatrix* tm, int num_tex_maps, TextureMap* texture_maps);
     float Intersects(Ray ray) override ;
     Vec3 getSurfaceNormal(Ray r) override;
     Material* getMaterial() override;

@@ -9,6 +9,7 @@ enum DecalMode{
     replace_ks,
     replace_background,
     bump_normal,
+    replace_normal,
     replace_all
 };
 
