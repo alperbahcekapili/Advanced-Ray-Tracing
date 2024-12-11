@@ -148,7 +148,7 @@ Vec3 Sphere::getSurfaceNormal(Ray r){
     Vec3 B = Vec3(M_PI*xyz.y*cos_phi, -R  *M_PI*sintheta, M_PI*xyz.y*sinphi).normalize();
 
     uv uv_loc = uv::calculateUVSphere(xyz+this->center, this->center, R);
-    Vec3 tex_value = this->tex_flags.replace_normal_texture->interpolateAt(uv_loc, tex_flags.replace_normal_texture->interpolation_type);
+    Vec3 tex_value = this->tex_flags.replace_normal_texture->interpolateAt(uv_loc , tex_flags.replace_normal_texture->interpolation_type);
     tex_value = (tex_value * 2) - Vec3(1,1,1);
     tex_value = tex_value.normalize(); 
 

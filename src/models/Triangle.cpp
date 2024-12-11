@@ -95,7 +95,7 @@ Vec3 Triangle::getSurfaceNormal(Ray r){
 
     Vec3 nnew = T*tex_value + B*tex_value + this->normal*tex_value;
     
-    return nnew;
+    return nnew.normalize();
 
 
 

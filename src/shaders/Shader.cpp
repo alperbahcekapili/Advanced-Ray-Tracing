@@ -338,24 +338,24 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
    Vec3  pixel(0,0,0);
    for (int i = 0; i < this->scene->numlights; i++)
    {
-    Ray lightRay = createLightRay(this->scene->lights[i], location);
-    
-    bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
-    if (!ligth_hits){        
-        // printf("Light does not hit obejct\n");
-        continue;}
+        Ray lightRay = createLightRay(this->scene->lights[i], location);
+        
+        bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
+        if (!ligth_hits){        
+            // printf("Light does not hit obejct\n");
+            continue;}
 
-    
+        
 
-    float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
-    if (cosTheta < 0)
-        cosTheta*=-1; // TODO: update here
-    
-    Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
-    // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
-    Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
+        float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
+        if (cosTheta < 0)
+            cosTheta*=-1; // TODO: update here
+        
+        Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
+        // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
+        Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
 
-    if(intersectingObject->get_texture_flags().replace_kd){
+        
         if(intersectingObject->getObject() == MeshType){
             Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
             if(hitTri == nullptr)
@@ -363,34 +363,37 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
             Triangle* triangle = hitTri;
             uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
             triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
-            Vec3 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, NEAREAST_NEIGHBOR);
-            tmp =  bg_pixel_val * irradiance;
-        }  
-    }else if(intersectingObject->get_texture_flags().blend_kd){
-        if(intersectingObject->getObject() == MeshType){
-            Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
-            Triangle* triangle = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
-            uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
-            triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
-            Vec3 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, NEAREAST_NEIGHBOR);
-            tmp = tmp + (bg_pixel_val * irradiance);
-            tmp = tmp / 2;
+            Vec3 bg_pixel_val = Vec3(0,0,0);
+            if(triangle->get_texture_flags().replace_kd_texture->is_image)
+                bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_kd_texture->interpolation_type);
+            else{
+                Vec3 scene_min = this->scene->bvh->min;
+                Vec3 scene_max = this->scene->bvh->max;
+                Vec3 corners[8];
+                corners[0] = Vec3(scene_min.x, scene_min.y, scene_min.z);
+                corners[1] = Vec3(scene_min.x, scene_min.y, scene_max.z);
+                corners[2] = Vec3(scene_min.x, scene_max.y, scene_min.z);
+                corners[3] = Vec3(scene_min.x, scene_max.y, scene_max.z);
+                corners[4] = Vec3(scene_max.x, scene_min.y, scene_min.z);
+                corners[5] = Vec3(scene_max.x, scene_min.y, scene_max.z);
+                corners[6] = Vec3(scene_max.x, scene_max.y, scene_min.z);
+                corners[7] = Vec3(scene_max.x, scene_max.y, scene_max.z);
+                bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, location, corners, scene_min, scene_max, NEAREAST_NEIGHBOR);
+                
+            }
+            if(intersectingObject->get_texture_flags().replace_kd)
+                tmp =  bg_pixel_val * irradiance;
+            else if(intersectingObject->get_texture_flags().blend_kd){
+                tmp = tmp + (bg_pixel_val * irradiance);
+                tmp = tmp / 2;
+            }else if(intersectingObject->get_texture_flags().replace_all){
+                bg_pixel_val = triangle->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_all_texture->interpolation_type) * 255;
+                return bg_pixel_val;
+            }   
         }
-    }else if(intersectingObject->get_texture_flags().replace_all){
-        if(intersectingObject->getObject() == MeshType){
-            Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
-            Triangle* triangle = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
-            uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
-            triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
-            Vec3 bg_pixel_val = triangle->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_all_texture->interpolation_type) * 255;
-            return bg_pixel_val;
-            
-        }
+        
+        pixel = pixel + tmp;
     }
-    
-    pixel = pixel + tmp;
-
-   }
     return pixel;
 }
 

@@ -52,6 +52,7 @@ int main(int argc, char const *argv[])
         // bvh->visualize(0);
         scenes.at(i)->bvh = bvh;
 
+        // we also need to define 8 vectors for each of the corners of BVH to use in perlin noise texture
 
 
         Scene curscene = *(scenes.at(i));

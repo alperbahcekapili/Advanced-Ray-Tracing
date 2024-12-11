@@ -20,6 +20,7 @@ public:
     Vec3 bg;
     float refraction_index;
     float shadow_ray_eps;
+    std::vector<Vec3> corner_grads;
     BVH* bvh;
     TextureMap* bg_texture;
     bool bg_texture_set;    

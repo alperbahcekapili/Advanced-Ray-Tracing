@@ -150,6 +150,19 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     }
     stream >> max_recursion_depth;
 
+ 
+
+    // create 8 random corner gradients for perlin noise
+    std::vector<Vec3> corner_grads;
+    for (int i = 0; i < 8; i++)
+    {
+        Vec3 dir = Vec3(generate_random_01(), generate_random_01(), generate_random_01()).normalize();
+        corner_grads.push_back(dir);
+    }
+    
+
+
+ 
     element = root->FirstChildElement("Cameras");
     element = element->FirstChildElement("Camera");
     
@@ -312,17 +325,19 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     if(element)
     {
         auto child = element->FirstChildElement("Images");
-        child = child->FirstChildElement("Image");
-        while (child)
-        {
-            // Find the last '/' in the path
-            size_t pos = filepath.find_last_of('/');
-            
-            // Extract everything before the last '/'
-            std::string folderPath = (pos != std::string::npos) ? filepath.substr(0, pos+1) : "";
+        if(child){
+            child = child->FirstChildElement("Image");
+            while (child)
+            {
+                // Find the last '/' in the path
+                size_t pos = filepath.find_last_of('/');
+                
+                // Extract everything before the last '/'
+                std::string folderPath = (pos != std::string::npos) ? filepath.substr(0, pos+1) : "";
 
-            image_list.push_back(new TextureImage(folderPath + child->GetText()));
-            child = child->NextSiblingElement("Image");
+                image_list.push_back(new TextureImage(folderPath + child->GetText()));
+                child = child->NextSiblingElement("Image");
+            }
         }
 
 
@@ -345,11 +360,20 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 const char * interpol_type = "bilinear";
                 if(interpol_elem)
                 interpol_type = interpol_elem->GetText();
-                
-                
                 InterploationType itype = TextureMap::getInterpolationType(interpol_type);
                 tmap_list.push_back(new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype));
             }
+            else if (strcmp(child->Attribute("type"), "perlin")==0)
+            {
+                const char * noise_conv = child->FirstChildElement("NoiseConversion")->GetText();
+                NoiseConversionType nctype = TextureMap::getNoiseConversionType(noise_conv);
+                float noise_scale = atof(child->FirstChildElement("NoiseScale")->GetText());
+                TextureMap* tmap_p = new TextureMap(nullptr, false, decal_mode, BILINEAR); // BILINEAR will not be used
+                tmap_p->corner_grads = corner_grads;
+                tmap_p->corner_grads_set = true;
+                tmap_list.push_back(tmap_p);
+            }
+            
             child = child->NextSiblingElement("TextureMap");
             // TODO: Add other texture map properties here
         }

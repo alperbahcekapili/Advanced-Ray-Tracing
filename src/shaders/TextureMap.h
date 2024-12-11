@@ -86,22 +86,30 @@ static uv calculateUVSphere(
     return tmp_uv;
 };
 
-
-
-
 };
 
+
+enum NoiseConversionType{
+    linear,
+    absval
+};
 class TextureMap {
     public:
     TextureImage* tim;
-    DecalMode decal_mode; 
+    DecalMode decal_mode;
+    NoiseConversionType noise_conv_type;
+    float noise_scale;
     InterploationType interpolation_type;
     bool is_image;
+    std::vector<Vec3> corner_grads;
+    bool corner_grads_set = false;
     TextureMap();
     TextureMap(TextureImage* texture_image, bool is_image, DecalMode decal_mode, InterploationType interpolation_type);
     static DecalMode getDecalMode(const char* mode);
     ~TextureMap();
     Vec3 interpolateAt(uv loc, InterploationType interploation_type);
+    Vec3 interpolateAt(uv loc, Vec3 xyz, Vec3 corner_locs[8], Vec3 min, Vec3 max, InterploationType interploation_type);
     TextureImage* getTim();
     static InterploationType getInterpolationType(const char* mode);
+    static NoiseConversionType getNoiseConversionType(const char* mode);
 };
