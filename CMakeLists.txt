@@ -19,7 +19,7 @@ file(GLOB_RECURSE SRC_FILES src/*.cpp)
 # Include directories for headers
 include_directories(${CMAKE_SOURCE_DIR}/src/util)
 
-# Add executable with sources and Miniz
+# Main executable
 add_executable(${PROJECT_NAME} main.cpp ${SRC_FILES})
 
 # Link OpenMP if available
@@ -27,3 +27,14 @@ find_package(OpenMP REQUIRED)
 if (OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 endif()
+
+# Add test executables
+file(GLOB_RECURSE TEST_FILES /src/test/*.cpp)
+
+# Create executables for each test file
+foreach(testFile ${TEST_FILES})
+    get_filename_component(testName ${testFile} NAME_WE)
+    add_executable(${testName} ${testFile} ${SRC_FILES})
+    # Optionally, link against any necessary libraries for tests
+    target_link_libraries(${testName} OpenMP::OpenMP_CXX)
+endforeach()
