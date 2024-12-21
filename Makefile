@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX = g++
 # CXXFLAGS = -Wall -Wextra -pedantic -ansi -O3 -g  -std=c++11   
-CXXFLAGS = -Wall -Wextra -pedantic -ansi -g -O0  -std=c++11 
+CXXFLAGS = -Wall -Wextra -pedantic -ansi -g -O0  -std=c++11 -fopenmp
 # Define the source files
 MAIN = main.cpp
 
@@ -19,7 +19,7 @@ TARGET = raytracer
 
 # Rule to link the object files into the final executable
 $(TARGET): $(OBJ)
-	$(CXX) -o $@ $^ `pkg-config --libs opencv4`
+	$(CXX) -o $@ -fopenmp $^ ` pkg-config --libs opencv4 `
 
 # Rule to compile each .cpp file into an object file
 # Ensure correct folder structure for .o files by creating the directory

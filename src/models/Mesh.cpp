@@ -60,14 +60,8 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     this->center = Vec3(centerx, centery, centerz);
     // std::cout << "Mesh Center Before Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
     
-    center = center * -1;
-    TransformationMatrix* to_center = new TransformationMatrix(center, 't');
-    center = center * -1;
-    TransformationMatrix* from_center = new TransformationMatrix(center, 't');
-    TransformationMatrix* resulting_tm = new TransformationMatrix();
-    *resulting_tm = (*from_center)  * (*tm) ;
-    *resulting_tm = (*resulting_tm) * (*to_center);
-
+    TransformationMatrix* resulting_tm = tm;
+    
     for (int i = 0; i < numfaces; i++)
     {
 
@@ -88,7 +82,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     this->bvh_faces = new BVH(triangles, num_faces, 0);
     
     this->objectType = objectType;
-    this->center = resulting_tm->transform(this->center);
+    // this->center = resulting_tm->transform(this->center);
     // std::cout << "Mesh Center After Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
 }
 

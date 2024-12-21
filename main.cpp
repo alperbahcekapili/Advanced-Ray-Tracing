@@ -66,6 +66,7 @@ int main(int argc, char const *argv[])
         // int fg_pixel_count = 0;
         // // now we need to iterate over the pixels and fill them
         int total_progress = 0;
+        #pragma omp parallel for
         for (int i = 0; i < imgWidth; i++)
         {
             image[i] = new Vec3[imgHeight];
@@ -124,7 +125,7 @@ int main(int argc, char const *argv[])
                     image[i][j] = clipValues(cumulative_pixel, 255.0);
                     continue;
                 }
-                
+            
                 
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
@@ -159,8 +160,8 @@ int main(int argc, char const *argv[])
                 // fg_pixel_count++;
                 }
 
-                image[i][j] = clipValues(cumulative_pixel, 255.0);
                 
+                image[i][j] = clipValues(cumulative_pixel, 255.0);
                 
 
             }

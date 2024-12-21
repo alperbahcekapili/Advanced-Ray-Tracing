@@ -133,12 +133,17 @@ Vec3 Sphere::getSurfaceNormal(Ray r){
     if(mint < 0)
         return Vec3(-1,-1,-1);
     Vec3 location = r.locationAtT(mint);
-    if( ! this->tex_flags.replace_normal){
+    Vec3 scaledVector = (this->center * -1) + location ;
+    Vec3 oldnormal =  scaledVector.normalize();
+
+    if( ! this->tex_flags.replace_normal && !this->tex_flags.bump_normal){
         Vec3 scaledVector = (this->center * -1) + location ;
         Vec3 unitVector = scaledVector.normalize();
         return unitVector;
     }
-    
+
+
+
     Vec3 xyz = location - this->center;
     float midlen = sqrt(pow(xyz.x,2) + pow(xyz.z,2));
     float sintheta = midlen / R;
@@ -146,18 +151,50 @@ Vec3 Sphere::getSurfaceNormal(Ray r){
     float sinphi = sqrt(1-pow(cos_phi,2));
     Vec3 T = Vec3(2*M_PI*xyz.z, 0, -2*M_PI*xyz.x).normalize();
     Vec3 B = Vec3(M_PI*xyz.y*cos_phi, -R  *M_PI*sintheta, M_PI*xyz.y*sinphi).normalize();
-
     uv uv_loc = uv::calculateUVSphere(xyz+this->center, this->center, R);
-    Vec3 tex_value = this->tex_flags.replace_normal_texture->interpolateAt(uv_loc , tex_flags.replace_normal_texture->interpolation_type);
-    tex_value = (tex_value * 2) - Vec3(1,1,1);
-    tex_value = tex_value.normalize(); 
-
     
-    Vec3 scaledVector = (this->center * -1) + location ;
-    Vec3 oldnormal =  scaledVector.normalize();
+    
+    if(this->tex_flags.replace_normal){
+        Vec3 tex_value = this->tex_flags.replace_normal_texture->interpolateAt(uv_loc , tex_flags.replace_normal_texture->interpolation_type);
+        tex_value = (tex_value * 2) - Vec3(1,1,1);
+        tex_value = tex_value.normalize(); 
+        Vec3 nnew = T*tex_value + B*tex_value + oldnormal*tex_value;
+        return nnew.normalize();
 
-    Vec3 nnew = T*tex_value + B*tex_value + oldnormal*tex_value;
-    return nnew.normalize();
+    }else{
+        Vec3 tex_value = this->tex_flags.bump_normal_texture->interpolateAt(uv_loc , tex_flags.bump_normal_texture->interpolation_type);
+        TextureMap* bntex = this->tex_flags.bump_normal_texture;
+       
+        float du = 1/float(bntex->tim->width);
+        float dv = 1/float(bntex->tim->height);
+
+        float u_moved = uv_loc.u + du;
+        float v_moved = uv_loc.v + dv;
+
+        uv uv_u_moved = uv() ;
+        uv_u_moved.u = u_moved;
+        uv_u_moved.v = uv_loc.v;
+
+        uv uv_v_moved = uv();
+        uv_v_moved.u = uv_loc.u;
+        uv_v_moved.v = v_moved;
+
+
+        Vec3 dhdu = (bntex->interpolateAt(uv_u_moved, bntex->interpolation_type) - tex_value)/du;
+        Vec3 dhdv = (bntex->interpolateAt(uv_v_moved, bntex->interpolation_type) - tex_value)/dv;
+
+        Vec3 dqdu = T + dhdu*oldnormal;
+        Vec3 dqdv = B + dhdv*oldnormal;
+
+
+        Vec3 nnew = dqdu.cross(dqdv);
+        return nnew.normalize();
+
+    }
+
+
+
+
 
 
 

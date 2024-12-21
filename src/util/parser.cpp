@@ -360,8 +360,15 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 const char * interpol_type = "bilinear";
                 if(interpol_elem)
                 interpol_type = interpol_elem->GetText();
+
+                float bump_factor = 1;
+                auto bump_factor_child = child->FirstChildElement("BumpFactor");
+                if(bump_factor_child)
+                    bump_factor = atof(bump_factor_child->GetText());
                 InterploationType itype = TextureMap::getInterpolationType(interpol_type);
-                tmap_list.push_back(new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype));
+                TextureMap* newmap =  new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype);
+                newmap->bump_factor = bump_factor;
+                tmap_list.push_back(newmap);
             }
             else if (strcmp(child->Attribute("type"), "perlin")==0)
             {
@@ -371,6 +378,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 TextureMap* tmap_p = new TextureMap(nullptr, false, decal_mode, BILINEAR); // BILINEAR will not be used
                 tmap_p->corner_grads = corner_grads;
                 tmap_p->corner_grads_set = true;
+                tmap_p->noise_scale = noise_scale;
+                tmap_p->noise_conv_type = nctype;
                 tmap_list.push_back(tmap_p);
             }
             
@@ -551,7 +560,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     stream.clear();
     stream.str("");
 
-
+    int texture_offset  =0;
 
 
     element = root->FirstChildElement("Objects");
@@ -589,7 +598,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
         }
 
-
+        stream.clear();
+        stream.str("");
 
         std::vector<TransformationMatrix*> tms;
         child = element->FirstChildElement("Transformations");
@@ -655,15 +665,25 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 int index_offset = -1;
                 const char* vertex_offset = child->Attribute("vertexOffset");
                 if(vertex_offset){
-                    index_offset += int(*vertex_offset - '0');
+                    index_offset += atoi(vertex_offset);
                 }
+                
+                const char* texture_offset_c = child->Attribute("textureOffset");
+                if(texture_offset_c){
+                    texture_offset = atoi(texture_offset_c) -1;
+                }else{
+                    texture_offset = -1;
+                }
+                
+
+
                 // TODO: add -1 here, make use of vertex offset in the xml
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid1+index_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid2+index_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid3+index_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));
             }
 
 		}

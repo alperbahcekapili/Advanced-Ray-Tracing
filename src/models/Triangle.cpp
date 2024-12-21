@@ -54,7 +54,7 @@ float Triangle::Intersects(Ray ray){
 }
 
 Vec3 Triangle::getSurfaceNormal(Ray r){
-    if(!this->tex_flags.replace_normal)
+    if(!this->tex_flags.replace_normal & !this->tex_flags.bump_normal)
     return this->normal;
 
 
@@ -84,7 +84,9 @@ Vec3 Triangle::getSurfaceNormal(Ray r){
         this->B = B.normalize();
         this->tbset = true;
     }
-    
+
+    if(this->tex_flags.replace_normal)
+    {
     // transform normall according to texture value
     float tval = this->Intersects(r);
     Vec3 inters_loc = r.locationAtT(tval);
@@ -96,6 +98,40 @@ Vec3 Triangle::getSurfaceNormal(Ray r){
     Vec3 nnew = T*tex_value + B*tex_value + this->normal*tex_value;
     
     return nnew.normalize();
+    }else{
+        TextureMap* bntex = this->tex_flags.bump_normal_texture;
+        // bump normal
+        float tval = this->Intersects(r);
+        Vec3 inters_loc = r.locationAtT(tval);
+        uv uv_loc = uv::calculateUVTriangle(inters_loc, this->v1, this->v2, this->v3, this->uv_coords_triangle.at(0), this->uv_coords_triangle.at(1), this->uv_coords_triangle.at(2));
+        Vec3 tex_value = bntex->interpolateAt(uv_loc, bntex->interpolation_type);
+        
+        float du = 1/float(bntex->tim->width);
+        float dv = 1/float(bntex->tim->height);
+
+        float u_moved = uv_loc.u + du;
+        float v_moved = uv_loc.v + dv;
+
+        uv uv_u_moved = uv() ;
+        uv_u_moved.u = u_moved;
+        uv_u_moved.v = uv_loc.v;
+
+        uv uv_v_moved = uv();
+        uv_v_moved.u = uv_loc.u;
+        uv_v_moved.v = v_moved;
+
+
+        Vec3 dhdu = bntex->bump_factor*(bntex->interpolateAt(uv_u_moved, bntex->interpolation_type) - tex_value)/du;
+        Vec3 dhdv = bntex->bump_factor*(bntex->interpolateAt(uv_v_moved, bntex->interpolation_type) - tex_value)/dv;
+
+        Vec3 dqdu = T + dhdu*this->normal;
+        Vec3 dqdv = B + dhdv*this->normal;
+
+
+        Vec3 nnew = dqdu.cross(dqdv);
+        return nnew.normalize();
+
+    }
 
 
 
@@ -171,9 +207,9 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
 
 
     Vec3 scaled_n = (this->v2-this->v1).cross(this->v3 - this->v1);
-    bool det_negative = this->tm->determinant() < 0;
-    if(det_negative)
-        scaled_n = (this->v3 - this->v1).cross(this->v2-this->v1);
+    // bool det_negative = this->tm->determinant() < 0;
+    // if(det_negative)
+    //     scaled_n = (this->v3 - this->v1).cross(this->v2-this->v1);
 
     this->normal = scaled_n.normalize();
 

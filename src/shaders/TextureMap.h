@@ -101,6 +101,7 @@ class TextureMap {
     float noise_scale;
     InterploationType interpolation_type;
     bool is_image;
+    float bump_factor;
     std::vector<Vec3> corner_grads;
     bool corner_grads_set = false;
     TextureMap();
@@ -108,7 +109,7 @@ class TextureMap {
     static DecalMode getDecalMode(const char* mode);
     ~TextureMap();
     Vec3 interpolateAt(uv loc, InterploationType interploation_type);
-    Vec3 interpolateAt(uv loc, Vec3 xyz, Vec3 corner_locs[8], Vec3 min, Vec3 max, InterploationType interploation_type);
+    Vec3 interpolateAt(Vec3 xyz);
     TextureImage* getTim();
     static InterploationType getInterpolationType(const char* mode);
     static NoiseConversionType getNoiseConversionType(const char* mode);

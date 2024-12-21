@@ -349,7 +349,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 
         float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
         if (cosTheta < 0)
-            cosTheta*=-1; // TODO: update here
+            cosTheta *= -1; // TODO: update here
         
         Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
         // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
@@ -364,7 +364,8 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
             uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
             triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
             Vec3 bg_pixel_val = Vec3(0,0,0);
-            if(triangle->get_texture_flags().replace_kd_texture->is_image)
+            if(intersectingObject->get_texture_flags().replace_kd)
+                if(triangle->get_texture_flags().replace_kd_texture->is_image)
                 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_kd_texture->interpolation_type);
             else{
                 Vec3 scene_min = this->scene->bvh->min;
@@ -378,18 +379,40 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 corners[5] = Vec3(scene_max.x, scene_min.y, scene_max.z);
                 corners[6] = Vec3(scene_max.x, scene_max.y, scene_min.z);
                 corners[7] = Vec3(scene_max.x, scene_max.y, scene_max.z);
-                bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, location, corners, scene_min, scene_max, NEAREAST_NEIGHBOR);
+                bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(location);
                 
             }
             if(intersectingObject->get_texture_flags().replace_kd)
                 tmp =  bg_pixel_val * irradiance;
             else if(intersectingObject->get_texture_flags().blend_kd){
+                bg_pixel_val = triangle->get_texture_flags().blend_kd_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().blend_kd_texture->interpolation_type);
                 tmp = tmp + (bg_pixel_val * irradiance);
                 tmp = tmp / 2;
             }else if(intersectingObject->get_texture_flags().replace_all){
                 bg_pixel_val = triangle->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_all_texture->interpolation_type) * 255;
                 return bg_pixel_val;
             }   
+        }
+        else if (intersectingObject->getObject() == SphereType){
+            Sphere* sphere = dynamic_cast<Sphere*>(intersectingObject);
+            uv tmp_uv = uv::calculateUVSphere(location, sphere->center, sphere->R);
+            Vec3 bg_pixel_val = Vec3(0,0,0);
+            if(intersectingObject->get_texture_flags().replace_kd)
+                if(sphere->get_texture_flags().replace_kd_texture->is_image)
+                    bg_pixel_val = sphere->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().replace_kd_texture->interpolation_type);
+            else{
+                bg_pixel_val = sphere->get_texture_flags().replace_kd_texture->interpolateAt(location);
+            }
+            if(intersectingObject->get_texture_flags().replace_kd)
+                tmp =  bg_pixel_val * irradiance;
+            else if(intersectingObject->get_texture_flags().blend_kd){
+                bg_pixel_val = sphere->get_texture_flags().blend_kd_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().blend_kd_texture->interpolation_type);
+                tmp = tmp + (bg_pixel_val * irradiance);
+                tmp = tmp / 2;
+            }else if(intersectingObject->get_texture_flags().replace_all){
+                bg_pixel_val = sphere->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().replace_all_texture->interpolation_type) * 255;
+                return bg_pixel_val;
+            }      
         }
         
         pixel = pixel + tmp;

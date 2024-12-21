@@ -105,9 +105,9 @@ Vec3 getGradientVector(int i, int j, int k) {
 
 
 
-Vec3 TextureMap::interpolateAt(uv loc, Vec3 xyz, Vec3 corner_locs[8], Vec3 min, Vec3 max, InterploationType interploation_type){
+Vec3 TextureMap::interpolateAt(Vec3 xyz){
     
-    xyz = xyz * 10;
+    xyz = xyz * noise_scale;
 
     std::vector<Vec3> corners(8);
     int x0 = (int)floor(xyz.x), y0 = (int)floor(xyz.y), z0 = (int)floor(xyz.z);
@@ -140,6 +140,8 @@ Vec3 TextureMap::interpolateAt(uv loc, Vec3 xyz, Vec3 corner_locs[8], Vec3 min, 
         
         resulting_normal = resulting_normal + Vec3(contrib * w, contrib * w, contrib * w);
     }
+    if(this->noise_conv_type == absval)
+        return Vec3(abs(resulting_normal.x), abs(resulting_normal.y), abs(resulting_normal.z));
     return (resulting_normal + Vec3(1,1,1)) / 2;
 }
 

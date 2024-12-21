@@ -62,28 +62,29 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
 Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
     // i and j already specify jitter
     // 
-    float offsetx = 0;//generate_random_01();
-    float offsety = 0;//generate_random_01();
+    float offsetx = 0.5;//generate_random_01();
+    float offsety = 0.5;//generate_random_01();
     rayindex = 0;
     
 
     int num_sample_axis =  int(sqrt(this->c->numsamples));
-    float subregion_width = 0.5f / float(num_sample_axis);
+    float subregion_width = (r - l)  / (float(num_sample_axis)* dimx);
+    float subregion_height = (t - b) / (float(num_sample_axis)*dimy);
     Vec3 pixel_center = this->sValues[i][j];
     
     int xgrid = int(rayindex%num_sample_axis);
     int ygrid = int(rayindex/num_sample_axis);
     
-    float pixel_start_x = pixel_center.x;
-    float pixel_start_y = pixel_center.y;
+    float pixel_start_x = pixel_center.x + subregion_width*xgrid;
+    float pixel_start_y = pixel_center.y + subregion_height*ygrid;
 
     // first go to relevant subgrid then add random offset
-    float samplex = pixel_start_x + xgrid*subregion_width + offsetx*subregion_width;
-    float sampley = pixel_start_y + ygrid*subregion_width + offsety*subregion_width;
+    float samplex = pixel_start_x + offsetx*subregion_width;
+    float sampley = pixel_start_y + offsety*subregion_width;
 
     // below is pixel sample
     Vec3 sampled_pos = Vec3(samplex, sampley, pixel_center.z);
-    Vec3 direction = (pixel_center - this->c->getPosition()).normalize();
+    Vec3 direction = (sampled_pos - this->c->getPosition()).normalize();
     // need to generate below for aperture
     if(this->c->aperture_size!= -1){
 
@@ -103,7 +104,7 @@ Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
 
 
     Ray resultingRay = Ray(
-        this->c->getPosition(),
+        sampled_pos,
         direction
     );
 
