@@ -11,6 +11,7 @@ struct texture_flags{
     bool bump_normal=false;
     bool replace_all=false;
     bool replace_normal=false;
+    bool any=false;
     TextureMap* replace_kd_texture;
     TextureMap* blend_kd_texture;
     TextureMap* replace_ks_texture;

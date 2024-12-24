@@ -178,8 +178,11 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
             // Handle any unrecognized decal modes if necessary.
             std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
         }
-
     }
+
+    this->tex_flags.any = this->tex_flags.replace_kd && this->tex_flags.blend_kd && this->tex_flags.replace_ks && this->tex_flags.bump_normal && this->tex_flags.replace_all && this->tex_flags.replace_normal;
+
+    
     
 
     // before setting tm we need to move the center to origin then move back

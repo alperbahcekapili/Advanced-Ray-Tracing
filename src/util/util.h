@@ -8,8 +8,6 @@
 #include "data_structures.h"
 #include "../lights/Light.h"
 
-// Macro for assertions with messages
-#define assertm(exp, msg) assert(((void)msg, exp))
 
 Ray createRayFrom(Vec3 start, Vec3 destination);
 Ray createLightRay(Light* light, Vec3 destination);

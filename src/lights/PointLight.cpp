@@ -13,8 +13,7 @@ PointLight::PointLight(Vec3  intensity, Vec3  location)
 
 Vec3  PointLight::irradianceAt(Ray light_ray, Vec3  location)  {
     float distance = (this->location - location).magnitude();
-    return this->intensity * pow(1/distance, 2);
-    
+    return this->intensity * pow(1/distance, 2);    
 }
 
 Vec3 PointLight::getPointOn(){

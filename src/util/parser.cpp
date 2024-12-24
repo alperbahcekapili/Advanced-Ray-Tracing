@@ -13,6 +13,7 @@
 #include "../models/Camera.h"
 #include "../lights/Light.h"
 #include "../lights/PointLight.h"
+#include "../lights/DirectionalLight.h"
 #include "../lights/AreaLight.h"
 #include "../models/Material.h"
 #include "../models/Mesh.h"
@@ -288,18 +289,18 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
 
 
-    element = element->FirstChildElement("AreaLight");
-    while (element)
+    lchild = element->FirstChildElement("AreaLight");
+    while (lchild)
     {
         Vec3 areal_normal ;
         float areal_size;
-        child = element->FirstChildElement("Position");
+        child = lchild->FirstChildElement("Position");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("Normal");
+        child = lchild->FirstChildElement("Normal");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("Radiance");
+        child = lchild->FirstChildElement("Radiance");
         stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("Size");
+        child = lchild->FirstChildElement("Size");
         stream << child->GetText() << std::endl;
 
         stream >> light_position.x >> light_position.y >> light_position.z;
@@ -310,6 +311,24 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         lights.push_back(l);
         element = element->NextSiblingElement("AreaLight");
     }
+
+
+    element = element->FirstChildElement("DirectionalLight");
+    while(element){
+        Vec3 direction;
+        Vec3 radiance;
+        child = element->FirstChildElement("Direction");
+        stream << child->GetText() << std::endl;
+        child = element->FirstChildElement("Radiance");
+        stream << child->GetText() << std::endl;
+        
+        stream >> direction.x >> direction.y >> direction.z;
+        stream >> radiance.x >> radiance.y >> radiance.z;
+        Light* l =  new DirectionalLight(direction, radiance);
+        lights.push_back(l);
+        element = element->NextSiblingElement("DirectionalLight");
+    }
+
 
 
 
@@ -529,15 +548,16 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     stream.str("");
 
     element = root->FirstChildElement("VertexData");
-    stream << element->GetText() << std::endl;
-    
-    while (stream >> cur_vertex.x >> cur_vertex.y >> cur_vertex.z)
-    {
-        vertices.push_back(cur_vertex);
+    if(element){
+        stream << element->GetText() << std::endl;
+        
+        while (stream >> cur_vertex.x >> cur_vertex.y >> cur_vertex.z)
+        {
+            vertices.push_back(cur_vertex);
+        }
+        stream.clear();
+        stream.str("");
     }
-    stream.clear();
-    stream.str("");
-
     bool TEXTURE_COORDS_EXIST = false;
 
 

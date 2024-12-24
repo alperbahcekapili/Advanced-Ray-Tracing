@@ -23,8 +23,6 @@ Vec3  Shader::radianceAt(Vec3  location, Object* intersectingObject, int interse
     Vec3  radiance(0,0,0);
     for (int i = 0; i < this->scene->numlights; i++)
         {
-
-            
             Ray lightRay = createLightRay(this->scene->lights[i], location);
             
             bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
@@ -303,8 +301,9 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
     Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
-    float errorMargin = 0.01;
-    if(((lightHitLocation - location )).magnitude() > errorMargin){
+    float errorMargin = 0.1;
+    Vec3 diff = lightHitLocation - location;
+    if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
         // This means the light is in the other side of the object
         // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
         return false;
@@ -354,16 +353,17 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
         Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
         // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
         Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
-
-        
+        // Texture related computations
+        if(intersectingObject->get_texture_flags().any){
         if(intersectingObject->getObject() == MeshType){
             Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
             if(hitTri == nullptr)
                 hitTri = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
             Triangle* triangle = hitTri;
+            Vec3 bg_pixel_val = Vec3(0,0,0);
             uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
             triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
-            Vec3 bg_pixel_val = Vec3(0,0,0);
+            
             if(intersectingObject->get_texture_flags().replace_kd)
                 if(triangle->get_texture_flags().replace_kd_texture->is_image)
                 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_kd_texture->interpolation_type);
@@ -414,8 +414,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 return bg_pixel_val;
             }      
         }
-        
-        pixel = pixel + tmp;
+        }pixel = pixel + tmp;
     }
     return pixel;
 }

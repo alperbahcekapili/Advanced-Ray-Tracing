@@ -43,6 +43,9 @@ Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType, 
         }
 
     }
+    this->tex_flags.any = this->tex_flags.replace_kd && this->tex_flags.blend_kd && this->tex_flags.replace_ks && this->tex_flags.bump_normal && this->tex_flags.replace_all && this->tex_flags.replace_normal;
+
+    
     this->tm = new TransformationMatrix();
     
     Vec3 point_on_sphere = Vec3(center.x + R, center.y, center.z);

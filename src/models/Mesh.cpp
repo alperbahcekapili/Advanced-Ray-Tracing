@@ -38,9 +38,8 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
             // Handle any unrecognized decal modes if necessary.
             std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
         }
-
     }
-    
+    this->tex_flags.any = this->tex_flags.replace_kd && this->tex_flags.blend_kd && this->tex_flags.replace_ks && this->tex_flags.bump_normal && this->tex_flags.replace_all && this->tex_flags.replace_normal;
     // std::cout << "Material:"<< material->materialType << std::endl;
     this->tm = new TransformationMatrix();
     *(this->tm) = *(tm);
@@ -64,11 +63,12 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     
     for (int i = 0; i < numfaces; i++)
     {
-
+        
         std::vector<std::pair<float, float> > uv_coords_triangle;
+        if(num_tex_maps>0){
         uv_coords_triangle.push_back(uv_coords_mesh.at(i*3));
         uv_coords_triangle.push_back(uv_coords_mesh.at(i*3+1));
-        uv_coords_triangle.push_back(uv_coords_mesh.at(i*3+2));
+        uv_coords_triangle.push_back(uv_coords_mesh.at(i*3+2));}
         // Initialize triangles with transformation relative to mesh center
         Triangle* tmp_triangle = new Triangle(
             material, ObjectType::TriangleType, 
