@@ -289,12 +289,20 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
 
 
 bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject, int intersectingObjIndex, Object** other_objects, int numobj ){
-    // create a ray from the lightsource to destination
     
-    // now we need to test if this ray intersects with any of the objects
-    // if ray intersects with any objects other than intersecting object with smaller t value then this area
-    // is not lighted by this lightsource
+
+    // if object type is mesh we can make use of last intersect property
+    if(intersectingObject->objectType == MeshType){
+        Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
+        Object* int_tri = mesh->last_intersected_obj;
+        float intersectingTvalue = mesh->Intersects(light_ray);
+        Object* int_tri2 = mesh->last_intersected_obj;
+        if(int_tri2 == int_tri)
+            return true;
+        return false;
+    }
     
+
     float intersectingTvalue = intersectingObject->Intersects(light_ray);
     // std::cout << "Light hits the object in required area. with thvalue:"<< intersectingTvalue <<  "..\n"; 
     
@@ -303,11 +311,11 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
     float errorMargin = 0.1;
     Vec3 diff = lightHitLocation - location;
-    // if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
-    //     // This means the light is in the other side of the object
-    //     // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
-    //     return false;
-    // }
+    if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
+        // This means the light is in the other side of the object
+        // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
+        return false;
+    }
 
     // if(intersectingObject->getMotionBlur().z!= 0){
     //     int b = -1;
@@ -317,7 +325,7 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     float new_tmin, new_tmax;
     Object* tmp;
     bool bvh_int = this->scene->bvh->intersectObject(light_ray, tmp, new_tmin, new_tmax);
-    if(new_tmin+0.001 < intersectingTvalue)
+    if(new_tmin < intersectingTvalue)
         in_shadow=true;
     return !in_shadow;
 

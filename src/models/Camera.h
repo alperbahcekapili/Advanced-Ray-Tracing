@@ -21,6 +21,9 @@ public:
     float numsamples;
     float focus_distance;
     float aperture_size;
-
+    float gamma;
+    float keyvalue;
+    float burnout;
+    float saturation;
 };
 

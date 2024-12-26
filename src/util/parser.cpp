@@ -14,6 +14,7 @@
 #include "../lights/Light.h"
 #include "../lights/PointLight.h"
 #include "../lights/DirectionalLight.h"
+#include "../lights/SphericalDirectionalLight.h"
 #include "../lights/SpotLight.h"
 #include "../lights/AreaLight.h"
 #include "../models/Material.h"
@@ -204,7 +205,21 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         child = element->FirstChildElement("Up");
         stream << child->GetText() << std::endl;
         
-        
+        bool tonemap = false;
+        child = element->FirstChildElement("Tonemap");    
+        if(child){
+            tonemap = true;
+            // child = child->FirstChildElement("TMO");    
+            // stream << child->GetText() << std::endl;
+            auto nchild = child->FirstChildElement("TMOOptions");    
+            stream << nchild->GetText() << std::endl;
+            nchild = child->FirstChildElement("Saturation");    
+            stream << nchild->GetText() << std::endl;
+            nchild = child->FirstChildElement("Gamma");    
+            stream << nchild->GetText() << std::endl;
+        }
+
+
         child = element->FirstChildElement("NearDistance");
         const char*  ndist_str = child->GetText();
         
@@ -222,12 +237,20 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             // means symmetric image plane thus we can set l,r,b,t same
             stream << -t  << " " << t  << " " << -t  << " " << t  << std::endl;
             }
-
         stream << ndist_str << std::endl;
+
+        float keyvalue, burnout, saturation, gamma;
+
 
         stream >>  cam_position.x >> cam_position.y >> cam_position.z;
         stream >> cam_gaze.x >> cam_gaze.y >> cam_gaze.z;
         stream >> cam_up.x >> cam_up.y >> cam_up.z;
+        if(tonemap){
+            stream >> keyvalue;
+            stream >> burnout;
+            stream >> saturation;
+            stream >> gamma;
+        }
         stream >> cam_near_plane.x >> cam_near_plane.y >> cam_near_plane.z >> cam_near_plane.h;
         stream >> cam_near_distance;
 
@@ -260,9 +283,99 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         Camera* camera = new Camera(
             cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name, numsamples, focus_distance, aperture_size
         );
+
+
+        if(tonemap){
+            camera->keyvalue = keyvalue;
+            camera->burnout = burnout;
+            camera->saturation = saturation;
+            camera->gamma = gamma;
+        }
+
         cameras.push_back(camera);
         element = element->NextSiblingElement("Camera");
     }
+
+
+
+    // read texture related stuff
+    std::vector<TextureImage*> image_list;
+    std::vector<TextureMap*> tmap_list;
+    
+    element = root->FirstChildElement("Textures");
+    if(element)
+    {
+        auto child = element->FirstChildElement("Images");
+        if(child){
+            child = child->FirstChildElement("Image");
+            while (child)
+            {
+                // Find the last '/' in the path
+                size_t pos = filepath.find_last_of('/');
+                
+                // Extract everything before the last '/'
+                std::string folderPath = (pos != std::string::npos) ? filepath.substr(0, pos+1) : "";
+                std::string full_path = folderPath + child->GetText();
+                bool exr_flag = full_path.substr(full_path.size() - 4) == ".exr";
+                image_list.push_back(new TextureImage(full_path, exr_flag));
+                child = child->NextSiblingElement("Image");
+            }
+        }
+
+
+        child = element->FirstChildElement("TextureMap");
+        while (child)
+        {
+            const char*  decal_mode_c = child->FirstChildElement("DecalMode")->GetText();
+            enum DecalMode decal_mode = TextureMap::getDecalMode(decal_mode_c);
+            if(decal_mode == replace_background){
+                const char*  id = child->Attribute("id");
+                bg_texture_index = int(*id-'0') - 1;
+            }
+            auto img_id = child->FirstChildElement("ImageId");
+            if(img_id){
+                stream << img_id->GetText() << std::endl;
+                auto img_index =-1;
+                stream >> img_index;;
+                // read interpolation type as well
+                auto interpol_elem = child->FirstChildElement("Interpolation");
+                const char * interpol_type = "bilinear";
+                if(interpol_elem)
+                interpol_type = interpol_elem->GetText();
+
+                float bump_factor = 1;
+                auto bump_factor_child = child->FirstChildElement("BumpFactor");
+                if(bump_factor_child)
+                    bump_factor = atof(bump_factor_child->GetText());
+                InterploationType itype = TextureMap::getInterpolationType(interpol_type);
+                TextureMap* newmap =  new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype);
+                newmap->bump_factor = bump_factor;
+                tmap_list.push_back(newmap);
+            }
+            else if (strcmp(child->Attribute("type"), "perlin")==0)
+            {
+                const char * noise_conv = child->FirstChildElement("NoiseConversion")->GetText();
+                NoiseConversionType nctype = TextureMap::getNoiseConversionType(noise_conv);
+                float noise_scale = atof(child->FirstChildElement("NoiseScale")->GetText());
+                TextureMap* tmap_p = new TextureMap(nullptr, false, decal_mode, BILINEAR); // BILINEAR will not be used
+                tmap_p->corner_grads = corner_grads;
+                tmap_p->corner_grads_set = true;
+                tmap_p->noise_scale = noise_scale;
+                tmap_p->noise_conv_type = nctype;
+                tmap_list.push_back(tmap_p);
+            }
+            
+            child = child->NextSiblingElement("TextureMap");
+            // TODO: Add other texture map properties here
+        }
+    
+
+
+}
+
+
+
+
 
     
     element = root->FirstChildElement("Lights");
@@ -342,6 +455,25 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         lchild = lchild->NextSiblingElement("SpotLight");
     }
 
+
+    bool SPHERICAL_LIGHT = false;
+    Light* spherical_light;
+    lchild = element->FirstChildElement("SphericalDirectionalLight");
+    while (lchild)
+    {   
+        SPHERICAL_LIGHT = true;
+        int imageid;
+        child = lchild->FirstChildElement("ImageId");
+        stream << child->GetText() << std::endl;
+        stream >> imageid;
+        spherical_light = new SphericalDirectionalLight(image_list.at(imageid-1));
+        Light* l = spherical_light;
+        lights.push_back(l);
+        lchild = lchild->NextSiblingElement("SphericalDirectionalLight");
+    }
+
+
+
     element = element->FirstChildElement("DirectionalLight");
     while(element){
         Vec3 direction;
@@ -360,80 +492,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
 
 
-    // read texture related stuff
-    std::vector<TextureImage*> image_list;
-    std::vector<TextureMap*> tmap_list;
     
-    element = root->FirstChildElement("Textures");
-    if(element)
-    {
-        auto child = element->FirstChildElement("Images");
-        if(child){
-            child = child->FirstChildElement("Image");
-            while (child)
-            {
-                // Find the last '/' in the path
-                size_t pos = filepath.find_last_of('/');
-                
-                // Extract everything before the last '/'
-                std::string folderPath = (pos != std::string::npos) ? filepath.substr(0, pos+1) : "";
-
-                image_list.push_back(new TextureImage(folderPath + child->GetText()));
-                child = child->NextSiblingElement("Image");
-            }
-        }
-
-
-        child = element->FirstChildElement("TextureMap");
-        while (child)
-        {
-            const char*  decal_mode_c = child->FirstChildElement("DecalMode")->GetText();
-            enum DecalMode decal_mode = TextureMap::getDecalMode(decal_mode_c);
-            if(decal_mode == replace_background){
-                const char*  id = child->Attribute("id");
-                bg_texture_index = int(*id-'0') - 1;
-            }
-            auto img_id = child->FirstChildElement("ImageId");
-            if(img_id){
-                stream << img_id->GetText() << std::endl;
-                auto img_index =-1;
-                stream >> img_index;;
-                // read interpolation type as well
-                auto interpol_elem = child->FirstChildElement("Interpolation");
-                const char * interpol_type = "bilinear";
-                if(interpol_elem)
-                interpol_type = interpol_elem->GetText();
-
-                float bump_factor = 1;
-                auto bump_factor_child = child->FirstChildElement("BumpFactor");
-                if(bump_factor_child)
-                    bump_factor = atof(bump_factor_child->GetText());
-                InterploationType itype = TextureMap::getInterpolationType(interpol_type);
-                TextureMap* newmap =  new TextureMap(image_list.at(img_index - 1), true, decal_mode, itype);
-                newmap->bump_factor = bump_factor;
-                tmap_list.push_back(newmap);
-            }
-            else if (strcmp(child->Attribute("type"), "perlin")==0)
-            {
-                const char * noise_conv = child->FirstChildElement("NoiseConversion")->GetText();
-                NoiseConversionType nctype = TextureMap::getNoiseConversionType(noise_conv);
-                float noise_scale = atof(child->FirstChildElement("NoiseScale")->GetText());
-                TextureMap* tmap_p = new TextureMap(nullptr, false, decal_mode, BILINEAR); // BILINEAR will not be used
-                tmap_p->corner_grads = corner_grads;
-                tmap_p->corner_grads_set = true;
-                tmap_p->noise_scale = noise_scale;
-                tmap_p->noise_conv_type = nctype;
-                tmap_list.push_back(tmap_p);
-            }
-            
-            child = child->NextSiblingElement("TextureMap");
-            // TODO: Add other texture map properties here
-        }
-    
-
-
-}
-
 
 
 
@@ -1059,6 +1118,8 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+    s->spherical_light_flag = SPHERICAL_LIGHT;
+    s->spherical_light = spherical_light;
     s->bg_texture_set = false;
     // if bg_texture is set then set in the scene as well
     if(bg_texture_index != -1){

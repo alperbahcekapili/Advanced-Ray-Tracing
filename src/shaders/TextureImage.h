@@ -15,8 +15,8 @@ class TextureImage {
         int width;
         int height;
         int channels;
-        unsigned char* data;
-        TextureImage (std::string path);
+        float* data;
+        TextureImage (std::string path, bool hdr);
         ~TextureImage();
         Vec3 get_value(float u, float v, InterploationType type);
         

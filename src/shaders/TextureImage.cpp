@@ -4,28 +4,49 @@
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../util/stbimage.h"
+#include "../util/tinyexr.h"
+#include "../util/util.h"
 
-
-TextureImage::TextureImage(std::string path){
+TextureImage::TextureImage(std::string path, bool hdr){
     this->path = path;
     // read this image into memory and be ready for querying
     int width, height, channels;
 
-    // Load the image
-    auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-    if (!data) {
-        std::cerr << "Failed to load image: " << stbi_failure_reason() << std::endl;
+    if (!hdr)
+    {// Load the image
+        auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+        if (!data) {
+            std::cerr << "Failed to load image: " << stbi_failure_reason() << std::endl;
+        }
+
+        std::cout << "Image loaded successfully: "
+                    << width << " x " << height
+                    << " with " << channels << " channels."
+                    << std::endl;
+
+        this->width = width;
+        this->height = height;
+        this->channels = channels;
+        char* charData = reinterpret_cast<char*>(data); // Non-const source
+        this->data = reinterpret_cast<float*>(charData);
+        
+
     }
+    else{
 
-    std::cout << "Image loaded successfully: "
-              << width << " x " << height
-              << " with " << channels << " channels."
-              << std::endl;
+        float* image; // width * height * RGBA
+        int width;
+        int height;
+        const char* err = NULL; // or nullptr in C++11
 
-    this->width = width;
-    this->height = height;
-    this->channels = channels;
-    this->data = data;
+        int ret = LoadEXR(&image, &width, &height, path.c_str(), &err);
+        gammaCorrectImage(image, 3, width, height, 2.2);
+        this->data = image;
+        this->channels = 4;
+        this->height = height;
+        this->width = width;
+
+    }
 
 }
 

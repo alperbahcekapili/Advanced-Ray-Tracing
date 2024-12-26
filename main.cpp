@@ -18,6 +18,7 @@
 
 #include <cmath> // For fmod
 #include "src/models/Material.h"
+#include "src/util/tinyexr.h"
 #include <stdio.h>
 
 
@@ -71,8 +72,10 @@ int main(int argc, char const *argv[])
             for (int j = 0; j < imgHeight; j++)
             {
 
-            total_progress++;
+                total_progress++;
                 
+                if(i==500 && j==500)    
+                printf("Alper");
                 
                 // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
                 Vec3 cumulative_pixel = Vec3(0,0,0);
@@ -115,6 +118,11 @@ int main(int argc, char const *argv[])
                         bg_pixel_val = shader.scene->bg_texture->interpolateAt(tmp_uv, NEAREAST_NEIGHBOR) * 255 ;
                         
                     }
+                    if(shader.scene->spherical_light_flag){
+                        
+                        bg_pixel_val = shader.scene->spherical_light->irradianceAt(cameraRay, Vec3(-1,-1,-1));
+
+                    }
 
                     cumulative_pixel = cumulative_pixel +  (bg_pixel_val/curscene.camera->numsamples);
                     image[i][j] = clipValues(cumulative_pixel, 255.0);
@@ -152,21 +160,34 @@ int main(int argc, char const *argv[])
                 
                 // std::cout << image[i][j].x << ", " << image[i][j].y << ", " << image[i][j].z << "\n";
 
-                // fg_pixel_count++;
+                
                 }
 
-                
-                image[i][j] = clipValues(cumulative_pixel, 255.0);
-                
+                image[i][j] = cumulative_pixel;
 
             }
 
         }
-        // std::cout << "Outside the loop\n";
 
 
 
 
+        // if output name endswith .exr we first tonemap results save the exr and perform gamma correction save png
+        bool hdr_flag = curscene.camera->name.substr(curscene.camera->name.size() - 4) == ".exr";
+        if(hdr_flag){
+            reinhardGlobalTonemap(image, imgWidth, imgHeight, curscene.camera->burnout, curscene.camera->saturation, curscene.camera->keyvalue);
+
+            float* flatArray = new float[imgWidth * imgHeight * 3];
+            convertVec3ToFlatArray(image, imgWidth, imgHeight, flatArray);
+
+            const char** err;
+            SaveEXR(flatArray, imgWidth, imgHeight, 3, 0, curscene.camera->name.c_str(), err);
+            gammaCorrectImage(image, imgWidth, imgHeight, curscene.camera->gamma);
+
+        }
+        
+
+        
 
         unsigned width = imgWidth, height = imgHeight;
         std::vector<unsigned char> image_mat(width * height * 4, 255); // White image
@@ -181,7 +202,10 @@ int main(int argc, char const *argv[])
                 image_mat[idx + 3] = 255; // Alpha (opaque)
             }
         }
-
+        size_t pos = curscene.camera->name.find(".exr");
+        if (pos != std::string::npos) {
+            curscene.camera->name.replace(pos, 4, ".png");  // Replace 4 characters (".exr")
+        }
         // Encode the image and save to file
         unsigned error = lodepng::encode(curscene.camera->name, image_mat, width, height);
 
