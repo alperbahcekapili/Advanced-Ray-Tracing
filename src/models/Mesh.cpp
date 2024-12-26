@@ -39,7 +39,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
             std::cerr << "Unknown decal mode encountered: " << texture_maps[i].decal_mode << std::endl;
         }
     }
-    this->tex_flags.any = this->tex_flags.replace_kd && this->tex_flags.blend_kd && this->tex_flags.replace_ks && this->tex_flags.bump_normal && this->tex_flags.replace_all && this->tex_flags.replace_normal;
+    this->tex_flags.any = (this->tex_flags.replace_kd || this->tex_flags.blend_kd || this->tex_flags.replace_ks || this->tex_flags.bump_normal || this->tex_flags.replace_all || this->tex_flags.replace_normal);
     // std::cout << "Material:"<< material->materialType << std::endl;
     this->tm = new TransformationMatrix();
     *(this->tm) = *(tm);

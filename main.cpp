@@ -18,7 +18,6 @@
 
 #include <cmath> // For fmod
 #include "src/models/Material.h"
-#include "src/util/tinyexr.h"
 #include <stdio.h>
 
 
@@ -62,7 +61,7 @@ int main(int argc, char const *argv[])
         // int fg_pixel_count = 0;
         // // now we need to iterate over the pixels and fill them
         int total_progress = 0;
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i = 0; i < imgWidth; i++)
         {
             image[i] = new Vec3[imgHeight];
@@ -75,7 +74,7 @@ int main(int argc, char const *argv[])
                 total_progress++;
                 
                 if(i==500 && j==500)    
-                printf("Alper");
+                 printf("Alper");
                 
                 // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
                 Vec3 cumulative_pixel = Vec3(0,0,0);
@@ -129,6 +128,8 @@ int main(int argc, char const *argv[])
                     continue;
                 }
             
+                if(i == 500 && j == 500)
+                    printf("Akper");
                 
                 Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                 Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
@@ -171,43 +172,43 @@ int main(int argc, char const *argv[])
 
 
 
+        float* flatArray = new float[imgWidth * imgHeight * 3];
+        convertVec3ToFlatArray(image, imgWidth, imgHeight, flatArray);
 
         // if output name endswith .exr we first tonemap results save the exr and perform gamma correction save png
         bool hdr_flag = curscene.camera->name.substr(curscene.camera->name.size() - 4) == ".exr";
         if(hdr_flag){
             reinhardGlobalTonemap(image, imgWidth, imgHeight, curscene.camera->burnout, curscene.camera->saturation, curscene.camera->keyvalue);
 
-            float* flatArray = new float[imgWidth * imgHeight * 3];
+            flatArray = new float[imgWidth * imgHeight * 3];
             convertVec3ToFlatArray(image, imgWidth, imgHeight, flatArray);
 
-            const char** err;
-            SaveEXR(flatArray, imgWidth, imgHeight, 3, 0, curscene.camera->name.c_str(), err);
-            gammaCorrectImage(image, imgWidth, imgHeight, curscene.camera->gamma);
+            const char* err = NULL; // or nullptr in C++11 or later.
+            SaveEXR(flatArray, imgWidth, imgHeight, curscene.camera->name.c_str());
 
+            // scale to 0,1
+            gammaCorrectImage(flatArray, 3, imgWidth, imgHeight, curscene.camera->gamma);
         }
         
 
         
 
         unsigned width = imgWidth, height = imgHeight;
-        std::vector<unsigned char> image_mat(width * height * 4, 255); // White image
+        std::vector<unsigned char> image_mat(width * height * 3, 255); // White image
 
+        
         // Set some pixels to black
-        for (int x = 0; x < imgWidth; ++x) {
-            for (int y = 0; y < imgHeight; ++y) {
-                int idx = 4 * (y * width + x);
-                image_mat[idx + 0] = static_cast<uint8_t>(clamp(image[x][y].x, 0.0f, 255.0f));
-                image_mat[idx + 1] = static_cast<uint8_t>(clamp(image[x][y].y, 0.0f, 255.0f));
-                image_mat[idx + 2] = static_cast<uint8_t>(clamp(image[x][y].z, 0.0f, 255.0f));
-                image_mat[idx + 3] = 255; // Alpha (opaque)
-            }
-        }
+        for (int x = 0; x < imgWidth * imgHeight * 3; ++x) 
+                image_mat[x] = static_cast<uint8_t>(flatArray[x]);
+                
+
+        printf("Resmi olusturdum");
         size_t pos = curscene.camera->name.find(".exr");
         if (pos != std::string::npos) {
             curscene.camera->name.replace(pos, 4, ".png");  // Replace 4 characters (".exr")
         }
         // Encode the image and save to file
-        unsigned error = lodepng::encode(curscene.camera->name, image_mat, width, height);
+        unsigned error = lodepng::encode(curscene.camera->name, image_mat, width, height, LCT_RGB);
 
         // Check for encoding errors
         if (error) {

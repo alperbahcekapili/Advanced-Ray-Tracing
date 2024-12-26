@@ -22,17 +22,23 @@ Shader::~Shader()
 Vec3  Shader::radianceAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex){
     Vec3  radiance(0,0,0);
     for (int i = 0; i < this->scene->numlights; i++)
-        {
+        {   
             Ray lightRay = createLightRay(this->scene->lights[i], location);
-            
-            bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
-            if (!ligth_hits)
-                continue;
-            Vec3 n = intersectingObject->getSurfaceNormal(lightRay);
-            // If we got so far then it means ith light source hits this surface thus we can calculate illumination
-            float cosTheta = lightRay.d.dot(n);
-            Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
-            radiance = irradiance + radiance;
+            if(this->scene->lights[i]->ltype!=SphericalDirectionalLightType)
+            {
+                bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
+                if (!ligth_hits)
+                    continue;
+
+                Vec3 n = intersectingObject->getSurfaceNormal(lightRay);
+                // If we got so far then it means ith light source hits this surface thus we can calculate illumination
+                float cosTheta = lightRay.d.dot(n);
+                Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
+                radiance = irradiance + radiance;
+            }else{
+                Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location);
+                radiance = irradiance + radiance;
+            }
         }
 
     return radiance;
@@ -238,7 +244,6 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
     // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
     Material* target_mat = target_obj->getMaterial();
     if(target_mat->materialType == MaterialType::Dielectric || target_mat->materialType == MaterialType::Conductor){
-        // std::cout << "Target is dielectric \n";
         return refractionTransmission(r, scene, target_obj, remaining_hop-1, intersect_index);
     }
                 
@@ -250,7 +255,7 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
     // std::cout << "Target is mirror!";
     
     Vec3  n = scene->sceneObjects[intersect_index]->getSurfaceNormal(r);
-    // TODO: is this r correct ? 
+    
     float cos_theta = n.dot( r.d * -1);
     Ray new_r = Ray(r.locationAtT(target_obj->Intersects(r)),  r.d + ( n * 2 * cos_theta));
     new_r.o = new_r.o + (new_r.d * scene->shadow_ray_eps);
@@ -276,8 +281,14 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
     bool intersected = scene->bvh->intersectObject(new_r, tofill, minTValue, maxTValue);
     if(intersected)
         new_intersect_index = tofill -> id;
-
     if (new_intersect_index == -1){
+
+        // if new ray does not intersect and there is environment light, reflect that
+        if(this->scene->spherical_light_flag){
+            Vec3 color = this->scene->spherical_light->irradianceAt(new_r, new_r.o);
+            return color;
+
+        }
         return current_pixel_val;
     }
     Vec3  child_color = specularReflection(new_r, scene, scene->sceneObjects[new_intersect_index], remaining_hop -1, new_intersect_index);
@@ -290,6 +301,8 @@ Vec3  Shader::specularReflection(Ray r, Scene* scene, Object* target_obj, int re
 
 bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject, int intersectingObjIndex, Object** other_objects, int numobj ){
     
+    
+
 
     // if object type is mesh we can make use of last intersect property
     if(intersectingObject->objectType == MeshType){
@@ -344,19 +357,25 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 
    Vec3  pixel(0,0,0);
    for (int i = 0; i < this->scene->numlights; i++)
-   {
+   {    
+
+
         Ray lightRay = createLightRay(this->scene->lights[i], location);
-        
-        bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
-        if (!ligth_hits){        
+        if(this->scene->lights[i]->ltype!= SphericalDirectionalLightType)
+        {
+            bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
+            if (!ligth_hits){        
             // printf("Light does not hit obejct\n");
             continue;}
+        }
 
         
 
         float cosTheta = (lightRay.d * -1).dot(intersectingObject->getSurfaceNormal(lightRay) );
         if (cosTheta < 0)
             cosTheta *= -1; // TODO: update here
+        if(this->scene->lights[i]->ltype == SphericalDirectionalLightType)
+            cosTheta = 1.0f;
         
         Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
         // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
@@ -432,8 +451,16 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 Vec3  Shader::ambientShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex){
     Vec3  resultingMagnitude = Vec3(0,0,0);
     // if this object has replace_all texture it is calculated in diffuse property so terminate here directly
-    if(intersectingObject->get_texture_flags().replace_all)
+    if(intersectingObject->get_texture_flags().replace_all){
+        if(intersectingObject->getObject() == SphereType)
+        {   
+            Sphere* sphere = dynamic_cast<Sphere*>(intersectingObject);
+            uv tmp_uv = uv::calculateUVSphere(location, sphere->center, sphere->R);
+            resultingMagnitude = sphere->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().replace_all_texture->interpolation_type) * 255;
+        }
         return resultingMagnitude;
+    }
+        
 
     return intersectingObject->getMaterial()->ambientProp * this->scene->ambient_light;
 }
@@ -451,9 +478,13 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
     {
         // create a ray from the lightsource to destination
         Ray lightRay = createLightRay(this->scene->lights[i], location);
-        bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
-        if (!ligth_hits)
-            continue;
+        if(this->scene->lights[i]->ltype!= SphericalDirectionalLightType)
+        {
+            bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
+            if (!ligth_hits){        
+            // printf("Light does not hit obejct\n");
+            continue;}
+        }
 
         Vec3  surface_normal = intersectingObject->getSurfaceNormal(lightRay);
         // std::cout <<  "Lightray in specular " <<lightRay.d.x  << "," << lightRay.d.z  << "," << lightRay.d.z  << "\n" ;
@@ -467,6 +498,9 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
         else{
             costheta = pow(costheta, intersectingObject->getMaterial()->phong_exponent);
         }
+
+        if(this->scene->lights[i]->ltype == SphericalDirectionalLightType)
+            costheta = 1;
 
         if(intersectingObject->get_texture_flags().replace_ks){
             if(intersectingObject->getObject() == MeshType){

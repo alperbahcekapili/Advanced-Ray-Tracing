@@ -228,7 +228,9 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         if(child)
         stream << child->GetText() << std::endl;
         else// then fovy is given we can calculate tlrb
-        {
+        {   
+
+            
             child = element->FirstChildElement("FovY");
             float fovy = std::atoi(child->GetText());
             // Convert fovy from degrees to radians

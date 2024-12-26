@@ -17,6 +17,10 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
     this->d = d;
     this->c = c;
 
+    l = l*2;
+    r = r*2;
+
+
     // We need to intialize the image pane with Camera thus we can precompute all ray functions for each pixel
     Vec3  wd(c->w.x * d, c->w.y * d, c->w.z * d);
     Vec3  m (c->getPosition().x + wd.x, c->getPosition().y + wd.y, c->getPosition().z + wd.z);

@@ -31,3 +31,5 @@ void degammaCorrectImage(float* image, int channels, int width, int height, floa
 float degammaCorrectColor(float& color, float gamma);
 float gammaCorrectColor(float& color, float gamma);
 void gammaCorrectImage(float* image, int channels, int width, int height, float gamma);
+bool SaveEXR(const float* rgb, int width, int height, const char* outfilename);
+void scale_floats_0_1(float* data, size_t size);

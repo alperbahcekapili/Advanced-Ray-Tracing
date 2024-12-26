@@ -40,7 +40,7 @@ TextureImage::TextureImage(std::string path, bool hdr){
         const char* err = NULL; // or nullptr in C++11
 
         int ret = LoadEXR(&image, &width, &height, path.c_str(), &err);
-        gammaCorrectImage(image, 3, width, height, 2.2);
+        
         this->data = image;
         this->channels = 4;
         this->height = height;
@@ -57,8 +57,6 @@ TextureImage::~TextureImage(){
 
 Vec3 TextureImage::get_value(float u, float v, InterploationType type){
 
-    u = u - floor(u);
-    v = v - floor(v);
 
     if(type == NEAREAST_NEIGHBOR){
         int x = int(u * this->width);

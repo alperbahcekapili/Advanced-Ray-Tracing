@@ -7,7 +7,8 @@
 enum LightType{
     PointLightType,
     AreaLightType,
-    DirectionalLightType
+    DirectionalLightType,
+    SphericalDirectionalLightType
 };
 
 class Light

@@ -13,7 +13,7 @@ Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType, 
     this->R = R;
     this->center = center;
     this->material = material;
-    this->objectType = objectType;
+    this->objectType = SphereType;
     this->tex_flags = texture_flags();
     this->texture_maps = texture_maps;
     this->num_tex_maps = num_tex_maps;
@@ -43,7 +43,7 @@ Sphere::Sphere(Vec3 center, float R, Material* material, ObjectType objectType, 
         }
 
     }
-    this->tex_flags.any = this->tex_flags.replace_kd && this->tex_flags.blend_kd && this->tex_flags.replace_ks && this->tex_flags.bump_normal && this->tex_flags.replace_all && this->tex_flags.replace_normal;
+    this->tex_flags.any = (this->tex_flags.replace_kd || this->tex_flags.blend_kd || this->tex_flags.replace_ks || this->tex_flags.bump_normal || this->tex_flags.replace_all || this->tex_flags.replace_normal);
 
     
     this->tm = new TransformationMatrix();

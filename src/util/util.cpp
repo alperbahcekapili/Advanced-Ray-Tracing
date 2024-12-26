@@ -7,8 +7,10 @@
 #include "../models/Ray.h"
 #include "../lights/Light.h"
 #include "../lights/DirectionalLight.h"
+#include "../lights/SphericalDirectionalLight.h"
 #include "util.h"
-
+#include "tinyexr.h"
+#include <cstring>
 #include <math.h>
 
 using namespace std;
@@ -16,6 +18,71 @@ using namespace std;
 #define assertm(exp, msg) assert(((void)msg, exp))
 
 
+
+  // See `examples/rgbe2exr/` for more details.
+  bool SaveEXR(const float* rgb, int width, int height, const char* outfilename) {
+
+    EXRHeader header;
+    InitEXRHeader(&header);
+
+    EXRImage image;
+    InitEXRImage(&image);
+
+    image.num_channels = 3;
+
+    std::vector<float> images[3];
+    images[0].resize(width * height);
+    images[1].resize(width * height);
+    images[2].resize(width * height);
+
+    // Split RGBRGBRGB... into R, G and B layer
+    for (int i = 0; i < width * height; i++) {
+      images[0][i] = rgb[3*i+0];
+      images[1][i] = rgb[3*i+1];
+      images[2][i] = rgb[3*i+2];
+    }
+
+    float* image_ptr[3];
+    image_ptr[0] = &(images[2].at(0)); // B
+    image_ptr[1] = &(images[1].at(0)); // G
+    image_ptr[2] = &(images[0].at(0)); // R
+
+    image.images = (unsigned char**)image_ptr;
+    image.width = width;
+    image.height = height;
+
+    header.num_channels = 3;
+    header.channels = (EXRChannelInfo *)malloc(sizeof(EXRChannelInfo) * header.num_channels);
+    // Must be (A)BGR order, since most of EXR viewers expect this channel order.
+    strncpy(header.channels[0].name, "B", 255); header.channels[0].name[std::strlen("B")] = '\0';
+    strncpy(header.channels[1].name, "G", 255); header.channels[1].name[std::strlen("G")] = '\0';
+    strncpy(header.channels[2].name, "R", 255); header.channels[2].name[std::strlen("R")] = '\0';
+
+    header.pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
+    header.requested_pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
+    for (int i = 0; i < header.num_channels; i++) {
+      header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of input image
+      header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of output image to be stored in .EXR
+    }
+
+    const char* err = NULL; // or nullptr in C++11 or later.
+    int ret = SaveEXRImageToFile(&image, &header, outfilename, &err);
+    if (ret != TINYEXR_SUCCESS) {
+      fprintf(stderr, "Save EXR err: %s\n", err);
+      FreeEXRErrorMessage(err); // free's buffer for an error message
+      return ret;
+    }
+    printf("Saved exr file. [ %s ] \n", outfilename);
+
+    // free(rgb);
+
+    free(header.channels);
+    free(header.pixel_types);
+    free(header.requested_pixel_types);
+
+  }
+
+  
 
 // Degamma correction for a single color
 Vec3 degammaCorrectColor(const Vec3& color, float gamma) {
@@ -70,6 +137,28 @@ void degammaCorrectImage(float* image, int channels, int width, int height, floa
 
 
 
+#include <algorithm>
+#include <limits>
+
+void scale_floats_0_1(float* data, size_t size) {
+    // Find the minimum and maximum values in the array
+    float min_val = *std::min_element(data, data + size);
+    float max_val = *std::max_element(data, data + size);
+
+    // Handle the case where all values are the same
+    if (min_val == max_val) {
+        for (size_t i = 0; i < size; ++i) {
+            data[i] = 0.0f;
+        }
+        return;
+    }
+
+    // Scale the values to the range [0, 1]
+    for (size_t i = 0; i < size; ++i) {
+        data[i] = (data[i] - min_val) / (max_val - min_val);
+    }
+}
+
 
 // Gamma correction for a single color
 Vec3 gammaCorrectColor(const Vec3& color, float gamma) {
@@ -99,9 +188,12 @@ void gammaCorrectImage(Vec3** image, int width, int height, float gamma) {
 
 void convertVec3ToFlatArray(Vec3** image, int width, int height, float* flatArray) {
     int index = 0;
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height ; ++j) {
-            Vec3 pixel = image[j][i];
+    for (int j = 0; j < height ; ++j)
+    {
+        for (int i = 0; i < width; ++i)
+        
+        {
+            Vec3 pixel = image[i][j];
             // printf("%f ", pixel.x);
             // printf("%f ", pixel.y);
             // printf("%f \n", pixel.z);
@@ -120,8 +212,8 @@ void reinhardGlobalTonemap(Vec3** image, int width, int height, float burnout, f
     std::vector<float> luminanceValues;
     luminanceValues.reserve(width * height);
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    for (int x = 0; x < width; ++x) {
+        for (int y = 0; y < height ; ++y) {
             Vec3 pixel = image[x][y];
             float luminance = 0.2126f * pixel.x + 0.7152f * pixel.y + 0.0722f * pixel.z;
             luminanceValues.push_back(luminance);
@@ -129,10 +221,8 @@ void reinhardGlobalTonemap(Vec3** image, int width, int height, float burnout, f
     }
 
     // Step 2: Compute the logarithmic average luminance
-    float logSum = 0.0f;
+    float logSum = 0.0;
     for (float luminance : luminanceValues) {
-        if (std::isnan(luminance)) 
-            luminance = 125;
         logSum += std::log(luminance + epsilon);
     }
     float logAvgLuminance = std::exp(logSum / luminanceValues.size()) ;
@@ -145,16 +235,16 @@ void reinhardGlobalTonemap(Vec3** image, int width, int height, float burnout, f
 
 
     // Step 3: Scale the luminance
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            Vec3& pixel = image[y][x];
+    for (int x = 0; x < width; ++x) {
+        for (int y = 0; y < height ; ++y) {
+            Vec3& pixel = image[x][y];
             float luminance = 0.2126f * pixel.x + 0.7152f * pixel.y + 0.0722f * pixel.z;
             float scaledLuminance = (alpha / logAvgLuminance) * luminance;
 
             
 
             // Step 4: Apply tone mapping with burnout parameter
-            float mappedLuminance = (scaledLuminance * (1.0f + scaledLuminance / (Lwhite * Lwhite))) / (1.0f + scaledLuminance);
+            float mappedLuminance = (scaledLuminance * (1.0f + (scaledLuminance / (Lwhite * Lwhite)))) / (1.0f + scaledLuminance);
 
 
             pixel.x = mappedLuminance * pow(pixel.x / luminance, saturation);
@@ -202,6 +292,13 @@ Ray createLightRay(Light* light, Vec3 destination){
         Vec3 origin = destination - (99999 * dir); // light comes from out of the scene
         return Ray(origin, dir);
     }
+    else if (light->ltype == SphericalDirectionalLightType)
+    {
+        SphericalDirectionalLight* sph_light = dynamic_cast<SphericalDirectionalLight*>(light);
+        Vec3 randomdir  = Vec3(generate_random_01(), generate_random_01(), generate_random_01());
+        return Ray(Vec3(0,0,0), randomdir);
+    }
+    
     Vec3 start = light->getPointOn();
     return createRayFrom(start, destination);
 }
