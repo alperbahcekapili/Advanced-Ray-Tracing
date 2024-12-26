@@ -1,4 +1,6 @@
 log*
+*.exr
+*.xmp
 *.png
 .vscode
 # Ignore build directories
