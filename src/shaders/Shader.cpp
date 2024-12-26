@@ -303,11 +303,11 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
     float errorMargin = 0.1;
     Vec3 diff = lightHitLocation - location;
-    if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
-        // This means the light is in the other side of the object
-        // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
-        return false;
-    }
+    // if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
+    //     // This means the light is in the other side of the object
+    //     // std::cout << "Light is on the other side. for "<< intersectingObjIndex << " \n";
+    //     return false;
+    // }
 
     // if(intersectingObject->getMotionBlur().z!= 0){
     //     int b = -1;
@@ -317,7 +317,7 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     float new_tmin, new_tmax;
     Object* tmp;
     bool bvh_int = this->scene->bvh->intersectObject(light_ray, tmp, new_tmin, new_tmax);
-    if(new_tmin < intersectingTvalue)
+    if(new_tmin+0.001 < intersectingTvalue)
         in_shadow=true;
     return !in_shadow;
 

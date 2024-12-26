@@ -14,6 +14,7 @@
 #include "../lights/Light.h"
 #include "../lights/PointLight.h"
 #include "../lights/DirectionalLight.h"
+#include "../lights/SpotLight.h"
 #include "../lights/AreaLight.h"
 #include "../models/Material.h"
 #include "../models/Mesh.h"
@@ -312,6 +313,34 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         element = element->NextSiblingElement("AreaLight");
     }
 
+    lchild = element->FirstChildElement("SpotLight");
+    while (lchild)
+    {
+        Vec3 position;
+        Vec3 direction;
+        Vec3 intensity;
+        float coverage_angle;
+        float faloff_angle;
+        child = lchild->FirstChildElement("Position");
+        stream << child->GetText() << std::endl;
+        child = lchild->FirstChildElement("Direction");
+        stream << child->GetText() << std::endl;
+        child = lchild->FirstChildElement("Intensity");
+        stream << child->GetText() << std::endl;
+        child = lchild->FirstChildElement("CoverageAngle");
+        stream << child->GetText() << std::endl;
+        child = lchild->FirstChildElement("FalloffAngle");
+        stream << child->GetText() << std::endl;
+
+        stream >> position.x >> position.y >> position.z;
+        stream >> direction.x >> direction.y >> direction.z;
+        stream >> intensity.x >> intensity.y >> intensity.z;
+        stream >> coverage_angle;
+        stream >> faloff_angle;
+        Light* l = new SpotLight(position, direction, intensity, coverage_angle, faloff_angle);
+        lights.push_back(l);
+        lchild = lchild->NextSiblingElement("SpotLight");
+    }
 
     element = element->FirstChildElement("DirectionalLight");
     while(element){
@@ -328,11 +357,6 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         lights.push_back(l);
         element = element->NextSiblingElement("DirectionalLight");
     }
-
-
-
-
-
 
 
 
@@ -701,9 +725,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
+                if(texture_offset_c){
                 uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
                 uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
             }
 
 		}
@@ -712,10 +737,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
       stream.clear();
         // convert vector to list
         Vec3* mesh_faces_ar = new Vec3[mesh_faces.size()];
+        #pragma omp parallel for
         for (int i = 0; i < mesh_faces.size(); i++)
         {
             mesh_faces_ar[i] = mesh_faces.at(i);
-            // std::cout << i << "\n" ;
         }
         mesh_numfaces = int(mesh_faces.size()/3);
 

@@ -118,10 +118,10 @@ std::vector<Vec3> read_ply(const std::string& filename) {
     }
 
 
-    for (size_t i = 0; i < faces.size(); i++)
+    /*for (size_t i = 0; i < faces.size(); i++)
     {
         std::cout << faces.at(i).x << ", " << faces.at(i).y << ", " << faces.at(i).z << std::endl;
-    }
+    }*/
     
     
 
