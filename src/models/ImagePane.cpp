@@ -17,8 +17,6 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
     this->d = d;
     this->c = c;
 
-    l = l*2;
-    r = r*2;
 
 
     // We need to intialize the image pane with Camera thus we can precompute all ray functions for each pixel

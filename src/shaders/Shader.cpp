@@ -322,7 +322,7 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
     Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
-    float errorMargin = 0.1;
+    float errorMargin = 0.001;
     Vec3 diff = lightHitLocation - location;
     if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
         // This means the light is in the other side of the object
@@ -358,8 +358,6 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
    Vec3  pixel(0,0,0);
    for (int i = 0; i < this->scene->numlights; i++)
    {    
-
-
         Ray lightRay = createLightRay(this->scene->lights[i], location);
         if(this->scene->lights[i]->ltype!= SphericalDirectionalLightType)
         {
@@ -395,19 +393,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 if(triangle->get_texture_flags().replace_kd_texture->is_image)
                 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_kd_texture->interpolation_type);
             else{
-                Vec3 scene_min = this->scene->bvh->min;
-                Vec3 scene_max = this->scene->bvh->max;
-                Vec3 corners[8];
-                corners[0] = Vec3(scene_min.x, scene_min.y, scene_min.z);
-                corners[1] = Vec3(scene_min.x, scene_min.y, scene_max.z);
-                corners[2] = Vec3(scene_min.x, scene_max.y, scene_min.z);
-                corners[3] = Vec3(scene_min.x, scene_max.y, scene_max.z);
-                corners[4] = Vec3(scene_max.x, scene_min.y, scene_min.z);
-                corners[5] = Vec3(scene_max.x, scene_min.y, scene_max.z);
-                corners[6] = Vec3(scene_max.x, scene_max.y, scene_min.z);
-                corners[7] = Vec3(scene_max.x, scene_max.y, scene_max.z);
                 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(location);
-                
             }
             if(intersectingObject->get_texture_flags().replace_kd)
                 tmp =  bg_pixel_val * irradiance;
@@ -527,3 +513,39 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
 }
 
 
+Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex){
+    Triangle* hitTri = nullptr;
+
+   Vec3  pixel(0,0,0);
+   for (int i = 0; i < this->scene->numlights; i++)
+   {    
+        // if object is in shadow directly terminate
+        Ray lightRay = createLightRay(this->scene->lights[i], location);
+        if(this->scene->lights[i]->ltype!= SphericalDirectionalLightType)
+        {
+            bool ligth_hits = lightHits(lightRay, location, intersectingObject, intersectingObjIndex, this->scene->sceneObjects, this->scene->numObjects)    ;;
+            if (!ligth_hits){        
+            // printf("Light does not hit obejct\n");
+            continue;}
+        }
+        Vec3 surface_normal =intersectingObject->getSurfaceNormal(lightRay);
+        float cosTheta = (lightRay.d * -1).dot( surface_normal );
+        if (cosTheta < 0)
+            cosTheta *= -1; // TODO: update here
+        if(this->scene->lights[i]->ltype == SphericalDirectionalLightType)
+            cosTheta = 1.0f;
+        
+        Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
+        brdf_inputs inputs;
+        inputs.kd = intersectingObject->getMaterial()->diffuseProp;
+        inputs.ks = intersectingObject->getMaterial()->specularProp;
+        inputs.n = surface_normal;
+        inputs.wi = (lightRay.d * -1);
+        inputs.wo = surface_normal; // is this correct ? TODO
+
+        Vec3 color = intersectingObject->getMaterial()->brdf->f(inputs);
+        pixel = pixel + color * irradiance * 255;
+
+    }
+    return pixel;
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "../util/data_structures.h"
+#include  "../shaders/BRDF.h"
 enum MaterialType {
     Mirror,
     Conductor,
@@ -15,6 +16,7 @@ class Material{
     Vec3 diffuseProp;
     Vec3 specularProp;
     Vec3 mirrorReflectance;
+    BRDF* brdf;
     float refraction_index;
     float absorbtion_index;
     Vec3  absorption_coef;

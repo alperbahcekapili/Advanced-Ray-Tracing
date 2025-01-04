@@ -25,6 +25,7 @@
 #include "../scene/Scene.h"
 #include "../shaders/TextureImage.h"
 #include "../shaders/TextureMap.h"
+#include "../shaders/BRDF.h"
 #include "data_structures.h"
 #include "ply.h"
 #include "read_ply.h"
@@ -495,13 +496,23 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
 
     
+    // Read BRDF'S 
+    std::vector<BRDF*> brdfs;
+    element = root->FirstChildElement("BRDFs");
+    auto modifiedPhong = element->FirstChildElement("ModifiedPhong");
+    while (modifiedPhong)
+    {   
+        // TODO: can be normalized
+        auto exp = modifiedPhong->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
 
-
-
-
-
-
-
+        BRDFType brdf_type = BRDFType::ModifiedPhong;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        modifiedPhong = modifiedPhong->NextSiblingElement("ModifiedPhong");
+    }
+    
 
 
 
@@ -565,6 +576,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }else{
             stream << "0 0 0 \n" << std::endl;
         }
+
+        
         
         stream >> ambient_reflectance.x >> ambient_reflectance.y >> ambient_reflectance.z;
         stream >> diffuse_reflectance.x >> diffuse_reflectance.y >> diffuse_reflectance.z;
@@ -592,6 +605,14 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
         stream >> phong_exponent;
         Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficient, roughness);
+
+        // get brdf id
+        auto brdfid = element->Attribute("BRDF");
+        if(brdfid){
+            int brdf_id = atoi(brdfid) - 1;
+            material->brdf = brdfs.at(brdf_id);
+        }
+        
         materials.push_back(material);
         element = element->NextSiblingElement("Material");
     }
@@ -643,11 +664,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream.clear();
         stream.str("");
     }
+
+
     bool TEXTURE_COORDS_EXIST = false;
-
-
-
-    // if tex coord data is presend then read that as well
+    // if tex coord data is present then read that as well
     std::vector<std::pair<float, float> > uv_coords;
     element = root->FirstChildElement("TexCoordData");
     if(element){

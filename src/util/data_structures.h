@@ -118,6 +118,7 @@ struct Vec3 {
         return Vec3(x * scalar, y * scalar, z * scalar);
     }
 
+
     // Overload for scalar * Vec3 (enables float * Vec3 syntax)
     friend Vec3 operator*(float scalar, const Vec3& vec) {
         return Vec3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
