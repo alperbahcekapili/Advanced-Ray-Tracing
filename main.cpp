@@ -61,7 +61,7 @@ int main(int argc, char const *argv[])
         // int fg_pixel_count = 0;
         // // now we need to iterate over the pixels and fill them
         int total_progress = 0;
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < imgWidth; i++)
         {
             image[i] = new Vec3[imgHeight];
