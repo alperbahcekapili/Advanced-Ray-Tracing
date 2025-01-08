@@ -24,7 +24,11 @@ struct texture_flags{
 enum ObjectType{
     TriangleType,
     SphereType,
-    MeshType
+    MeshType,
+    MeshLightType,
+    SphereLightType,
+    TriangleLightType
+
 };
 
 class Object
@@ -36,26 +40,27 @@ public:
     TransformationMatrix* tm;
     int num_tex_maps;
     ObjectType objectType;
+    Vec3 radiance = Vec3(0,0,0); // TODO: remove this
     Vec3 min;
     Vec3 max;
     Vec3 motionBlur;
     texture_flags tex_flags;
     TextureMap* texture_maps;
     int id; // Used as unqiue id 
-    virtual float Intersects(Ray ray)  = 0;
-    virtual Vec3 getSurfaceNormal(Ray r) = 0;
+    virtual float Intersects(Ray ray)  {};
+    virtual Vec3 getSurfaceNormal(Ray r) {};
     virtual ~Object() = default ;
-    virtual Material* getMaterial() = 0;
-    virtual ObjectType getObject() = 0;
-    virtual Vec3 getBoundingBox(bool isMax) = 0;
-    virtual Vec3  getCenter() = 0;
-    virtual Vec3 getMotionBlur() = 0;
-    virtual TransformationMatrix* gettm() = 0;
+    virtual Material* getMaterial() {};
+    virtual ObjectType getObject() {};
+    virtual Vec3 getBoundingBox(bool isMax) {};
+    virtual Vec3  getCenter() {};
+    virtual Vec3 getMotionBlur() {};
+    virtual TransformationMatrix* gettm() {};
     virtual int get_num_tex_maps() =0;
-    virtual TextureMap* get_texture_maps() = 0;
-    virtual texture_flags get_texture_flags() = 0;
+    virtual TextureMap* get_texture_maps() {};
+    virtual texture_flags get_texture_flags() {};
     
-    // virtual void transform(TransformationMatrix tm) = 0;
+    // virtual void transform(TransformationMatrix tm) {};
     
     
 };

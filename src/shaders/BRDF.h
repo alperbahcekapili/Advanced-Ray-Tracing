@@ -8,6 +8,8 @@ struct brdf_inputs{
     Vec3 n;
     Vec3 kd;
     Vec3 ks;
+    float refraction_index;
+    
     
 };
 
@@ -16,13 +18,16 @@ enum BRDFType{
     OriginalPhong,
     ModifiedBlinnPhong,
     ModifiedPhong,
-    TorranceSparrow
+    TorranceSparrow,
+    NormalizedModifiedPhong,
+    NormalizedModifiedBlinnPhong
+
 };
 class BRDF{
     public:
 
-        float phong_exponent;;
-
+        float phong_exponent;
+        bool kdfresnel = false;
 
         BRDFType brdf_type;
         Vec3  f(brdf_inputs inputs);
@@ -32,6 +37,8 @@ class BRDF{
         Vec3 modifiedBlinnPhong(brdf_inputs inputs);
         Vec3 modifiedPhong(brdf_inputs inputs);
         Vec3 torranceSparrow(brdf_inputs inputs);
-
+        Vec3 normalizedModifiedPhong(brdf_inputs inputs);
+        Vec3 normalizedModifiedBlinnPhong(brdf_inputs inputs);
+    
         ~BRDF();
 };

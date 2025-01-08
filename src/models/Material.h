@@ -16,6 +16,7 @@ class Material{
     Vec3 diffuseProp;
     Vec3 specularProp;
     Vec3 mirrorReflectance;
+    bool brdf_set = false;
     BRDF* brdf;
     float refraction_index;
     float absorbtion_index;

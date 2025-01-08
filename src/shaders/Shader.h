@@ -18,7 +18,7 @@ public:
     Vec3  specularShadingAt(Ray cameraRay,Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     Vec3  specularReflection(Ray r, Scene* scene, Object* source_obj,  int remaining_hop, int intersect_index);
     Vec3  refractionTransmission(Ray r, Scene* scene, Object* target_obj, int remaining_hop, int intersect_index);
-    Vec3 BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
+    Vec3 BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray);
     Vec3  radianceAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     bool lightHits(Ray light_ray, Vec3  location, Object* intersectingObject, int intersectingObjIndex, Object** other_objects, int numobj );
 };

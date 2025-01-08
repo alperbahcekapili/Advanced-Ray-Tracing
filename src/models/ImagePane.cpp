@@ -64,14 +64,13 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
 Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
     // i and j already specify jitter
     // 
-    float offsetx = 0.5;//generate_random_01();
-    float offsety = 0.5;//generate_random_01();
-    rayindex = 0;
+    float offsetx = generate_random_01();
+    float offsety = generate_random_01();
     
 
     int num_sample_axis =  int(sqrt(this->c->numsamples));
     float subregion_width = (r - l)  / (float(num_sample_axis)* dimx);
-    float subregion_height = (t - b) / (float(num_sample_axis)*dimy);
+    float subregion_height = (t - b) / (float(num_sample_axis)* dimy);
     Vec3 pixel_center = this->sValues[i][j];
     
     int xgrid = int(rayindex%num_sample_axis);

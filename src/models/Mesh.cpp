@@ -45,7 +45,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     *(this->tm) = *(tm);
     this->last_intersected_obj = nullptr;
     Object** triangles = new Object*[numfaces];
-
+    this->faces = new Object*[numfaces];
     float centerx = 0;
     float centery = 0;
     float centerz = 0;
@@ -77,6 +77,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
         );
         tmp_triangle->mesh = this;
         triangles[i] = tmp_triangle;
+        this->faces[i] = tmp_triangle;
     }
     this->num_faces = numfaces;
     this->bvh_faces = new BVH(triangles, num_faces, 0);

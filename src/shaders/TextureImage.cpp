@@ -3,6 +3,7 @@
 #include "../util/lodepng.h"
 #include <iostream>
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG
 #include "../util/stbimage.h"
 #include "../util/tinyexr.h"
 #include "../util/util.h"
@@ -27,9 +28,14 @@ TextureImage::TextureImage(std::string path, bool hdr){
         this->width = width;
         this->height = height;
         this->channels = channels;
-        char* charData = reinterpret_cast<char*>(data); // Non-const source
-        this->data = reinterpret_cast<float*>(charData);
+        this->data = new float[width * height * channels];
+        for (size_t i = 0; i < width * height * channels; i++)
+        {
+            this->data[i] = static_cast<float>(data[i]) ;
+        }
         
+            
+            
 
     }
     else{
@@ -57,6 +63,9 @@ TextureImage::~TextureImage(){
 
 Vec3 TextureImage::get_value(float u, float v, InterploationType type){
 
+    // if either u or v is bigger than one then repeat
+    u = u - floor(u);
+    v = v - floor(v);
 
     if(type == NEAREAST_NEIGHBOR){
         int x = int(u * this->width);

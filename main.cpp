@@ -3,6 +3,8 @@
 #include "src/models/ImagePane.h"
 #include "src/models/Ray.h"
 #include "src/models/Sphere.h"
+#include "src/models/SphereLight.h"
+#include "src/models/MeshLight.h"
 #include "src/lights/Light.h"
 #include "src/lights/PointLight.h"
 #include "src/scene/Scene.h"
@@ -61,7 +63,7 @@ int main(int argc, char const *argv[])
         // int fg_pixel_count = 0;
         // // now we need to iterate over the pixels and fill them
         int total_progress = 0;
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < imgWidth; i++)
         {
             image[i] = new Vec3[imgHeight];
@@ -123,29 +125,42 @@ int main(int argc, char const *argv[])
                     image[i][j] = clipValues(cumulative_pixel, 255.0);
                     continue;
                 }
+
+                Vec3 pixel_val = Vec3(0,0,0);
+                
+                
+                pixel_val = tofill->radiance;
+                if(pixel_val.x != 0 && pixel_val.y != 0 && pixel_val.z != 0){
+                    cumulative_pixel = cumulative_pixel +  (pixel_val/curscene.camera->numsamples);
+                    continue;
+                }
             
                 
-                // Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
-                // Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
-                // Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
-
-                // Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
-                
-
-                // if(tofill->getMaterial()->materialType == MaterialType::Mirror){
-                //     Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
-                //     pixel_val = specular_reflection + pixel_val;
-                //     // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
-
-                // }
-                // else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
-                //     Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, tofill, 6, intersectingObjIndex);
-                //     pixel_val = refrac_transmission + pixel_val;
-                //     // std::cout << "refrac_transmission: \n" << refrac_transmission.x << ", " << refrac_transmission.y << ", " << refrac_transmission.z << "\n";
-                // }
 
 
-                Vec3 pixel_val = shader.BRDFShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                if(!tofill->getMaterial()->brdf_set)
+                {
+                    Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                    Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                    Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
+
+                    pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
+                    
+
+                    if(tofill->getMaterial()->materialType == MaterialType::Mirror){
+                        Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
+                        pixel_val = specular_reflection + pixel_val;
+                        // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
+
+                    }
+                    else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
+                        Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, tofill, 6, intersectingObjIndex);
+                        pixel_val = refrac_transmission + pixel_val;
+                        // std::cout << "refrac_transmission: \n" << refrac_transmission.x << ", " << refrac_transmission.y << ", " << refrac_transmission.z << "\n";
+                    }
+                }
+                else
+                    pixel_val = shader.BRDFShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex, cameraRay);
 
                 // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
                 // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
@@ -183,7 +198,12 @@ int main(int argc, char const *argv[])
             // scale to 0,1
             gammaCorrectImage(flatArray, 3, imgWidth, imgHeight, curscene.camera->gamma);
         }
-        
+        else{
+            for (int i = 0; i < imgWidth * imgHeight * 3; ++i) {
+                flatArray[i] = std::min(flatArray[i], 255.0f);
+            }
+
+        }
 
         
 

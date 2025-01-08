@@ -25,6 +25,9 @@ struct uv{
     const std::pair<float, float>& uv_b, // Texture coordinates at vertex b
     const std::pair<float, float>& uv_c  // Texture coordinates at vertex c,
 ) {
+
+
+
     // Compute the triangle edges
     Vec3 v0 = b - a;
     Vec3 v1 = c - a;

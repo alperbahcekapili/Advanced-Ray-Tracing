@@ -513,7 +513,7 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
 }
 
 
-Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex){
+Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray){
     Triangle* hitTri = nullptr;
 
    Vec3  pixel(0,0,0);
@@ -531,7 +531,7 @@ Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int inter
         Vec3 surface_normal =intersectingObject->getSurfaceNormal(lightRay);
         float cosTheta = (lightRay.d * -1).dot( surface_normal );
         if (cosTheta < 0)
-            cosTheta *= -1; // TODO: update here
+            cosTheta = 0; // TODO: update here
         if(this->scene->lights[i]->ltype == SphericalDirectionalLightType)
             cosTheta = 1.0f;
         
@@ -541,10 +541,10 @@ Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int inter
         inputs.ks = intersectingObject->getMaterial()->specularProp;
         inputs.n = surface_normal;
         inputs.wi = (lightRay.d * -1);
-        inputs.wo = surface_normal; // is this correct ? TODO
-
+        inputs.wo = (camray.d * -1); // is this correct ? TODO
+        inputs.refraction_index = intersectingObject->getMaterial()->refraction_index;
         Vec3 color = intersectingObject->getMaterial()->brdf->f(inputs);
-        pixel = pixel + color * irradiance * 255;
+        pixel = pixel + color * irradiance;
 
     }
     return pixel;
