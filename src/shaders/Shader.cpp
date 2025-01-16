@@ -87,18 +87,7 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
     Ray reflected_ray = Ray(intersecting_location, r.d + (n * 2 * cos_theta));
     // TODO replace this with shadow eps
     reflected_ray.o = reflected_ray.o + (reflected_ray.d * scene->shadow_ray_eps);
-    // If roughness parameter is other than zero then we need to deviate from original direction a little
-    if(target_mat->roughness != 0){
-        float deviation_magnx = generate_random_01();
-        float deviation_magny = generate_random_01();
-        Vec3 ** tangents = reflected_ray.getTangentVectors();
-        Vec3 dev1 = target_mat->roughness * deviation_magnx * (*tangents[0]);
-        Vec3 dev2 = target_mat->roughness * deviation_magny * (*tangents[1]);
-        reflected_ray.d = reflected_ray.d + dev1 + dev2;
-    }
-    // We need to move reflected ray along its direction in order to prevent self intersection
-
-    if (target_obj->getMaterial()->materialType == MaterialType::Dielectric){
+        if (target_obj->getMaterial()->materialType == MaterialType::Dielectric){
         
         float cosphi = sqrt(before_sqrt);
         
@@ -141,14 +130,6 @@ Vec3  Shader::refractionTransmission(Ray r, Scene* scene, Object* target_obj, in
         float inside_cos = (transmitted_ray.d * -1).dot(inside_normal); // we negate the normal TODO need remove negate ?
         float before_sqrt_internal = 1-(pow(n2/n1, 2)*(1-pow(inside_cos,2)));
         outgoing_ray = Ray(inside_hit_location, (1+this->scene->shadow_ray_eps)*(transmitted_ray.d+n*inside_cos)*(n2/n1) - n*sqrt(before_sqrt_internal));
-        if(target_mat->roughness != 0){
-            float deviation_magnx = generate_random_01();
-            float deviation_magny = generate_random_01();
-            Vec3 ** tangents = outgoing_ray.getTangentVectors();
-            Vec3 dev1 = target_mat->roughness * deviation_magnx * (*tangents[0]);
-            Vec3 dev2 = target_mat->roughness * deviation_magny * (*tangents[1]);
-            outgoing_ray.d = outgoing_ray.d + dev1 + dev2;
-        }
 
 
         
@@ -322,7 +303,7 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
     // we can calculate intersecting location with this tvalue and it is different 
     // from the given location then that means light hits the other side of the object
     Vec3  lightHitLocation = light_ray.locationAtT(intersectingTvalue);
-    float errorMargin = 0.1;
+    float errorMargin = 0.001;
     Vec3 diff = lightHitLocation - location;
     if( abs(diff.x) + abs(diff.y) + abs(diff.z) > errorMargin){
         // This means the light is in the other side of the object

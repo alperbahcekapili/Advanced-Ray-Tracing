@@ -190,13 +190,6 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
     Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
     // std::cout << "Triangle before transform center: " << center.x << ", " << center.y << ", " << center.z << "\n";
 
-    // if this is not a face then do op. relative to center
-    if(this->mesh == nullptr){
-        Vec3 center = (v1 +  v2 + v3 ) / 3.0f;
-        TransformationMatrix* to_center = new TransformationMatrix(-1*center, 't');
-        TransformationMatrix* from_center = new TransformationMatrix(center, 't');
-        *(this->tm) = (*from_center) * (*tm) * (*to_center);}
-    else
     *(this->tm) =  (*tm);
     
 

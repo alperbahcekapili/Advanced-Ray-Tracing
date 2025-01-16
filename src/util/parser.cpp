@@ -155,14 +155,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
  
 
-    // create 8 random corner gradients for perlin noise
-    std::vector<Vec3> corner_grads;
-    for (int i = 0; i < 8; i++)
-    {
-        Vec3 dir = Vec3(generate_random_01(), generate_random_01(), generate_random_01()).normalize();
-        corner_grads.push_back(dir);
-    }
-    
+ 
 
 
  
@@ -360,8 +353,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 NoiseConversionType nctype = TextureMap::getNoiseConversionType(noise_conv);
                 float noise_scale = atof(child->FirstChildElement("NoiseScale")->GetText());
                 TextureMap* tmap_p = new TextureMap(nullptr, false, decal_mode, BILINEAR); // BILINEAR will not be used
-                tmap_p->corner_grads = corner_grads;
-                tmap_p->corner_grads_set = true;
+                tmap_p->corner_grads_set = false;
                 tmap_p->noise_scale = noise_scale;
                 tmap_p->noise_conv_type = nctype;
                 tmap_list.push_back(tmap_p);
@@ -786,10 +778,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
-                if(texture_offset_c){
+                
                 uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
                 uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
+                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));
             }
 
 		}

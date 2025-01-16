@@ -27,8 +27,12 @@ TextureImage::TextureImage(std::string path, bool hdr){
         this->width = width;
         this->height = height;
         this->channels = channels;
-        char* charData = reinterpret_cast<char*>(data); // Non-const source
-        this->data = reinterpret_cast<float*>(charData);
+        this->data = new float[width * height * channels];
+
+        for (int i = 0; i < width * height * channels; ++i) {
+            this->data[i] = data[i];
+        }
+
         
 
     }
@@ -68,6 +72,10 @@ Vec3 TextureImage::get_value(float u, float v, InterploationType type){
         return Vec3(r, g, b);
     }else if (type == BILINEAR)
     {
+        u = abs(u  - int(u));
+        v = abs(v  - int(v));
+        
+
         // Calculate the coordinates of the top-left corner of the 2x2 square surrounding the desired pixel
         float x1 = floor(u * this->width);
         float y1 = floor(v * this->height);

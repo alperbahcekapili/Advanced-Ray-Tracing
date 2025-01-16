@@ -54,7 +54,7 @@ ImagePane::ImagePane(int dimy, int dimx, float l, float r, float b, float t, flo
         // std::cout << su  <<  "," << sv  << "\n";
         Vec3  s = (q + (c->u * su)) + (c->v * -sv);
         sValues[i][j] = s;
-        // printf("S(%f,%f,%f) of i,j: %d,%d\n", s.x, s.y, s.z, i, j);
+        //printf("S(%f,%f,%f) of i,j: %d,%d\n", s.x, s.y, s.z, i, j);
     }
    }
    
@@ -90,22 +90,7 @@ Ray ImagePane::rayFromCamera(int i, int j, int rayindex){
     Vec3 sampled_pos = Vec3(samplex, sampley, pixel_center.z);
     Vec3 direction = (sampled_pos - this->c->getPosition()).normalize();
     // need to generate below for aperture
-    if(this->c->aperture_size!= -1){
-
-        float ap_offsetx = (generate_random_01()-0.5)*this->c->aperture_size;
-        float ap_offsety = (generate_random_01()-0.5)*this->c->aperture_size;
-
-        // aperture center is assumed to be on camera center
-        Vec3 campos = this->c->getPosition();
-        Vec3 a(campos.x + ap_offsetx, campos.y + ap_offsety, campos.z);
-        Vec3 dir = (sampled_pos - campos).normalize();
-        float t = this->c->focus_distance/dir.dot(this->c->w);// because I use w as gaze I do not *-1
-        Vec3 p = campos + (dir*t);
-        Vec3 d = (p - a).normalize();
-        direction = d;
-        sampled_pos = a;
-    }
-
+    
 
     Ray resultingRay = Ray(
         sampled_pos,
