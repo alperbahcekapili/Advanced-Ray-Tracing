@@ -778,10 +778,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
-                
-                uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
+                if(uv_coords.size()>0)
+                {uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
                 uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));
+                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
             }
 
 		}

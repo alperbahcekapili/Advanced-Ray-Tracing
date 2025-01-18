@@ -57,7 +57,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     }
     
     this->center = Vec3(centerx, centery, centerz);
-    // std::cout << "Mesh Center Before Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
+    std::cout << "Mesh Center Before Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
     
     TransformationMatrix* resulting_tm = tm;
     

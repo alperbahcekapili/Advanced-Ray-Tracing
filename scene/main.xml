@@ -17,29 +17,138 @@
     </Cameras>
 
     <Lights>
-        <AmbientLight>25 25 25</AmbientLight>
+        <AmbientLight>50 50 50</AmbientLight>
         <PointLight id="1">
-            <Position>20 50 20</Position>
-            <Intensity>100000 100000 100000</Intensity>
+            <Position>50 100 20</Position>
+            <Intensity>1000000 1000000 1000000</Intensity>
         </PointLight>
         <PointLight id="2">
-            <Position>-15 50 5</Position>
-            <Intensity>100000 100000 100000</Intensity>
+            <Position>-100 100 -20</Position>
+            <Intensity>1000000 1000000 1000000</Intensity>
         </PointLight>
         <PointLight id="3">
-            <Position>-15 50 50</Position>
-            <Intensity>100000 100000 100000</Intensity>
+            <Position>50 100 20</Position>
+            <Intensity>1000000 1000000 1000000</Intensity>
         </PointLight>
 
     </Lights>
     <Materials>
-        <Material id="1">
-            <AmbientReflectance>0 3 0</AmbientReflectance>
+        <!-- <Material id="1">
+            <AmbientReflectance>0 0 0</AmbientReflectance>
             <DiffuseReflectance>1 1 1</DiffuseReflectance>
             <SpecularReflectance>1 1 1</SpecularReflectance>
             <PhongExponent>300</PhongExponent>
         </Material>
+        <Material id="2">
+            <AmbientReflectance>3 3 3</AmbientReflectance>
+            <DiffuseReflectance>1 1 1</DiffuseReflectance>
+            <SpecularReflectance>1 1 1</SpecularReflectance>
+            <PhongExponent>300</PhongExponent>
+        </Material> -->
+
+        <Material id="1">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.08175961673259735 0.02983682230114937 0.015673212707042694</DiffuseReflectance>
+            <SpecularReflectance>0.0 0.0 0.0</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="2">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.5197093486785889 0.590034008026123 0.8000000715255737</DiffuseReflectance>
+            <SpecularReflectance>0.7440944910049438 0.7440944910049438 0.7440944910049438</SpecularReflectance>
+            <MirrorReflectance>0.5 0.5 0.5</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="3">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>1.0 0.7590219974517822 0.5691599249839783</DiffuseReflectance>
+            <SpecularReflectance>0.12007874250411987 0.12007874250411987 0.12007874250411987</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="4">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.2171364426612854 0.05240148305892944 0.027949601411819458</DiffuseReflectance>
+            <SpecularReflectance>0.5 0.5 0.5</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="5">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.05637647211551666 0.01913260854780674 0.004609394818544388</DiffuseReflectance>
+            <SpecularReflectance>0.5 0.5 0.5</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="6">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.22341124713420868 0.22341124713420868 0.22341124713420868</DiffuseReflectance>
+            <SpecularReflectance>0.7913385629653931 0.7913385629653931 0.7913385629653931</SpecularReflectance>
+            <MirrorReflectance>0.5 0.5 0.5</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="7">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.08897995203733444 0.08897995203733444 0.08897995203733444</DiffuseReflectance>
+            <SpecularReflectance>0.11417323350906372 0.11417323350906372 0.11417323350906372</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="8">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.10035386681556702 0.26400086283683777 0.5019864439964294</DiffuseReflectance>
+            <SpecularReflectance>0.5 0.5 0.5</SpecularReflectance>
+            <MirrorReflectance>0.5 0.5 0.5</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="9">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.13054215908050537 0.04124774411320686 0.022744331508874893</DiffuseReflectance>
+            <SpecularReflectance>0.5 0.5 0.5</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="10">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.8000000715255737 0.29416996240615845 0.0</DiffuseReflectance>
+            <SpecularReflectance>0.625984251499176 0.625984251499176 0.625984251499176</SpecularReflectance>
+            <MirrorReflectance>0.0 0.0 0.0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="11">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.14981022477149963 0.14981022477149963 0.14981022477149963</DiffuseReflectance>
+            <SpecularReflectance>0.625984251499176 0.625984251499176 0.625984251499176</SpecularReflectance>
+            <MirrorReflectance>0.27952754497528076 0.27952754497528076 0.27952754497528076</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="12">
+            <AmbientReflectance>0 0 0</AmbientReflectance>
+            <DiffuseReflectance>0 0 0</DiffuseReflectance>
+            <SpecularReflectance>0 0 0</SpecularReflectance>
+            <MirrorReflectance>0 0 0</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+        <Material id="13">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0.800000011920929 0.800000011920929 0.800000011920929</DiffuseReflectance>
+            <SpecularReflectance>0.5 0.5 0.5</SpecularReflectance>
+            <MirrorReflectance>0.5999999940395355 0.5999999940395355 0.5999999940395355</MirrorReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+
+
     </Materials>
+
+    <Transformations>
+        <Scaling id="1">10 10 10</Scaling>
+        <Translation id="1">-12.5 25 87.5</Translation>
+        <Scaling id="2">0.75 -0.75 0.75</Scaling>
+        <Translation id="2">-1 -0.5 0</Translation>
+        <Rotation id="1">260 0 0 1</Rotation>
+        <Rotation id="1">-120 1 0 0</Rotation>
+    </Transformations>
 
     <Textures>
         <Images>
@@ -63,64 +172,427 @@
     </Textures>
 
     <VertexData>
-         -100 25 -100 
-         -100 -5 100
-          100 -5 100
-          100 25 -100
-          -25 25 -25
-          -75 25 -25
-          25 25 -25
-          75 25 -25 
+         -100 25 -100
+        -75 25 -100
+        -50 25 -100
+        -25 25 -100
+        0 25 -100
+        -100 25 -75
+        -75 25 -75
+        -50 25 -75
+        -25 25 -75
+        0 25 -75
+        -100 25 -50
+        -75 25 -50
+        -50 25 -50
+        -25 25 -50
+        0 25 -50
+        -100 25 -25
+        -75 25 -25
+        -50 25 -25
+        -25 25 -25
+        0 25 -25
+        -100 25 0
+        -75 25 0
+        -50 25 0
+        -25 25 0
+        0 25 0
+        -100 25 25
+        -75 25 25
+        -50 25 25
+        -25 25 25
+        0 25 25
+        -100 25 50
+        -75 25 50
+        -50 25 50
+        -25 25 50
+        0 25 50
+        -100 25 75
+        -75 25 75
+        -50 25 75
+        -25 25 75
+        0 25 75
+        -100 25 100
+        -75 25 100
+        -50 25 100
+        -25 25 100
+        0 25 100
     </VertexData>
 
-    <TexCoordData>
-        1 0
-        0 0
-        0 1
-        1 1
-    </TexCoordData>
-
-    <Transformations>
-        <Scaling id="1">10 10 10</Scaling>
-        <Translation id="2">0 -20 0</Translation>
-    </Transformations>
+    
     <Objects>
-        <Mesh id="1">               
+                <Mesh id="0">               
             <Material>1</Material>
-            <Textures>1</Textures>
             <Faces>
-                1 2 3
-                1 3 4
+                1 2 7
+                7 6 1
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="1">               
+            <Material>2</Material>
+            <Faces>
+                2 3 8
+                8 7 2
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="2">               
+            <Material>1</Material>
+            <Faces>
+                3 4 9
+                9 8 3
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="3">               
+            <Material>2</Material>
+            <Faces>
+                4 5 10
+                10 9 4
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="3">               
+            <Material>2</Material>
+            <Faces>
+                6 7 12
+                12 11 6
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="4">               
+            <Material>1</Material>
+            <Faces>
+                7 8 13
+                13 12 7
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="5">               
+            <Material>2</Material>
+            <Faces>
+                8 9 14
+                14 13 8
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="6">               
+            <Material>1</Material>
+            <Faces>
+                9 10 15
+                15 14 9
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="6">               
+            <Material>1</Material>
+            <Faces>
+                11 12 17
+                17 16 11
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="7">               
+            <Material>2</Material>
+            <Faces>
+                12 13 18
+                18 17 12
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="8">               
+            <Material>1</Material>
+            <Faces>
+                13 14 19
+                19 18 13
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="9">               
+            <Material>2</Material>
+            <Faces>
+                14 15 20
+                20 19 14
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="9">               
+            <Material>2</Material>
+            <Faces>
+                16 17 22
+                22 21 16
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="10">               
+            <Material>1</Material>
+            <Faces>
+                17 18 23
+                23 22 17
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="11">               
+            <Material>2</Material>
+            <Faces>
+                18 19 24
+                24 23 18
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="12">               
+            <Material>1</Material>
+            <Faces>
+                19 20 25
+                25 24 19
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="12">               
+            <Material>1</Material>
+            <Faces>
+                21 22 27
+                27 26 21
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="13">               
+            <Material>2</Material>
+            <Faces>
+                22 23 28
+                28 27 22
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="14">               
+            <Material>1</Material>
+            <Faces>
+                23 24 29
+                29 28 23
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="15">               
+            <Material>2</Material>
+            <Faces>
+                24 25 30
+                30 29 24
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="15">               
+            <Material>2</Material>
+            <Faces>
+                26 27 32
+                32 31 26
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="16">               
+            <Material>1</Material>
+            <Faces>
+                27 28 33
+                33 32 27
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="17">               
+            <Material>2</Material>
+            <Faces>
+                28 29 34
+                34 33 28
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="18">               
+            <Material>1</Material>
+            <Faces>
+                29 30 35
+                35 34 29
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="18">               
+            <Material>1</Material>
+            <Faces>
+                31 32 37
+                37 36 31
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="19">               
+            <Material>2</Material>
+            <Faces>
+                32 33 38
+                38 37 32
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="20">               
+            <Material>1</Material>
+            <Faces>
+                33 34 39
+                39 38 33
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="21">               
+            <Material>2</Material>
+            <Faces>
+                34 35 40
+                40 39 34
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="21">               
+            <Material>2</Material>
+            <Faces>
+                36 37 42
+                42 41 36
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="22">               
+            <Material>1</Material>
+            <Faces>
+                37 38 43
+                43 42 37
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="23">               
+            <Material>2</Material>
+            <Faces>
+                38 39 44
+                44 43 38
+            </Faces>
+        </Mesh>
+
+
+        <Mesh id="24">               
+            <Material>1</Material>
+            <Faces>
+                39 40 45
+                45 44 39
             </Faces>
         </Mesh>
         <Mesh id="2">               
             <Material>1</Material>
-            
             <Transformations>t1 s1</Transformations>
             <Faces>
                 1 2 3
                 1 3 4
             </Faces>
         </Mesh>
-        <Sphere id="3">
+        <!-- <Mesh id="2">
             <Material>1</Material>
-            <Center>5</Center>
-            <Radius>10</Radius>
-        </Sphere>
-        <Sphere id="4">
+            <Faces plyFile="ply/chinese_dragon.ply" />
+        </Mesh> -->
+        
+        <Mesh id="1" shadingMode="smooth">
+            <Material>3</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_1.ply" /></Mesh>
+        <Mesh id="2" shadingMode="smooth">
+            <Material>9</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_2.ply" /></Mesh>
+        <Mesh id="3" shadingMode="smooth">
+            <Material>10</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_3.ply" /></Mesh>
+        <Mesh id="4" shadingMode="smooth">
+            <Material>11</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_4.ply" /></Mesh>
+        <Mesh id="5" shadingMode="smooth">
+            <Material>4</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_5.ply" /></Mesh>
+        <Mesh id="6" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_6.ply" /></Mesh>
+        <Mesh id="7" shadingMode="smooth">
+            <Material>4</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_7.ply" /></Mesh>
+        <Mesh id="8" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_8.ply" /></Mesh>
+        <Mesh id="9" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_9.ply" /></Mesh>
+        <Mesh id="10" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_10.ply" /></Mesh>
+        <Mesh id="11" shadingMode="smooth">
+            <Material>7</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_11.ply" /></Mesh>
+        <Mesh id="12" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_12.ply" /></Mesh>
+        <Mesh id="13" shadingMode="smooth">
+            <Material>7</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_13.ply" /></Mesh>
+        <Mesh id="14" shadingMode="smooth">
+            <Material>8</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_14.ply" /></Mesh>
+        <Mesh id="15" shadingMode="smooth">
             <Material>1</Material>
-            <Center>6</Center>
-            <Radius>10</Radius>
-        </Sphere>
-        <Sphere id="5">
-            <Material>1</Material>
-            <Center>7</Center>
-            <Radius>10</Radius>
-        </Sphere>
-        <Sphere id="6">
-            <Material>1</Material>
-            <Center>8</Center>
-            <Radius>10</Radius>
-        </Sphere>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_15.ply" /></Mesh>
+        <Mesh id="16" shadingMode="smooth">
+            <Material>2</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_16.ply" /></Mesh>
+        <Mesh id="17" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_17.ply" /></Mesh>
+        <Mesh id="18" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s1 r1 r2 t1</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_18.ply" /></Mesh>
+
+
     </Objects>
 </Scene>
