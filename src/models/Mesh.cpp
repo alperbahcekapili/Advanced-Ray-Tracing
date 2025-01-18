@@ -82,7 +82,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     this->num_faces = numfaces;
     this->bvh_faces = new BVH(triangles, num_faces, 0);
     
-    this->objectType = objectType;
+    this->objectType = MeshType;
     // this->center = resulting_tm->transform(this->center);
     // std::cout << "Mesh Center After Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
 }

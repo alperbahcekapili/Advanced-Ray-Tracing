@@ -312,17 +312,70 @@ struct TransformationMatrix {
 
     
     // Function to compute the inverse of the matrix
-    TransformationMatrix inverse()  {
-        float det = determinant();
-        TransformationMatrix result;
+    // TransformationMatrix inverse()  {
 
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                result.matrix[j][i] = cofactor(i, j) / det;
-            }
+        
+
+    //     float det = determinant();
+    //     TransformationMatrix result;
+
+    //     for (int i = 0; i < 4; ++i) {
+    //         for (int j = 0; j < 4; ++j) {
+    //             result.matrix[j][i] = cofactor(i, j) / det;
+    //         }
+    //     }
+    //     return result;
+    // }
+
+
+TransformationMatrix inverse() const {
+    TransformationMatrix inv;
+
+    // Copy the current matrix into a local array
+    float m[4][4];
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            m[i][j] = matrix[i][j];
         }
-        return result;
     }
+
+    // Invert the 3x3 rotation/scaling part
+    float det = m[0][0] * (m[1][1] * m[2][2] - m[2][1] * m[1][2]) -
+                m[0][1] * (m[1][0] * m[2][2] - m[2][0] * m[1][2]) +
+                m[0][2] * (m[1][0] * m[2][1] - m[2][0] * m[1][1]);
+
+    if (std::abs(det) < 1e-6) {
+        throw std::runtime_error("Matrix is not invertible");
+    }
+
+    float invDet = 1.0f / det;
+
+    inv.matrix[0][0] = (m[1][1] * m[2][2] - m[2][1] * m[1][2]) * invDet;
+    inv.matrix[0][1] = (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * invDet;
+    inv.matrix[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * invDet;
+
+    inv.matrix[1][0] = (m[1][2] * m[2][0] - m[1][0] * m[2][2]) * invDet;
+    inv.matrix[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * invDet;
+    inv.matrix[1][2] = (m[1][0] * m[0][2] - m[0][0] * m[1][2]) * invDet;
+
+    inv.matrix[2][0] = (m[1][0] * m[2][1] - m[2][0] * m[1][1]) * invDet;
+    inv.matrix[2][1] = (m[2][0] * m[0][1] - m[0][0] * m[2][1]) * invDet;
+    inv.matrix[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invDet;
+
+    // Invert the translation
+    inv.matrix[0][3] = -(inv.matrix[0][0] * m[0][3] + inv.matrix[0][1] * m[1][3] + inv.matrix[0][2] * m[2][3]);
+    inv.matrix[1][3] = -(inv.matrix[1][0] * m[0][3] + inv.matrix[1][1] * m[1][3] + inv.matrix[1][2] * m[2][3]);
+    inv.matrix[2][3] = -(inv.matrix[2][0] * m[0][3] + inv.matrix[2][1] * m[1][3] + inv.matrix[2][2] * m[2][3]);
+
+    // The bottom row remains [0, 0, 0, 1]
+    inv.matrix[3][0] = 0.0f;
+    inv.matrix[3][1] = 0.0f;
+    inv.matrix[3][2] = 0.0f;
+    inv.matrix[3][3] = 1.0f;
+
+    return inv;
+}
+
 
  TransformationMatrix inverseUpperLeft3x3()  {
     // Create a 3x3 matrix for the upper left portion

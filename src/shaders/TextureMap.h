@@ -34,6 +34,7 @@ struct uv{
 
     if(uv_c.first == uv_b.first && uv_c.second == uv_b.second)
         std::cout << "C anb B coords are same";
+    
 
     // Compute the triangle edges
     Vec3 v0 = b - a;
@@ -56,8 +57,10 @@ struct uv{
     float alpha = 1.0 - beta - gamma;
 
     // Interpolate texture coordinates
-    float u = alpha * uv_a.first + beta * uv_b.first + gamma * uv_c.first;
-    float v = alpha * uv_a.second + beta * uv_b.second + gamma * uv_c.second;
+    // float u = alpha * uv_a.first + beta * uv_b.first + gamma * uv_c.first;
+    // float v = alpha * uv_a.second + beta * uv_b.second + gamma * uv_c.second;
+    float u = alpha * 0 + beta * 0 + gamma * 1;
+    float v = alpha * 0 + beta * 1 + gamma * 0;
     uv tmp_uv;
     tmp_uv.u = u;
     tmp_uv.v = v;

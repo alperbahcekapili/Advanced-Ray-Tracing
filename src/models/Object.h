@@ -24,7 +24,8 @@ struct texture_flags{
 enum ObjectType{
     TriangleType,
     SphereType,
-    MeshType
+    MeshType,
+    MeshInstanceType
 };
 
 class Object

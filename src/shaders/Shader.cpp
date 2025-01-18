@@ -3,6 +3,7 @@
 #include "../models/Sphere.h"
 #include "../models/Triangle.h"
 #include "../models/Material.h"
+#include "../models/ObjectInstance.h"
 #include "../util/util.h"
 #include <math.h>
 #include <stdio.h>
@@ -286,14 +287,31 @@ bool Shader::lightHits(Ray light_ray, Vec3  location, Object* intersectingObject
 
 
     // if object type is mesh we can make use of last intersect property
-    if(intersectingObject->objectType == MeshType){
-        Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
-        Object* int_tri = mesh->last_intersected_obj;
-        float intersectingTvalue = mesh->Intersects(light_ray);
-        Object* int_tri2 = mesh->last_intersected_obj;
-        if(int_tri2 == int_tri)
-            return true;
-        return false;
+    if(intersectingObject->getObject() == MeshType || intersectingObject->getObject() == MeshInstanceType ){
+        Object* int_tri = NULL;
+        if(intersectingObject->getObject() == MeshType){
+            Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
+            int_tri = mesh->last_intersected_obj;
+            float intersectingTvalue = mesh->Intersects(light_ray);
+            Object* int_tri2 = mesh->last_intersected_obj;
+            if(int_tri2 == int_tri)
+                return true;
+            return false;
+        }
+        else{
+            ObjectInstance* mesh = dynamic_cast<ObjectInstance*>(intersectingObject);
+            Mesh* mesh2 = dynamic_cast<Mesh*>(mesh->parent);
+            int_tri = mesh2->last_intersected_obj;
+            float intersectingTvalue = mesh->Intersects(light_ray);
+            Object* int_tri2 = mesh2->last_intersected_obj;
+            if(int_tri2 == int_tri)
+                return true;
+            return false;
+        }
+         
+        
+        
+        
     }
     
 
@@ -361,6 +379,15 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
         Vec3  irradiance = this->scene->lights[i]->irradianceAt(lightRay, location) * cosTheta;
         // std::cout << "Irradiance: " << irradiance.x  << "," << irradiance.y  << "," << irradiance.z  <<  "\n";
         Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
+
+
+        if (intersectingObject->objectType == MeshInstanceType){
+            location = intersectingObject->gettm()->inverse().transform(location);
+            ObjectInstance* mesh = dynamic_cast<ObjectInstance*>(intersectingObject);
+            intersectingObject = mesh->parent;
+        }
+
+
         // Texture related computations
         if(intersectingObject->get_texture_flags().any){
         if(intersectingObject->getObject() == MeshType){
@@ -378,17 +405,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
             else{
                 Vec3 scene_min = this->scene->bvh->min;
                 Vec3 scene_max = this->scene->bvh->max;
-                Vec3 corners[8];
-                corners[0] = Vec3(scene_min.x, scene_min.y, scene_min.z);
-                corners[1] = Vec3(scene_min.x, scene_min.y, scene_max.z);
-                corners[2] = Vec3(scene_min.x, scene_max.y, scene_min.z);
-                corners[3] = Vec3(scene_min.x, scene_max.y, scene_max.z);
-                corners[4] = Vec3(scene_max.x, scene_min.y, scene_min.z);
-                corners[5] = Vec3(scene_max.x, scene_min.y, scene_max.z);
-                corners[6] = Vec3(scene_max.x, scene_max.y, scene_min.z);
-                corners[7] = Vec3(scene_max.x, scene_max.y, scene_max.z);
                 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(location);
-                
             }
             if(intersectingObject->get_texture_flags().replace_kd)
                 tmp =  bg_pixel_val * irradiance;
@@ -422,7 +439,8 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 return bg_pixel_val;
             }      
         }
-        }pixel = pixel + tmp;
+        }
+        pixel = pixel + tmp;
     }
     return pixel;
 }

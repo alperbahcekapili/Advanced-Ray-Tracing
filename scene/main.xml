@@ -5,7 +5,7 @@
 
     <Cameras>
         <Camera id="1">
-            <Position>0 200 10</Position>
+            <Position>0 150 10</Position>
             <Gaze>0 -1 0</Gaze>
             <Up>0 0 1</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
@@ -27,7 +27,11 @@
             <Intensity>1000000 1000000 1000000</Intensity>
         </PointLight>
         <PointLight id="3">
-            <Position>50 100 20</Position>
+            <Position>-25 100 20</Position>
+            <Intensity>1000000 1000000 1000000</Intensity>
+        </PointLight>
+        <PointLight id="3">
+            <Position>-25 100 -20</Position>
             <Intensity>1000000 1000000 1000000</Intensity>
         </PointLight>
 
@@ -139,10 +143,10 @@
         </Material>
 
         <Material id="14">
-            <AmbientReflectance>1 1 1</AmbientReflectance>
-            <DiffuseReflectance>0 1 0</DiffuseReflectance>
+            <AmbientReflectance>0 0 0</AmbientReflectance>
+            <DiffuseReflectance>0.23 0.75 0.5</DiffuseReflectance>
             <SpecularReflectance>1 1 1</SpecularReflectance>
-            <PhongExponent>1</PhongExponent>
+            <PhongExponent>3000</PhongExponent>
         </Material>
 
 
@@ -150,21 +154,75 @@
 
     <Transformations>
         <Scaling id="1">10 10 10</Scaling>
-        <Translation id="1">-12.5 25 87.5</Translation>
         <Scaling id="2">20 20 20</Scaling>
-        <Translation id="2">-20 20 0</Translation>
+        <Scaling id = "3">200 200 200</Scaling>
+
+        <Translation id="1">52.5 25 87.5</Translation>
+        <Translation id="2">80 20 90</Translation>
+        <Translation id ="3">22.5 25 87.5</Translation>
+        
         <Rotation id="1">260 0 0 1</Rotation>
-        <Rotation id="1">-120 1 0 0</Rotation>
-        <Rotation id="1">90 0 1 0</Rotation>
+        <Rotation id="2">-120 1 0 0</Rotation>
+        <Rotation id="3"> -120 0 1 0</Rotation>
+ 
+
+        <!-- 
+        Second Player
+         -->
+
+        <Scaling id="4">10 10 10</Scaling>
+        <Scaling id="5">20 20 20</Scaling>
+        <Scaling id = "6">200 200 200</Scaling>
+
+        <Translation id="4">52.5 25 -70</Translation>
+        <Translation id="5">80 20 -70</Translation>
+        <Translation id ="6">22.5 25 -70</Translation>
+
+        <Rotation id="4">30 0 0 1</Rotation>
+        <Rotation id="5">-120 1 0 0</Rotation>
+        <Rotation id="6">60 0 1 0</Rotation>
+
+
+
     </Transformations>
 
     <Textures>
         <Images>
             <Image id="1">textures/brickwall.jpg</Image>
+            <Image id="2">textures/brickwall.jpg</Image>
+            <Image id="3">textures/brickwall.jpg</Image>
+            <Image id="4">textures/brickwall.jpg</Image>
+            <Image id="5">textures/brickwall.jpg</Image>
+            <Image id="6">textures/brickwall.jpg</Image>
         </Images>
 
         <TextureMap id="1" type="image">
             <ImageId>1</ImageId>
+            <DecalMode>replace_all</DecalMode>
+            <Interpolation>bilinear</Interpolation>
+        </TextureMap>
+        <TextureMap id="1" type="image">
+            <ImageId>2</ImageId>
+            <DecalMode>replace_all</DecalMode>
+            <Interpolation>bilinear</Interpolation>
+        </TextureMap>
+        <TextureMap id="1" type="image">
+            <ImageId>3</ImageId>
+            <DecalMode>replace_all</DecalMode>
+            <Interpolation>bilinear</Interpolation>
+        </TextureMap>
+        <TextureMap id="1" type="image">
+            <ImageId>4</ImageId>
+            <DecalMode>replace_all</DecalMode>
+            <Interpolation>bilinear</Interpolation>
+        </TextureMap>
+        <TextureMap id="1" type="image">
+            <ImageId>5</ImageId>
+            <DecalMode>replace_all</DecalMode>
+            <Interpolation>bilinear</Interpolation>
+        </TextureMap>
+        <TextureMap id="1" type="image">
+            <ImageId>6</ImageId>
             <DecalMode>replace_all</DecalMode>
             <Interpolation>bilinear</Interpolation>
         </TextureMap>
@@ -258,9 +316,11 @@
         -25 25 100
         0 25 100
     </VertexData>
-
-    
     <Objects>
+    
+
+
+
         <Mesh id="0">               
             <Material>1</Material>
             <Faces>
@@ -297,7 +357,7 @@
         </Mesh>
 
 
-        <Mesh id="3">               
+        <Mesh id="4">               
             <Material>2</Material>
             <Faces>
                 6 7 12
@@ -306,7 +366,7 @@
         </Mesh>
 
 
-        <Mesh id="4">               
+        <Mesh id="5">               
             <Material>1</Material>
             <Faces>
                 7 8 13
@@ -315,7 +375,7 @@
         </Mesh>
 
 
-        <Mesh id="5">               
+        <Mesh id="6">               
             <Material>2</Material>
             <Faces>
                 8 9 14
@@ -324,7 +384,7 @@
         </Mesh>
 
 
-        <Mesh id="6">               
+        <Mesh id="7">               
             <Material>1</Material>
             <Faces>
                 9 10 15
@@ -333,7 +393,7 @@
         </Mesh>
 
 
-        <Mesh id="6">               
+        <Mesh id="8">               
             <Material>1</Material>
             <Faces>
                 11 12 17
@@ -342,7 +402,7 @@
         </Mesh>
 
 
-        <Mesh id="7">               
+        <Mesh id="9">               
             <Material>2</Material>
             <Faces>
                 12 13 18
@@ -351,7 +411,7 @@
         </Mesh>
 
 
-        <Mesh id="8">               
+        <Mesh id="10">               
             <Material>1</Material>
             <Faces>
                 13 14 19
@@ -360,7 +420,7 @@
         </Mesh>
 
 
-        <Mesh id="9">               
+        <Mesh id="11">               
             <Material>2</Material>
             <Faces>
                 14 15 20
@@ -369,7 +429,7 @@
         </Mesh>
 
 
-        <Mesh id="9">               
+        <Mesh id="12">               
             <Material>2</Material>
             <Faces>
                 16 17 22
@@ -378,7 +438,7 @@
         </Mesh>
 
 
-        <Mesh id="10">               
+        <Mesh id="13">               
             <Material>1</Material>
             <Faces>
                 17 18 23
@@ -387,7 +447,7 @@
         </Mesh>
 
 
-        <Mesh id="11">               
+        <Mesh id="14">               
             <Material>2</Material>
             <Faces>
                 18 19 24
@@ -396,7 +456,7 @@
         </Mesh>
 
 
-        <Mesh id="12">               
+        <Mesh id="15">               
             <Material>1</Material>
             <Faces>
                 19 20 25
@@ -405,7 +465,7 @@
         </Mesh>
 
 
-        <Mesh id="12">               
+        <Mesh id="16">               
             <Material>1</Material>
             <Faces>
                 21 22 27
@@ -414,7 +474,7 @@
         </Mesh>
 
 
-        <Mesh id="13">               
+        <Mesh id="17">               
             <Material>2</Material>
             <Faces>
                 22 23 28
@@ -423,7 +483,7 @@
         </Mesh>
 
 
-        <Mesh id="14">               
+        <Mesh id="18">               
             <Material>1</Material>
             <Faces>
                 23 24 29
@@ -432,7 +492,7 @@
         </Mesh>
 
 
-        <Mesh id="15">               
+        <Mesh id="19">               
             <Material>2</Material>
             <Faces>
                 24 25 30
@@ -441,7 +501,7 @@
         </Mesh>
 
 
-        <Mesh id="15">               
+        <Mesh id="20">               
             <Material>2</Material>
             <Faces>
                 26 27 32
@@ -450,7 +510,7 @@
         </Mesh>
 
 
-        <Mesh id="16">               
+        <Mesh id="21">               
             <Material>1</Material>
             <Faces>
                 27 28 33
@@ -459,7 +519,7 @@
         </Mesh>
 
 
-        <Mesh id="17">               
+        <Mesh id="22">               
             <Material>2</Material>
             <Faces>
                 28 29 34
@@ -468,7 +528,7 @@
         </Mesh>
 
 
-        <Mesh id="18">               
+        <Mesh id="23">               
             <Material>1</Material>
             <Faces>
                 29 30 35
@@ -477,7 +537,7 @@
         </Mesh>
 
 
-        <Mesh id="18">               
+        <Mesh id="24">               
             <Material>1</Material>
             <Faces>
                 31 32 37
@@ -486,7 +546,7 @@
         </Mesh>
 
 
-        <Mesh id="19">               
+        <Mesh id="25">               
             <Material>2</Material>
             <Faces>
                 32 33 38
@@ -495,7 +555,7 @@
         </Mesh>
 
 
-        <Mesh id="20">               
+        <Mesh id="26">               
             <Material>1</Material>
             <Faces>
                 33 34 39
@@ -504,7 +564,7 @@
         </Mesh>
 
 
-        <Mesh id="21">               
+        <Mesh id="27">               
             <Material>2</Material>
             <Faces>
                 34 35 40
@@ -513,7 +573,7 @@
         </Mesh>
 
 
-        <Mesh id="21">               
+        <Mesh id="28">               
             <Material>2</Material>
             <Faces>
                 36 37 42
@@ -522,7 +582,7 @@
         </Mesh>
 
 
-        <Mesh id="22">               
+        <Mesh id="29">               
             <Material>1</Material>
             <Faces>
                 37 38 43
@@ -531,7 +591,7 @@
         </Mesh>
 
 
-        <Mesh id="23">               
+        <Mesh id="30">               
             <Material>2</Material>
             <Faces>
                 38 39 44
@@ -540,32 +600,63 @@
         </Mesh>
 
 
-        <Mesh id="24">               
+        <Mesh id="31">               
             <Material>1</Material>
             <Faces>
                 39 40 45
                 45 44 39
             </Faces>
         </Mesh>
-        <Mesh id="2">               
-            <Material>1</Material>
-            <Transformations>t1 s1</Transformations>
-            <Faces>
-                1 2 3
-                1 3 4
-            </Faces>
-        </Mesh>
-        <!-- <Mesh id="2">
+
+
+
+
+
+
+
+
+
+ 
+        <Mesh id="33">
             <Material>14</Material>
-            <Transformations>s2 r3 t1</Transformations>
+            <Transformations>s3 r3 t3</Transformations>
             <Faces plyFile="ply/chinese_dragon.ply" />
-        </Mesh> -->
-        <Mesh>
+        </Mesh> 
+        <!-- <MeshInstance id="34" baseMeshId="33">
+            <Material>14</Material>
+            <Transformations>t6</Transformations>
+        </MeshInstance> -->
+        <Mesh id="26">
+            <Material>14</Material>
+            <Transformations>s6 r6 t6</Transformations>
+            <Faces plyFile="ply/chinese_dragon.ply" />
+        </Mesh>
+        
+
+
+        
+        <Mesh id="35">
             <Material>3</Material>
+            <Textures>1</Textures>
             <Transformations>s2 t2</Transformations>
+            <Faces textureOffset="0" plyFile="ply/wall.ply"/>
+        </Mesh>
+        <!-- <MeshInstance id="35" baseMeshId="34">
+            <Material>3</Material>
+            <Transformations>t5</Transformations>
+        </MeshInstance> -->
+        
+         <Mesh>
+            <Material>3</Material>
+            <Transformations>s5 t5</Transformations>
             <Textures>1</Textures>
             <Faces textureOffset="0" plyFile="ply/wall.ply"/>
         </Mesh>
+
+
+
+
+
         <Mesh id="1" shadingMode="smooth">
             <Material>3</Material>
             <Transformations>s1 r1 r2 t1</Transformations>
@@ -638,6 +729,85 @@
             <Material>5</Material>
             <Transformations>s1 r1 r2 t1</Transformations>
             <Faces plyFile="ply/berserker_ply_ply/mesh_18.ply" /></Mesh>
+
+
+
+
+        <Mesh id="1" shadingMode="smooth">
+            <Material>3</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_1.ply" /></Mesh>
+        <Mesh id="2" shadingMode="smooth">
+            <Material>9</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_2.ply" /></Mesh>
+        <Mesh id="3" shadingMode="smooth">
+            <Material>10</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_3.ply" /></Mesh>
+        <Mesh id="4" shadingMode="smooth">
+            <Material>11</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_4.ply" /></Mesh>
+        <Mesh id="5" shadingMode="smooth">
+            <Material>4</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_5.ply" /></Mesh>
+        <Mesh id="6" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_6.ply" /></Mesh>
+        <Mesh id="7" shadingMode="smooth">
+            <Material>4</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_7.ply" /></Mesh>
+        <Mesh id="8" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_8.ply" /></Mesh>
+        <Mesh id="9" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_9.ply" /></Mesh>
+        <Mesh id="10" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_10.ply" /></Mesh>
+        <Mesh id="11" shadingMode="smooth">
+            <Material>7</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_11.ply" /></Mesh>
+        <Mesh id="12" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_12.ply" /></Mesh>
+        <Mesh id="13" shadingMode="smooth">
+            <Material>7</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_13.ply" /></Mesh>
+        <Mesh id="14" shadingMode="smooth">
+            <Material>8</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_14.ply" /></Mesh>
+        <Mesh id="15" shadingMode="smooth">
+            <Material>1</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_15.ply" /></Mesh>
+        <Mesh id="16" shadingMode="smooth">
+            <Material>2</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_16.ply" /></Mesh>
+        <Mesh id="17" shadingMode="smooth">
+            <Material>6</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_17.ply" /></Mesh>
+        <Mesh id="18" shadingMode="smooth">
+            <Material>5</Material>
+            <Transformations>s4 r4 r5 t4</Transformations>
+            <Faces plyFile="ply/berserker_ply_ply/mesh_18.ply" /></Mesh>
+
+
+
 
 
     </Objects>
