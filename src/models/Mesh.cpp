@@ -61,6 +61,7 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     
     TransformationMatrix* resulting_tm = tm;
     
+    #pragma omp parallel for
     for (int i = 0; i < numfaces; i++)
     {
         

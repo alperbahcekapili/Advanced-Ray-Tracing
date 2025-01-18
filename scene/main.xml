@@ -138,37 +138,37 @@
             <PhongExponent>1</PhongExponent>
         </Material>
 
+        <Material id="14">
+            <AmbientReflectance>1 1 1</AmbientReflectance>
+            <DiffuseReflectance>0 1 0</DiffuseReflectance>
+            <SpecularReflectance>1 1 1</SpecularReflectance>
+            <PhongExponent>1</PhongExponent>
+        </Material>
+
 
     </Materials>
 
     <Transformations>
         <Scaling id="1">10 10 10</Scaling>
         <Translation id="1">-12.5 25 87.5</Translation>
-        <Scaling id="2">0.75 -0.75 0.75</Scaling>
+        <Scaling id="2">100 100 100</Scaling>
         <Translation id="2">-1 -0.5 0</Translation>
         <Rotation id="1">260 0 0 1</Rotation>
         <Rotation id="1">-120 1 0 0</Rotation>
+        <Rotation id="1">90 0 1 0</Rotation>
     </Transformations>
 
     <Textures>
         <Images>
-            <Image id="1">textures/checkerboard.png</Image>
-            <Image id="2">textures/another_grid.jpg</Image>
+            <Image id="1">textures/brickwall.jpg</Image>
         </Images>
 
         <TextureMap id="1" type="image">
             <ImageId>1</ImageId>
-            <DecalMode>replace_all</DecalMode>
+            <DecalMode>replace_kd</DecalMode>
             <Interpolation>bilinear</Interpolation>
-            <Normalizer>1</Normalizer>
         </TextureMap>
-
-        <TextureMap id="2" type="image">
-            <ImageId>2</ImageId>
-            <DecalMode>replace_all</DecalMode>
-            <Interpolation>bilinear</Interpolation>
-            <Normalizer>255</Normalizer>
-        </TextureMap>
+        
     </Textures>
 
     <VertexData>
@@ -221,7 +221,7 @@
 
     
     <Objects>
-                <Mesh id="0">               
+        <Mesh id="0">               
             <Material>1</Material>
             <Faces>
                 1 2 7
@@ -516,10 +516,15 @@
             </Faces>
         </Mesh>
         <!-- <Mesh id="2">
-            <Material>1</Material>
+            <Material>14</Material>
+            <Transformations>s2 r3 t1</Transformations>
             <Faces plyFile="ply/chinese_dragon.ply" />
         </Mesh> -->
-        
+        <Mesh>
+            <Material>3</Material>
+            <Transformations>s2</Transformations>
+            <Faces plyFile="ply/wall.ply"/>
+        </Mesh>
         <Mesh id="1" shadingMode="smooth">
             <Material>3</Material>
             <Transformations>s1 r1 r2 t1</Transformations>

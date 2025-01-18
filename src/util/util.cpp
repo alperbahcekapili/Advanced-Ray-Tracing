@@ -197,9 +197,9 @@ void convertVec3ToFlatArray(Vec3** image, int width, int height, float* flatArra
             // printf("%f ", pixel.x);
             // printf("%f ", pixel.y);
             // printf("%f \n", pixel.z);
-            flatArray[index++] = pixel.x;
-            flatArray[index++] = pixel.y;
-            flatArray[index++] = pixel.z;
+            flatArray[index++] = std::min(pixel.x, 255.0f);
+            flatArray[index++] = std::min(pixel.y, 255.0f);
+            flatArray[index++] = std::min(pixel.z, 255.0f);
         }
     }
 }

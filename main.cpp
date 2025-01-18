@@ -175,20 +175,6 @@ int main(int argc, char const *argv[])
         float* flatArray = new float[imgWidth * imgHeight * 3];
         convertVec3ToFlatArray(image, imgWidth, imgHeight, flatArray);
 
-        // if output name endswith .exr we first tonemap results save the exr and perform gamma correction save png
-        bool hdr_flag = curscene.camera->name.substr(curscene.camera->name.size() - 4) == ".exr";
-        if(hdr_flag){
-            reinhardGlobalTonemap(image, imgWidth, imgHeight, curscene.camera->burnout, curscene.camera->saturation, curscene.camera->keyvalue);
-
-            flatArray = new float[imgWidth * imgHeight * 3];
-            convertVec3ToFlatArray(image, imgWidth, imgHeight, flatArray);
-
-            const char* err = NULL; // or nullptr in C++11 or later.
-            SaveEXR(flatArray, imgWidth, imgHeight, curscene.camera->name.c_str());
-
-            // scale to 0,1
-            gammaCorrectImage(flatArray, 3, imgWidth, imgHeight, curscene.camera->gamma);
-        }
         
 
         
@@ -198,8 +184,11 @@ int main(int argc, char const *argv[])
 
         
         // Set some pixels to black
-        for (int x = 0; x < imgWidth * imgHeight * 3; ++x) 
-                image_mat[x] = static_cast<uint8_t>(flatArray[x]);
+        for (int x = 0; x < imgWidth * imgHeight * 3; ++x) {
+            image_mat[x] = static_cast<uint8_t>(flatArray[x]);
+        }
+                
+
                 
 
         printf("Resmi olusturdum");
