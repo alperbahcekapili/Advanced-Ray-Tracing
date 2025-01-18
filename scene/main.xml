@@ -151,8 +151,8 @@
     <Transformations>
         <Scaling id="1">10 10 10</Scaling>
         <Translation id="1">-12.5 25 87.5</Translation>
-        <Scaling id="2">100 100 100</Scaling>
-        <Translation id="2">-1 -0.5 0</Translation>
+        <Scaling id="2">20 20 20</Scaling>
+        <Translation id="2">-20 20 0</Translation>
         <Rotation id="1">260 0 0 1</Rotation>
         <Rotation id="1">-120 1 0 0</Rotation>
         <Rotation id="1">90 0 1 0</Rotation>
@@ -165,11 +165,51 @@
 
         <TextureMap id="1" type="image">
             <ImageId>1</ImageId>
-            <DecalMode>replace_kd</DecalMode>
+            <DecalMode>replace_all</DecalMode>
             <Interpolation>bilinear</Interpolation>
         </TextureMap>
         
     </Textures>
+
+    
+    <TexCoordData>
+        1 1
+        0 1
+        0 0
+        1 0
+        0 1
+        1 1
+        1 0
+        0 0
+        0 1
+        1 1
+        1 0
+        0 0
+        0 0
+        1 0
+        1 1
+        0 1
+        0 1
+        1 1
+        1 0
+        0 0
+        1 1
+        0 1
+        0 0
+        1 0
+        0 0
+        1 0
+        1 1
+        0 1
+        0 1
+        1 1
+        1 0
+        0 0
+        1 1
+        0 1
+        0 0
+        1 0
+    </TexCoordData>
 
     <VertexData>
          -100 25 -100
@@ -522,8 +562,9 @@
         </Mesh> -->
         <Mesh>
             <Material>3</Material>
-            <Transformations>s2</Transformations>
-            <Faces plyFile="ply/wall.ply"/>
+            <Transformations>s2 t2</Transformations>
+            <Textures>1</Textures>
+            <Faces textureOffset="0" plyFile="ply/wall.ply"/>
         </Mesh>
         <Mesh id="1" shadingMode="smooth">
             <Material>3</Material>

@@ -681,12 +681,13 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }
 
         
-
+        bool hasTexture = false;
         
         // read textures if exist
         std::vector<TextureMap*> tmaps;
         child = element->FirstChildElement("Textures");
         if(child){
+            hasTexture = true;
             stream << child->GetText() << std::endl;
             int texture_buffer;
             while(stream >> texture_buffer){
@@ -752,6 +753,23 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             plyFilePath = filepath.substr(0, firstSlashPos + 1) + plyFilePath;
             std::vector<Vec3> tmp_l = read_ply(plyFilePath);
             mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end()); // TODO: texture coord with ply ? 
+
+            const char* texture_offset_c = child->Attribute("textureOffset");
+            if(texture_offset_c){
+                
+
+                texture_offset = atoi(texture_offset_c);
+            }else{
+                texture_offset = 0;
+            }
+
+            
+            if(hasTexture)
+                for (size_t i = 0; i < mesh_faces.size(); i++)            
+                {
+                    uv_coords_mesh.push_back(uv_coords.at(i+texture_offset));
+                }
+
 		}
 		else
 		{
@@ -778,10 +796,11 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
-                if(uv_coords.size()>0)
-                {uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
-                uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
+                if(hasTexture)
+                {
+                    uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
+                    uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
+                    uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
             }
 
 		}

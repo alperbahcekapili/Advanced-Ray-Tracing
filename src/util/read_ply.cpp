@@ -92,6 +92,7 @@ std::vector<Vec3> read_ply(const std::string& filename) {
                 vertices.push_back(vertex);
             
             ++vertex_count;
+            continue;
         }
         else if (face_count < num_faces) {
             Face face;
