@@ -21,5 +21,6 @@ public:
     Vec3 BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray);
     Vec3  radianceAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     bool lightHits(Ray light_ray, Vec3  location, Object* intersectingObject, int intersectingObjIndex, Object** other_objects, int numobj );
+    Vec3 trace(Ray ray, int remaining_hop, int min_recusion_depth, int hops_sofar, Camera* camera);
 };
 

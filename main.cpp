@@ -69,16 +69,19 @@ int main(int argc, char const *argv[])
             image[i] = new Vec3[imgHeight];
 
             // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
-
+            // #pragma omp parallel for
             for (int j = 0; j < imgHeight; j++)
             {
 
                 total_progress++;
                 
                 Vec3 cumulative_pixel = Vec3(0,0,0);
+                
+                
                 for (int rayindex = 0; rayindex < curscene.camera->numsamples; rayindex++)
                 {
-                    // shoot ray from camera to ImagePane
+                
+                // shoot ray from camera to ImagePane
                 Ray cameraRay = curscene.imagePane->rayFromCamera(i, j, rayindex);
 
                 // now iterate over the objects to find first object that hits this ray
@@ -138,7 +141,7 @@ int main(int argc, char const *argv[])
                 
 
 
-                if(!tofill->getMaterial()->brdf_set)
+                if(!tofill->getMaterial()->brdf_set && false)
                 {
                     Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
                     Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
@@ -160,14 +163,34 @@ int main(int argc, char const *argv[])
                     }
                 }
                 else
-                    pixel_val = shader.BRDFShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex, cameraRay);
+                {
+                    
 
-                // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
-                // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
-                // std::cout << "Specular Intensity: \n" << specular_intensity.x << ", " << specular_intensity.y << ", " << specular_intensity.z << "\n";
+                    // pixel_val = shader.BRDFShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex, cameraRay);
+                    pixel_val = shader.trace(cameraRay, curscene.max_recursion_depth, curscene.min_recursion_depth, 0, curscene.camera);
+
+                    if(curscene.camera->path_tracing){
+                        Ray* new_rays = new Ray[curscene.camera->pt->splitting_factor];
+                        // We need to crate splitting_factor many rays and average the results
+                        new_rays = curscene.camera->pt->generateInitialRays(&cameraRay, new_rays,  tofill, curscene.camera->pt->techniques.at(0));
+                        Vec3 cumulative_pixel = Vec3(0,0,0);    
+                        for (int i = 0; i < curscene.camera->pt->splitting_factor; i++){
+                            bool intersects = curscene.bvh->intersectObject( new_rays[i], tofill, minTValue, maxTValue);
+                            // std::cout << "Initial random camera ray intersects: " << intersects << "\n";
+                            // std::cout << new_rays[i].d.x << "\n";
+
+                            Vec3 trace_out = shader.trace(new_rays[i], curscene.max_recursion_depth, curscene.min_recursion_depth, 0, curscene.camera);
+                            Vec3 addition = trace_out / float(1.0f + curscene.camera->pt->splitting_factor) ; // TODO replace hops # 
+                            
+                            cumulative_pixel = cumulative_pixel +  addition;
+                        }
+                        pixel_val = pixel_val + cumulative_pixel;
+                    }
+                    
+                }
 
 
-                cumulative_pixel = cumulative_pixel + (pixel_val/curscene.camera->numsamples);
+                cumulative_pixel = cumulative_pixel + (pixel_val/float(curscene.camera->numsamples));
                 // std::cout << image[i][j].x << ", " << image[i][j].y << ", " << image[i][j].z << "\n";
 
                 

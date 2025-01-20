@@ -64,6 +64,10 @@ Vec3  MeshLight::irradianceAt(Ray light_ray, Vec3  location)  {
     float distance = (location - sample_loc).magnitude();
     Triangle* selected_tri = dynamic_cast<Triangle*>(this->last_intersected_obj);
     float eq_top = selected_tri->normal.dot(light_direction);
+    // should not be negative
+    eq_top = abs(eq_top);
+
+
     float dwi = this->area * eq_top / (distance*distance);
 
     return this->radiance * dwi;
@@ -87,3 +91,11 @@ Vec3 MeshLight::getPointOn(){
 
 
 MeshLight::~MeshLight(){}
+
+
+Vec3 MeshLight::getBoundingBox(bool isMax){
+    if(isMax)
+        return this->bvh_faces->max;
+    return this->bvh_faces->min;
+
+}

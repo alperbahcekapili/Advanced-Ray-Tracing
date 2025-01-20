@@ -155,6 +155,21 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     }
     stream >> max_recursion_depth;
 
+
+    stream.clear();
+
+    int min_recursion_depth;
+    element = root->FirstChildElement("MinRecursionDepth");
+    if (element)
+    {
+        stream << element->GetText() << std::endl;
+    }
+    else
+    {
+        stream << "1" << std::endl;
+    }
+    stream >> min_recursion_depth;
+
  
 
     // create 8 random corner gradients for perlin noise
@@ -275,19 +290,65 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             stream << child->GetText() << std::endl;
         else
             stream << "1" << std::endl;
+
         child = element->FirstChildElement("ImageName");
         stream << child->GetText() << std::endl;
 
-        
-        
         stream >> img_width >> img_height;
         stream >> numsamples;
         stream >> camera_name;
+
+
+        
+        // path tracing
+        bool path_tracing = false;
+        std::vector<PathTracingTechnique> techniques;
+        int splitting_factor;
+        child = element->FirstChildElement("Renderer");
+        if(child){
+            path_tracing = true;
+            child = element->FirstChildElement("RendererParams");
+            if(child)
+            {stream << child->GetText() << std::endl;
+            std::string  technique;
+            bool is_uniform = true;
+            while(stream >> technique){
+                if(strcmp(technique.c_str(), "NextEventEstimation") == 0){
+                    techniques.push_back(NEE);
+                }
+                else if(strcmp(technique.c_str(), "RussianRoulette") == 0)
+                {
+                    techniques.push_back(RUSSIAN_ROULETTE);
+                }
+                else if(strcmp(technique.c_str(), "ImportanceSampling") == 0)
+                {
+                    techniques.push_back(IMPORTANCE_SAMPLING);
+                }
+            }}else
+            {
+                techniques.push_back(UNIFORM);
+            }
+
+            stream.clear();
+
+
+            child = element->FirstChildElement("SplittingFactor");
+            stream << child->GetText() << std::endl;
+            stream >> splitting_factor;
+        }
+
+        
+        
         // max t hardcoded
         Camera* camera = new Camera(
             cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name, numsamples, focus_distance, aperture_size
         );
-
+    
+        if(path_tracing){
+            camera->path_tracing = true;
+            camera->pt = new PathTracer(techniques, splitting_factor);
+            std::cout << "I set splitting factor: " << splitting_factor << "\n";
+        }
 
         if(tonemap){
             camera->keyvalue = keyvalue;
@@ -1416,6 +1477,9 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+
+    s->min_recursion_depth = min_recursion_depth;
+    s->max_recursion_depth = max_recursion_depth;
     s->spherical_light_flag = SPHERICAL_LIGHT;
     s->spherical_light = spherical_light;
     s->bg_texture_set = false;

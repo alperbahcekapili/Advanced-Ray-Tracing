@@ -54,8 +54,12 @@ float Triangle::Intersects(Ray ray){
 }
 
 Vec3 Triangle::getSurfaceNormal(Ray r){
-    if(!this->tex_flags.replace_normal & !this->tex_flags.bump_normal)
-    return this->normal;
+    if(!this->tex_flags.replace_normal & !this->tex_flags.bump_normal){
+        if(this->normal.dot(r.d) > 0)
+        return this->normal * -1;
+        return this->normal;
+    }
+    
 
 
     if(!this->tbset)
@@ -209,7 +213,7 @@ Triangle::Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2 ,
     // std::cout << "Center: " << new_center.x << ", " << new_center.y << ", " << new_center.z << "\n";
 
 
-    Vec3 scaled_n = (this->v2-this->v1).cross(this->v3 - this->v1);
+    Vec3 scaled_n = (this->v3 - this->v1).cross((this->v2-this->v1));
     // bool det_negative = this->tm->determinant() < 0;
     // if(det_negative)
     //     scaled_n = (this->v3 - this->v1).cross(this->v2-this->v1);

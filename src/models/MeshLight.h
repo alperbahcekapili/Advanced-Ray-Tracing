@@ -12,6 +12,7 @@ public:
     ~MeshLight();
     Vec3 irradianceAt(Ray light_ray, Vec3  location) ;
     Vec3 getPointOn();
+    Vec3 getBoundingBox(bool isMax) override;
 
 };
 

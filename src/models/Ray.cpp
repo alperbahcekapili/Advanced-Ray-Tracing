@@ -7,6 +7,12 @@ using namespace std;
 #include "Ray.h"
 #include "../util/util.h"
 
+
+Ray::Ray(){
+    this->o = Vec3(0,0,0);
+    this->d = Vec3(0,0,0);
+    this->time = -1;
+}
 Ray::Ray(Vec3 o, Vec3 d){
     this->o = o;
     this->d = d.normalize();
@@ -22,29 +28,28 @@ string Ray::toString(){
     printf(toret, "o:(%f,%f,%f}), d:(%f,%f,%f) \n", o.x, o.y, o.z, d.x, d.y, d.z);
     return toret;
 }
+Vec3** Ray::getTangentVectors() {
+    // Ensure this->d is normalized
+    Vec3 d_normalized = this->d.normalize();
 
-Vec3** Ray::getTangentVectors(){
-    float minabsval = this->d.x;
-    if(abs(this->d.y) < abs(this->d.x) && abs(this->d.y) < abs(this->d.z))
-        minabsval = this->d.y;
-    if(abs(this->d.z) < abs(this->d.x) && abs(this->d.z) < abs(this->d.y))
-        minabsval = this->d.z;
-    
+    // Select a component with the smallest absolute value
     Vec3 nhat;
-    if(minabsval == this->d.x)
-        nhat = {1,this->d.y,this->d.z};
-    else if(minabsval == this->d.y)    
-        nhat = {this->d.x,1,this->d.z};
-    else
-        nhat = {this->d.x,this->d.y,1};
-    
+    if (std::abs(d_normalized.x) <= std::abs(d_normalized.y) && std::abs(d_normalized.x) <= std::abs(d_normalized.z)) {
+        nhat = Vec3(1.0f, 0.0f, 0.0f);
+    } else if (std::abs(d_normalized.y) <= std::abs(d_normalized.x) && std::abs(d_normalized.y) <= std::abs(d_normalized.z)) {
+        nhat = Vec3(0.0f, 1.0f, 0.0f);
+    } else {
+        nhat = Vec3(0.0f, 0.0f, 1.0f);
+    }
 
+    // Calculate tangent vectors
     Vec3* tg1 = new Vec3();
     Vec3* tg2 = new Vec3();
 
-    *tg1 = nhat.cross(this->d);
-    *tg2 = this->d.cross(*tg1);
+    *tg1 = nhat.cross(d_normalized).normalize(); // First tangent
+    *tg2 = d_normalized.cross(*tg1).normalize(); // Second tangent
 
+    // Allocate and return results
     Vec3** ret_list = new Vec3*[2];
     ret_list[0] = tg1;
     ret_list[1] = tg2;

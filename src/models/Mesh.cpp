@@ -97,13 +97,7 @@ float Mesh::Intersects(Ray ray){
 float mint, maxt;
 Object* tofill;
 
-
-auto start = std::chrono::high_resolution_clock::now();
 bool intersects = this->bvh_faces->intersectObject(ray, tofill, mint, maxt);
-auto end = std::chrono::high_resolution_clock::now();
-
-// Calculate duration
-std::chrono::duration<double> duration = end - start;
 
 if(intersects){
     this->last_intersected_obj = tofill;

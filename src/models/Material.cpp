@@ -15,4 +15,5 @@ phong_exponent(phong_exponent){
     this->absorbtion_index = absorbtion_index;
     this->absorption_coef = absorption_coef;
     this->roughness = roughness;
+    
 }

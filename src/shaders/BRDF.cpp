@@ -28,6 +28,8 @@ Vec3 BRDF::modifiedPhong(brdf_inputs inputs){
     Vec3 f = inputs.kd + (inputs.ks * pow(cosAlpha, this->phong_exponent));
     if (cosTheta < 0)
         return Vec3(0,0,0);
+    if(f.x < 0 || f.y < 0 || f.z < 0)
+        printf("Negative value in modified phong\n");
     return f; // 90 degree check
 }
 
@@ -42,6 +44,9 @@ Vec3 BRDF::normalizedModifiedPhong(brdf_inputs inputs){
     Vec3 f = (inputs.kd/M_PI) + (inputs.ks * ((this->phong_exponent + 2)/(2*M_PI)) * pow(cosAlpha, n_factor));
     if (cosTheta < 0)
         return Vec3(0,0,0);
+
+    if(f.x < 0 || f.y < 0 || f.z < 0)
+        printf("Negative value in modified phong\n");
     return f; // 90 degree check
 }
 
@@ -52,6 +57,9 @@ Vec3 BRDF::originalBlinnPhong(brdf_inputs inputs){
     Vec3 f = inputs.kd + (inputs.ks * (pow(cosAlpha, this->phong_exponent) / cosTheta));
     if (cosTheta < 0)
         return Vec3(0,0,0);
+
+    if(f.x < 0 || f.y < 0 || f.z < 0)
+        printf("Negative value in modified phong\n");
     return f; // 90 degree check
 }
 

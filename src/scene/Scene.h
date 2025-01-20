@@ -12,6 +12,8 @@ private:
 public:
     Camera* camera;
     int numObjects;  
+    int max_recursion_depth=1;
+    int min_recursion_depth=1;
     Object** sceneObjects;
     ImagePane* imagePane; 
     Light** lights; 

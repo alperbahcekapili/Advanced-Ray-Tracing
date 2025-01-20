@@ -513,7 +513,7 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
 }
 
 
-Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray){
+Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray){ 
     Triangle* hitTri = nullptr;
 
    Vec3  pixel(0,0,0);
@@ -543,9 +543,97 @@ Vec3 Shader::BRDFShadingAt(Vec3  location, Object* intersectingObject, int inter
         inputs.wi = (lightRay.d * -1);
         inputs.wo = (camray.d * -1); // is this correct ? TODO
         inputs.refraction_index = intersectingObject->getMaterial()->refraction_index;
-        Vec3 color = intersectingObject->getMaterial()->brdf->f(inputs);
+        Vec3 color(0,0,0);
+        if (intersectingObject->getMaterial()->brdf_set)
+            color = intersectingObject->getMaterial()->brdf->f(inputs);
+        else
+            color = intersectingObject->radiance;
+        
+        
+        
         pixel = pixel + color * irradiance;
 
     }
     return pixel;
+}
+
+
+Vec3 Shader::trace(Ray ray, int remaining_hop, int min_recusion_depth, int hops_sofar, Camera* camera){
+
+    // if ray that is coming towards the bvh 
+
+
+    float minTValue = 9999999;
+    float maxTValue = -1;
+    Object* tofill = nullptr;
+    // std::cout << "Inside trace, remaining hop: " << remaining_hop << "\n";
+    // std::cout << "Ray direction " <<ray.d.x << ", " << ray.d.y << ", " << ray.d.z << ", " <<  "\n";
+    // std::cout << "Ray Origin " << ray.o.x << "," << ray.o.y << ","<< ray.o.z << "\n";
+    bool intersected = scene->bvh->intersectObject(ray, tofill, minTValue, maxTValue);
+    if(!intersected){
+        // std::cout << "No intersection found\n";
+        return Vec3(0,0,0); // TODO: we still tackle here it should not happen! 
+    }
+
+    if(remaining_hop == 0){
+        return tofill->radiance;
+    }
+
+    Vec3 surface_normal = tofill->getSurfaceNormal(ray);
+
+    // generate random ray for next iteration acc. to techniques
+    Vec3 intersection_location = ray.locationAtT(minTValue);
+    PathTracingTechnique tech = camera->pt->directionTechnique();
+    Ray* next_ray = camera->pt->getNextRay(ray, tofill, intersection_location, tech);
+    // move next ray a little bit to prevent self intersection
+    float cosTheta = (ray.d * -1).dot( surface_normal );
+
+    brdf_inputs inputs;
+    inputs.kd = tofill->getMaterial()->diffuseProp;
+    inputs.ks = tofill->getMaterial()->specularProp;
+    inputs.n = surface_normal;
+    inputs.wi = (ray.d * -1);
+    inputs.wo = (next_ray->d); // is this correct ? TODO
+    inputs.refraction_index = tofill->getMaterial()->refraction_index;
+    
+
+    if (tofill->getMaterial()->brdf_set){
+        
+        Vec3 cumulative_lights = Vec3(0,0,0);
+        Vec3 brdf_out = tofill->getMaterial()->brdf->f(inputs);
+
+
+        if(camera->pt->hasTechnique(NEE)){
+            // sample light sources
+            for (size_t i = 0; i < scene->numlights; i++)
+            {
+                Vec3 light_pos = scene->lights[i]->getPointOn(); // if fails change this to center
+                Ray lsample_ray = Ray(next_ray->o, light_pos - intersection_location);
+                Vec3 trace_out =  trace(lsample_ray, 0, min_recusion_depth, 0, camera) * cosTheta * 2 * M_PI;
+                // if(trace_out.x+trace_out.y+trace_out.z>0)
+                //     std::cout << "I got a nonzero light \n";
+                cumulative_lights = cumulative_lights + trace_out;
+            }
+        }
+
+
+        if(camera->pt->hasTechnique(RUSSIAN_ROULETTE)){
+            float q = 0.5;
+            float rand_n = generate_random_01();
+            if(rand_n < q && hops_sofar > min_recusion_depth){
+                tofill->radiance = tofill->radiance * q;
+                return brdf_out * (tofill->radiance + cumulative_lights);; // 0 because if light we should have already terminated
+            }
+            
+        }
+
+        Vec3 trace_out =  trace(*next_ray, remaining_hop-1, min_recusion_depth, hops_sofar+1, camera) * cosTheta * 2 * M_PI;
+
+        return  brdf_out * (trace_out + cumulative_lights);
+    }
+        
+    else
+        return tofill->radiance;
+
+
 }
