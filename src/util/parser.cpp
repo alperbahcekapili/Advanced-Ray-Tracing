@@ -20,15 +20,17 @@
 #include "../models/Material.h"
 #include "../models/Mesh.h"
 #include "../models/Sphere.h"
+#include "../models/SphereLight.h"
+#include "../models/MeshLight.h"
 #include "../models/ImagePane.h"
 #include "../models/ObjectInstance.h"
 #include "../scene/Scene.h"
 #include "../shaders/TextureImage.h"
 #include "../shaders/TextureMap.h"
+#include "../shaders/BRDF.h"
 #include "data_structures.h"
 #include "ply.h"
 #include "read_ply.h"
-
 
 
 
@@ -153,6 +155,21 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     }
     stream >> max_recursion_depth;
 
+
+    stream.clear();
+
+    int min_recursion_depth;
+    element = root->FirstChildElement("MinRecursionDepth");
+    if (element)
+    {
+        stream << element->GetText() << std::endl;
+    }
+    else
+    {
+        stream << "1" << std::endl;
+    }
+    stream >> min_recursion_depth;
+
  
 
     // create 8 random corner gradients for perlin noise
@@ -273,19 +290,65 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
             stream << child->GetText() << std::endl;
         else
             stream << "1" << std::endl;
+
         child = element->FirstChildElement("ImageName");
         stream << child->GetText() << std::endl;
 
-        
-        
         stream >> img_width >> img_height;
         stream >> numsamples;
         stream >> camera_name;
+
+
+        
+        // path tracing
+        bool path_tracing = false;
+        std::vector<PathTracingTechnique> techniques;
+        int splitting_factor;
+        child = element->FirstChildElement("Renderer");
+        if(child){
+            path_tracing = true;
+            child = element->FirstChildElement("RendererParams");
+            if(child)
+            {stream << child->GetText() << std::endl;
+            std::string  technique;
+            bool is_uniform = true;
+            while(stream >> technique){
+                if(strcmp(technique.c_str(), "NextEventEstimation") == 0){
+                    techniques.push_back(NEE);
+                }
+                else if(strcmp(technique.c_str(), "RussianRoulette") == 0)
+                {
+                    techniques.push_back(RUSSIAN_ROULETTE);
+                }
+                else if(strcmp(technique.c_str(), "ImportanceSampling") == 0)
+                {
+                    techniques.push_back(IMPORTANCE_SAMPLING);
+                }
+            }}else
+            {
+                techniques.push_back(UNIFORM);
+            }
+
+            stream.clear();
+
+
+            child = element->FirstChildElement("SplittingFactor");
+            stream << child->GetText() << std::endl;
+            stream >> splitting_factor;
+        }
+
+        
+        
         // max t hardcoded
         Camera* camera = new Camera(
             cam_up, cam_gaze , cam_position, cam_near_distance, 1000, camera_name, numsamples, focus_distance, aperture_size
         );
-
+    
+        if(path_tracing){
+            camera->path_tracing = true;
+            camera->pt = new PathTracer(techniques, splitting_factor);
+            std::cout << "I set splitting factor: " << splitting_factor << "\n";
+        }
 
         if(tonemap){
             camera->keyvalue = keyvalue;
@@ -376,134 +439,204 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 }
 
 
-
+    
 
 
     
     element = root->FirstChildElement("Lights");
-    tinyxml2::XMLElement* child = element->FirstChildElement("AmbientLight");
-    if(child){
-        stream << child->GetText() << std::endl;
-        stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;        
-    }else{
-        ambient_light = Vec3(0,0,0);
-    }
-    auto lchild = element->FirstChildElement("PointLight");
-    while (lchild)
-    {
-        child = lchild->FirstChildElement("Position");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Intensity");
-        stream << child->GetText() << std::endl;
-
-        stream >> light_position.x >> light_position.y >> light_position.z;
-        stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
-        Light* l = new PointLight(light_intensity, light_position);
-        lights.push_back(l);
-        lchild = lchild->NextSiblingElement("PointLight");
-    }
-
-
-
-    lchild = element->FirstChildElement("AreaLight");
-    while (lchild)
-    {
-        Vec3 areal_normal ;
-        float areal_size;
-        child = lchild->FirstChildElement("Position");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Normal");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Radiance");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Size");
-        stream << child->GetText() << std::endl;
-
-        stream >> light_position.x >> light_position.y >> light_position.z;
-        stream >> areal_normal.x >> areal_normal.y >> areal_normal.z;
-        stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
-        stream >> areal_size;
-        Light* l = new AreaLight(areal_size, light_position, areal_normal, light_intensity);
-        lights.push_back(l);
-        element = element->NextSiblingElement("AreaLight");
-    }
-
-    lchild = element->FirstChildElement("SpotLight");
-    while (lchild)
-    {
-        Vec3 position;
-        Vec3 direction;
-        Vec3 intensity;
-        float coverage_angle;
-        float faloff_angle;
-        child = lchild->FirstChildElement("Position");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Direction");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("Intensity");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("CoverageAngle");
-        stream << child->GetText() << std::endl;
-        child = lchild->FirstChildElement("FalloffAngle");
-        stream << child->GetText() << std::endl;
-
-        stream >> position.x >> position.y >> position.z;
-        stream >> direction.x >> direction.y >> direction.z;
-        stream >> intensity.x >> intensity.y >> intensity.z;
-        stream >> coverage_angle;
-        stream >> faloff_angle;
-        Light* l = new SpotLight(position, direction, intensity, coverage_angle, faloff_angle);
-        lights.push_back(l);
-        lchild = lchild->NextSiblingElement("SpotLight");
-    }
-
-
+    
+    // global thus outside of the if
     bool SPHERICAL_LIGHT = false;
     Light* spherical_light;
-    lchild = element->FirstChildElement("SphericalDirectionalLight");
-    while (lchild)
-    {   
-        SPHERICAL_LIGHT = true;
-        int imageid;
-        child = lchild->FirstChildElement("ImageId");
-        stream << child->GetText() << std::endl;
-        stream >> imageid;
-        spherical_light = new SphericalDirectionalLight(image_list.at(imageid-1));
-        Light* l = spherical_light;
-        lights.push_back(l);
-        lchild = lchild->NextSiblingElement("SphericalDirectionalLight");
+
+
+    if(element)
+    {
+        tinyxml2::XMLElement* child = element->FirstChildElement("AmbientLight");
+        if(child){
+            stream << child->GetText() << std::endl;
+            stream >> ambient_light.x >> ambient_light.y >> ambient_light.z;        
+        }else{
+            ambient_light = Vec3(0,0,0);
+        }
+        auto lchild = element->FirstChildElement("PointLight");
+        while (lchild)
+        {
+            child = lchild->FirstChildElement("Position");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Intensity");
+            stream << child->GetText() << std::endl;
+
+            stream >> light_position.x >> light_position.y >> light_position.z;
+            stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
+            Light* l = new PointLight(light_intensity, light_position);
+            lights.push_back(l);
+            lchild = lchild->NextSiblingElement("PointLight");
+        }
+
+
+
+        lchild = element->FirstChildElement("AreaLight");
+        while (lchild)
+        {
+            Vec3 areal_normal ;
+            float areal_size;
+            child = lchild->FirstChildElement("Position");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Normal");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Radiance");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Size");
+            stream << child->GetText() << std::endl;
+
+            stream >> light_position.x >> light_position.y >> light_position.z;
+            stream >> areal_normal.x >> areal_normal.y >> areal_normal.z;
+            stream >> light_intensity.x >> light_intensity.y >> light_intensity.z;
+            stream >> areal_size;
+            Light* l = new AreaLight(areal_size, light_position, areal_normal, light_intensity);
+            lights.push_back(l);
+            lchild = lchild->NextSiblingElement("AreaLight");
+        }
+
+        lchild = element->FirstChildElement("SpotLight");
+        while (lchild)
+        {
+            Vec3 position;
+            Vec3 direction;
+            Vec3 intensity;
+            float coverage_angle;
+            float faloff_angle;
+            child = lchild->FirstChildElement("Position");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Direction");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("Intensity");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("CoverageAngle");
+            stream << child->GetText() << std::endl;
+            child = lchild->FirstChildElement("FalloffAngle");
+            stream << child->GetText() << std::endl;
+
+            stream >> position.x >> position.y >> position.z;
+            stream >> direction.x >> direction.y >> direction.z;
+            stream >> intensity.x >> intensity.y >> intensity.z;
+            stream >> coverage_angle;
+            stream >> faloff_angle;
+            Light* l = new SpotLight(position, direction, intensity, coverage_angle, faloff_angle);
+            lights.push_back(l);
+            lchild = lchild->NextSiblingElement("SpotLight");
+        }
+
+
+        lchild = element->FirstChildElement("SphericalDirectionalLight");
+        while (lchild)
+        {   
+            SPHERICAL_LIGHT = true;
+            int imageid;
+            child = lchild->FirstChildElement("ImageId");
+            stream << child->GetText() << std::endl;
+            stream >> imageid;
+            spherical_light = new SphericalDirectionalLight(image_list.at(imageid-1));
+            Light* l = spherical_light;
+            lights.push_back(l);
+            lchild = lchild->NextSiblingElement("SphericalDirectionalLight");
+        }
+
+
+
+        element = element->FirstChildElement("DirectionalLight");
+        while(element){
+            Vec3 direction;
+            Vec3 radiance;
+            child = element->FirstChildElement("Direction");
+            stream << child->GetText() << std::endl;
+            child = element->FirstChildElement("Radiance");
+            stream << child->GetText() << std::endl;
+            
+            stream >> direction.x >> direction.y >> direction.z;
+            stream >> radiance.x >> radiance.y >> radiance.z;
+            Light* l =  new DirectionalLight(direction, radiance);
+            lights.push_back(l);
+            element = element->NextSiblingElement("DirectionalLight");
+        }
+
     }
-
-
-
-    element = element->FirstChildElement("DirectionalLight");
-    while(element){
-        Vec3 direction;
-        Vec3 radiance;
-        child = element->FirstChildElement("Direction");
-        stream << child->GetText() << std::endl;
-        child = element->FirstChildElement("Radiance");
-        stream << child->GetText() << std::endl;
-        
-        stream >> direction.x >> direction.y >> direction.z;
-        stream >> radiance.x >> radiance.y >> radiance.z;
-        Light* l =  new DirectionalLight(direction, radiance);
-        lights.push_back(l);
-        element = element->NextSiblingElement("DirectionalLight");
-    }
-
-
 
     
+    // Read BRDF'S 
+    std::vector<BRDF*> brdfs;
+    element = root->FirstChildElement("BRDFs");
+    auto modifiedPhong = element->FirstChildElement("ModifiedPhong");
+    while (modifiedPhong)
+    {   
+        auto exp = modifiedPhong->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
+
+        BRDFType brdf_type = BRDFType::ModifiedPhong;
+        if (modifiedPhong->Attribute("normalized"))
+            brdf_type = BRDFType::NormalizedModifiedPhong;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        modifiedPhong = modifiedPhong->NextSiblingElement("ModifiedPhong");
+    }
 
 
+    auto originalBlinnPhong = element->FirstChildElement("OriginalBlinnPhong");
+    while (originalBlinnPhong)
+    {
+        auto exp = originalBlinnPhong->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
+        BRDFType brdf_type = BRDFType::OriginalBlinnPhong;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        originalBlinnPhong = originalBlinnPhong->NextSiblingElement("OriginalBlinnPhong");
+    }
 
 
+    auto modifiedBlinnPhong = element->FirstChildElement("ModifiedBlinnPhong");
+    while (modifiedBlinnPhong)
+    {
+        auto exp = modifiedBlinnPhong->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
+        BRDFType brdf_type = BRDFType::ModifiedBlinnPhong;
+        if ( modifiedBlinnPhong->Attribute("normalized"))
+            brdf_type = BRDFType::NormalizedModifiedBlinnPhong;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        modifiedBlinnPhong = modifiedBlinnPhong->NextSiblingElement("ModifiedBlinnPhong");
+    }
+    
+    auto originalPhong = element->FirstChildElement("OriginalPhong");
+    while (originalPhong)
+    {
+        auto exp = originalPhong->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
+        BRDFType brdf_type = BRDFType::OriginalPhong;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        originalPhong = originalPhong->NextSiblingElement("OriginalPhong");
+    }
 
-
-
-
-
+    auto torranceSparrow = element->FirstChildElement("TorranceSparrow");
+    while(torranceSparrow)
+    {
+        // kdfresnel
+        auto exp = torranceSparrow->FirstChildElement("Exponent");
+        stream << exp->GetText() << std::endl;
+        BRDFType brdf_type = BRDFType::TorranceSparrow;
+        BRDF* new_brdf = new BRDF(brdf_type);
+        if(strcmp(torranceSparrow->Attribute("kdfresnel"), "true") == 0){
+            new_brdf->kdfresnel = true;
+        }
+        stream >> new_brdf->phong_exponent;
+        brdfs.push_back(new_brdf);
+        torranceSparrow = torranceSparrow->NextSiblingElement("TorranceSparrow");
+    }
 
 
 
@@ -532,7 +665,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         material_type = MaterialType::Other;
 
 
-        child = element->FirstChildElement("AmbientReflectance");
+        auto  child = element->FirstChildElement("AmbientReflectance");
         stream << child->GetText() << std::endl;
         child = element->FirstChildElement("DiffuseReflectance");
         stream << child->GetText() << std::endl;
@@ -565,6 +698,8 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         }else{
             stream << "0 0 0 \n" << std::endl;
         }
+
+        
         
         stream >> ambient_reflectance.x >> ambient_reflectance.y >> ambient_reflectance.z;
         stream >> diffuse_reflectance.x >> diffuse_reflectance.y >> diffuse_reflectance.z;
@@ -592,6 +727,15 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 
         stream >> phong_exponent;
         Material* material = new Material(material_type, ambient_reflectance, diffuse_reflectance, specular_reflectance, phong_exponent, mirror_reflectance, refraction_index, absorption_index, absorption_coefficient, roughness);
+
+        // get brdf id
+        auto brdfid = element->Attribute("BRDF");
+        if(brdfid){
+            int brdf_id = atoi(brdfid) - 1;
+            material->brdf_set = true;
+            material->brdf = brdfs.at(brdf_id);
+        }
+        
         materials.push_back(material);
         element = element->NextSiblingElement("Material");
     }
@@ -643,11 +787,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         stream.clear();
         stream.str("");
     }
+
+
     bool TEXTURE_COORDS_EXIST = false;
-
-
-
-    // if tex coord data is presend then read that as well
+    // if tex coord data is present then read that as well
     std::vector<std::pair<float, float> > uv_coords;
     element = root->FirstChildElement("TexCoordData");
     if(element){
@@ -665,14 +808,148 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     stream.clear();
     stream.str("");
 
+    
+
     int texture_offset  =0;
 
 
     element = root->FirstChildElement("Objects");
+
+
+    // Object Lights
+    element = element->FirstChildElement("LightMesh");
+    while (element)
+    {
+        auto child = element->FirstChildElement("Material");
+        stream.clear();
+        string tmp = child->GetText();
+        stream << tmp << std::endl;
+        stream >> mesh_material_id;
+        mesh_material = materials.at(mesh_material_id-1);
+
+        Vec3 motionBlur;
+        child = element->FirstChildElement("MotionBlur");
+        if(child){
+            stream << child->GetText();
+            stream >> motionBlur.x;
+            stream >> motionBlur.y;
+            stream >> motionBlur.z;
+        }
+
+        Vec3 radiance;
+        child = element->FirstChildElement("Radiance");
+        if (child)
+        {
+            stream << child->GetText() << std::endl;
+            stream >> radiance.x >> radiance.y >> radiance.z;
+        }
+
+        // read textures if exist
+        std::vector<TextureMap*> tmaps;
+        bool hasTexture = false;
+        stream.clear();
+        stream.str("");
+
+        std::vector<TransformationMatrix*> tms;
+        child = element->FirstChildElement("Transformations");
+        if(child){
+            stream << child->GetText() << std::endl;
+            string transformation_buffer;
+            while(stream >> transformation_buffer){
+                char op = transformation_buffer.at(0);
+                int id = std::stoi(transformation_buffer.substr(1));
+                if(op=='r'){
+                    tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
+                }else if (op=='t')
+                {
+                    tms.push_back(new TransformationMatrix(translate.at(id-1), op));
+                }else if (op=='s')
+                {
+                    tms.push_back(new TransformationMatrix(scale.at(id-1), op));
+                }
+            }
+        }
+        // Initialize resulting tm as identity matrix so that it means no transformation
+        
+        TransformationMatrix* resulting_tm = new TransformationMatrix();
+        resulting_tm->matrix[0][0] = 1;
+        resulting_tm->matrix[1][1] = 1;
+        resulting_tm->matrix[2][2] = 1;
+        resulting_tm->matrix[3][3] = 1;
+        for (int i = tms.size()-1; i >= 0; i--)
+        {
+            *resulting_tm =   (*resulting_tm) * (*tms.at(i));
+        }
+            
+        
+        TransformationMatrix* resulting_tm_copy ;
+        child = element->FirstChildElement("Faces");
+        stream.clear();
+        int numfaces;
+        char *** elem_names;
+        int ftype;
+        float version;
+        
+        std::vector<std::pair<float, float> > uv_coords_mesh;
+
+        char* plyattr = "plyFile";
+		if (child->Attribute(plyattr))
+		{
+			std::string plyFilePath = child->Attribute("plyFile");
+            std::size_t firstSlashPos = filepath.rfind('/');
+                if (firstSlashPos == std::string::npos) {
+            firstSlashPos = -1;
+            }
+            // Construct the new path: part before the first '/' + '/' + new filename
+            plyFilePath = filepath.substr(0, firstSlashPos + 1) + plyFilePath;
+            std::vector<Vec3> tmp_l = read_ply(plyFilePath);
+            mesh_faces.insert(mesh_faces.end(), tmp_l.begin(), tmp_l.end()); // TODO: texture coord with ply ? 
+		}
+		else
+		{
+			stream << child->GetText() << std::endl;
+            while (!(stream >> facevid1).eof())
+            {   
+                stream >> facevid2 >> facevid3;
+                int index_offset = -1;
+                const char* vertex_offset = child->Attribute("vertexOffset");
+                if(vertex_offset){
+                    index_offset += atoi(vertex_offset);
+                }
+               
+                mesh_faces.push_back(vertices.at(facevid1+index_offset));
+                mesh_faces.push_back(vertices.at(facevid2+index_offset));
+                mesh_faces.push_back(vertices.at(facevid3+index_offset));
+            }
+
+		}
+
+       
+      stream.clear();
+        // convert vector to list
+        Vec3* mesh_faces_ar = new Vec3[mesh_faces.size()];
+        #pragma omp parallel for
+        for (int i = 0; i < mesh_faces.size(); i++)
+        {
+            mesh_faces_ar[i] = mesh_faces.at(i);
+        }
+        mesh_numfaces = int(mesh_faces.size()/3);
+
+        TextureMap* tmaps_array = new TextureMap[tmaps.size()];
+
+        MeshLight* m = new MeshLight(materials.at(mesh_material_id-1), ObjectType::MeshType, mesh_faces_ar, mesh_numfaces, resulting_tm, tmaps.size(), tmaps_array, uv_coords_mesh, radiance); 
+        lights.push_back(m);
+        meshes.push_back(m);
+        mesh_faces.clear();
+        element = element->NextSiblingElement("LightMesh");
+    }
+    
+
+    element = root->FirstChildElement("Objects");   
     element = element->FirstChildElement("Mesh");
     while (element)
     {
-        child = element->FirstChildElement("Material");
+        auto child = element->FirstChildElement("Material");
         stream.clear();
         string tmp = child->GetText();
         stream << tmp << std::endl;
@@ -693,8 +970,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
         
         // read textures if exist
         std::vector<TextureMap*> tmaps;
+        bool hasTexture = false;
         child = element->FirstChildElement("Textures");
         if(child){
+            hasTexture = true;
             stream << child->GetText() << std::endl;
             int texture_buffer;
             while(stream >> texture_buffer){
@@ -786,8 +1065,10 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
                 mesh_faces.push_back(vertices.at(facevid1+index_offset));
                 mesh_faces.push_back(vertices.at(facevid2+index_offset));
                 mesh_faces.push_back(vertices.at(facevid3+index_offset));
-                if(texture_offset_c){
-                uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
+                
+                if (hasTexture)
+                
+                {uv_coords_mesh.push_back(uv_coords.at(facevid1+texture_offset));
                 uv_coords_mesh.push_back(uv_coords.at(facevid2+texture_offset));
                 uv_coords_mesh.push_back(uv_coords.at(facevid3+texture_offset));}
             }
@@ -820,6 +1101,7 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     }
     
 
+    const tinyxml2::XMLElement* child;
 
 
 
@@ -883,9 +1165,6 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
     Vec3 triv2(vertices.at(trianglev2-1).x,vertices.at(trianglev2-1).y,vertices.at(trianglev2-1).z);
     Vec3 triv3(vertices.at(trianglev3-1).x,vertices.at(trianglev3-1).y,vertices.at(trianglev3-1).z);
     
-    // triangles.push_back(new Triangle( // TODO: Fix here
-    //     materials.at(triangle_material_id-1), ObjectType::TriangleType, triv1, triv2, triv3, resulting_tm, nullptr, -1, nullptr, nullptr
-    // ));
     element = element->NextSiblingElement("Triangle");
 }
 stream.str("");
@@ -967,6 +1246,84 @@ while (element)
     ObjectType::SphereType, resulting_tm, tmaps.size(), tmaps_array);
     element = element->NextSiblingElement("Sphere");
     spheres.push_back(s);
+}
+
+
+
+// //Get Spheres
+element = root->FirstChildElement("Objects");
+element = element->FirstChildElement("LightSphere");
+while (element)
+{
+    child = element->FirstChildElement("Material");
+    stream << child->GetText() << std::endl;
+    stream >> sphere_material_id;
+
+    child = element->FirstChildElement("Center");
+    stream << child->GetText() << std::endl;
+    stream >> sphere_center_id;
+
+    child = element->FirstChildElement("Radius");
+    stream << child->GetText() << std::endl;
+    stream >> shpere_radius;
+
+    Vec3 radiance;
+    child = element->FirstChildElement("Radiance");
+    if (child)
+    {
+        stream << child->GetText() << std::endl;
+        stream >> radiance.x >> radiance.y >> radiance.z;
+    }
+
+
+
+    
+    // read textures if exist
+    std::vector<TextureMap*> tmaps;
+    
+
+    std::vector<TransformationMatrix*> tms;
+    child = element->FirstChildElement("Transformations");
+    if(child){
+        stream.clear();
+        stream << child->GetText() << std::endl;
+        string transformation_buffer;
+        while(stream >> transformation_buffer){
+            char op = transformation_buffer.at(0);
+            int id = std::stoi(transformation_buffer.substr(1));
+            if(op=='r'){
+                tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
+            }else if (op=='t')
+            {
+                tms.push_back(new TransformationMatrix(translate.at(id-1), op));
+            }else if (op=='s')
+            {
+                tms.push_back(new TransformationMatrix(scale.at(id-1), op));
+            }
+        }
+    }
+    // Initialize resulting tm as identity matrix so that it means no transformation
+    TransformationMatrix* resulting_tm = new TransformationMatrix();
+    resulting_tm->matrix[0][0] = 1;
+    resulting_tm->matrix[1][1] = 1;
+    resulting_tm->matrix[2][2] = 1;
+    resulting_tm->matrix[3][3] = 1;
+    for (int i = 0; i < tms.size(); i++)
+    {
+        *resulting_tm = *resulting_tm * (*tms.at( tms.size() - i - 1));
+    }
+    
+
+    TextureMap* tmaps_array = new TextureMap[tmaps.size()];
+
+    SphereLight* s = new SphereLight(
+    vertices.at(sphere_center_id-1),
+    shpere_radius,  
+    materials.at(sphere_material_id-1),
+    ObjectType::SphereType, resulting_tm, tmaps.size(), tmaps_array, radiance);
+    element = element->NextSiblingElement("LightSphere");
+    spheres.push_back(s);
+    lights.push_back(s);
 }
 
 
@@ -1120,6 +1477,9 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+
+    s->min_recursion_depth = min_recursion_depth;
+    s->max_recursion_depth = max_recursion_depth;
     s->spherical_light_flag = SPHERICAL_LIGHT;
     s->spherical_light = spherical_light;
     s->bg_texture_set = false;

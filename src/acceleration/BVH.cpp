@@ -117,6 +117,8 @@ bool BVH::intersects(Ray ray, float& tNear, float& tFar){
     tNear = std::numeric_limits<float>::lowest();
     tFar = std::numeric_limits<float>::max();
 
+    
+
     // Iterate over each axis (x, y, z)
     for (int axis = 0; axis < 3; ++axis) {
         // Get the ray origin and direction components for the current axis
@@ -141,6 +143,16 @@ bool BVH::intersects(Ray ray, float& tNear, float& tFar){
 
         
     }
+
+    // if ray origin is inside the box, return true
+    if (ray.o.x >= this->min.x && ray.o.x <= this->max.x &&
+        ray.o.y >= this->min.y && ray.o.y <= this->max.y &&
+        ray.o.z >= this->min.z && ray.o.z <= this->max.z) {
+        // then one of the t values should be negative, we need to set tmin to positive one
+        if (tNear < 0) tNear = tFar;
+        return true;
+    }
+
     // If at any point tNear exceeds tFar, there is no intersection
     if (tNear > tFar) return false;
     return true;
@@ -154,13 +166,20 @@ bool BVH::intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax){
 
     if(this->is_leaf){
         // if current node is leaf then return obj
-        // if current bbox intersects with the object then we need to test wheter ray intersects with the object
+        // if current bbox intersects with the ray then we need to test wheter ray intersects with the object
         float tval = this->leaf_object->Intersects(ray);
+        if(tval == 0){
+            std::cout << "tval is 0\n";
+        }
         if(tval > 0){
             tmin=tval;
             to_fill = this->leaf_object;
             // std::cout << "Intersection detected at leaf, returning true...\n";
             return true;
+        }
+        else{
+            // std::cout << "Intersection not detected at leaf, returning false...\n";
+            return false;
         }
         return false;
     }

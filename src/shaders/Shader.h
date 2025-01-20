@@ -13,12 +13,14 @@ public:
     Shader(Scene* scene);
     ~Shader();
     
-    Vec3  diffuseShadingAt(Vec3  locationü, Object* intersectingObject, int diffuseShadingAt);
+    Vec3  diffuseShadingAt(Vec3  location, Object* intersectingObject, int diffuseShadingAt);
     Vec3  ambientShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     Vec3  specularShadingAt(Ray cameraRay,Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     Vec3  specularReflection(Ray r, Scene* scene, Object* source_obj,  int remaining_hop, int intersect_index);
     Vec3  refractionTransmission(Ray r, Scene* scene, Object* target_obj, int remaining_hop, int intersect_index);
+    Vec3 BRDFShadingAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex, Ray camray);
     Vec3  radianceAt(Vec3  location, Object* intersectingObject, int intersectingObjIndex);
     bool lightHits(Ray light_ray, Vec3  location, Object* intersectingObject, int intersectingObjIndex, Object** other_objects, int numobj );
+    Vec3 trace(Ray ray, int remaining_hop, int min_recusion_depth, int hops_sofar, Camera* camera);
 };
 

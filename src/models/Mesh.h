@@ -12,7 +12,7 @@ private:
 
 public:
 
-    Object* faces;
+    Object** faces;
     Material* material;
     ObjectType objectType;
     TransformationMatrix* tm;

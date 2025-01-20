@@ -3,6 +3,9 @@
 #include <vector>
 #include <string>
 #include "../util/data_structures.h"
+#include "../shaders/PathTracer.h"
+
+
 class Camera
 {
 private:
@@ -25,5 +28,9 @@ public:
     float keyvalue;
     float burnout;
     float saturation;
+
+    bool path_tracing = false;
+    PathTracer* pt = nullptr;
+
 };
 

@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set compile options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -ansi -g -O0 -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -ansi -g -O0 -fopenmp") #  -Wall -Wextra -pedantic 
 
 # Source files (recursively find all .cpp files under src/)
 file(GLOB_RECURSE SRC_FILES src/*.cpp)

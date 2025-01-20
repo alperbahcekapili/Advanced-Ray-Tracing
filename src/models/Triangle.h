@@ -18,6 +18,7 @@ public:
     Vec3 v1;
     Vec3 v2;
     Vec3 v3;
+    Vec3 radiance = Vec3(0,0,0); ;
     Vec3 T;
     Vec3 B;
     bool tbset=false;

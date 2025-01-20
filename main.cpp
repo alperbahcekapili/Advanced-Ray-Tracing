@@ -3,6 +3,8 @@
 #include "src/models/ImagePane.h"
 #include "src/models/Ray.h"
 #include "src/models/Sphere.h"
+#include "src/models/SphereLight.h"
+#include "src/models/MeshLight.h"
 #include "src/lights/Light.h"
 #include "src/lights/PointLight.h"
 #include "src/scene/Scene.h"
@@ -67,20 +69,19 @@ int main(int argc, char const *argv[])
             image[i] = new Vec3[imgHeight];
 
             // printf("Totatl progress: %f\n", float(total_progress)/(imgHeight*imgWidth));
-
+            // #pragma omp parallel for
             for (int j = 0; j < imgHeight; j++)
             {
 
                 total_progress++;
                 
-                if(i==500 && j==500)    
-                 printf("Alper");
-                
-                // printf("Total Progress: %d/%d\n",total_progress, imgWidth*imgHeight);
                 Vec3 cumulative_pixel = Vec3(0,0,0);
+                
+                
                 for (int rayindex = 0; rayindex < curscene.camera->numsamples; rayindex++)
                 {
-                    // shoot ray from camera to ImagePane
+                
+                // shoot ray from camera to ImagePane
                 Ray cameraRay = curscene.imagePane->rayFromCamera(i, j, rayindex);
 
                 // now iterate over the objects to find first object that hits this ray
@@ -127,38 +128,69 @@ int main(int argc, char const *argv[])
                     image[i][j] = clipValues(cumulative_pixel, 255.0);
                     continue;
                 }
+
+                Vec3 pixel_val = Vec3(0,0,0);
+                
+                
+                pixel_val = tofill->radiance;
+                if(pixel_val.x != 0 && pixel_val.y != 0 && pixel_val.z != 0){
+                    cumulative_pixel = cumulative_pixel +  (pixel_val/curscene.camera->numsamples);
+                    continue;
+                }
             
-                if(i == 500 && j == 500)
-                    printf("Akper");
-                
-                Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
-                Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
-                Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
-
-                Vec3  pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
                 
 
-                if(tofill->getMaterial()->materialType == MaterialType::Mirror){
-                    Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
-                    pixel_val = specular_reflection + pixel_val;
-                    // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
 
+                if(!tofill->getMaterial()->brdf_set && false)
+                {
+                    Vec3  diffuse_intensity = shader.diffuseShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                    Vec3  ambient_intensity = shader.ambientShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex);
+                    Vec3  specular_intensity = shader.specularShadingAt(cameraRay, cameraRay.locationAtT(minTValue) , tofill, intersectingObjIndex);
+
+                    pixel_val = specular_intensity + diffuse_intensity + ambient_intensity;
+                    
+
+                    if(tofill->getMaterial()->materialType == MaterialType::Mirror){
+                        Vec3  specular_reflection = shader.specularReflection(cameraRay, &curscene ,tofill, 6, intersectingObjIndex);
+                        pixel_val = specular_reflection + pixel_val;
+                        // std::cout << "specular_reflection: \n" << specular_reflection.x << ", " << specular_reflection.y << ", " << specular_reflection.z << "\n";
+
+                    }
+                    else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
+                        Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, tofill, 6, intersectingObjIndex);
+                        pixel_val = refrac_transmission + pixel_val;
+                        // std::cout << "refrac_transmission: \n" << refrac_transmission.x << ", " << refrac_transmission.y << ", " << refrac_transmission.z << "\n";
+                    }
                 }
-                else if (tofill->getMaterial()->materialType == MaterialType::Dielectric || tofill->getMaterial()->materialType == MaterialType::Conductor){
-                    Vec3  refrac_transmission = shader.refractionTransmission(cameraRay, &curscene, tofill, 6, intersectingObjIndex);
-                    pixel_val = refrac_transmission + pixel_val;
-                    // std::cout << "refrac_transmission: \n" << refrac_transmission.x << ", " << refrac_transmission.y << ", " << refrac_transmission.z << "\n";
+                else
+                {
+                    
 
+                    // pixel_val = shader.BRDFShadingAt(cameraRay.locationAtT(minTValue), tofill, intersectingObjIndex, cameraRay);
+                    pixel_val = shader.trace(cameraRay, curscene.max_recursion_depth, curscene.min_recursion_depth, 0, curscene.camera);
+
+                    if(curscene.camera->path_tracing){
+                        Ray* new_rays = new Ray[curscene.camera->pt->splitting_factor];
+                        // We need to crate splitting_factor many rays and average the results
+                        new_rays = curscene.camera->pt->generateInitialRays(&cameraRay, new_rays,  tofill, curscene.camera->pt->techniques.at(0));
+                        Vec3 cumulative_pixel = Vec3(0,0,0);    
+                        for (int i = 0; i < curscene.camera->pt->splitting_factor; i++){
+                            bool intersects = curscene.bvh->intersectObject( new_rays[i], tofill, minTValue, maxTValue);
+                            // std::cout << "Initial random camera ray intersects: " << intersects << "\n";
+                            // std::cout << new_rays[i].d.x << "\n";
+
+                            Vec3 trace_out = shader.trace(new_rays[i], curscene.max_recursion_depth, curscene.min_recursion_depth, 0, curscene.camera);
+                            Vec3 addition = trace_out / float(1.0f + curscene.camera->pt->splitting_factor) ; // TODO replace hops # 
+                            
+                            cumulative_pixel = cumulative_pixel +  addition;
+                        }
+                        pixel_val = pixel_val + cumulative_pixel;
+                    }
+                    
                 }
 
 
-                // std::cout << "Ambient Intensity: \n" <<  ambient_intensity.x << ", " << ambient_intensity.y << ", " << ambient_intensity.z << "\n";
-                // std::cout << "Diffuse Intensity: \n" << diffuse_intensity.x << ", " << diffuse_intensity.y << ", " << diffuse_intensity.z << "\n";
-                // std::cout << "Specular Intensity: \n" << specular_intensity.x << ", " << specular_intensity.y << ", " << specular_intensity.z << "\n";
-
-
-                cumulative_pixel = cumulative_pixel + (pixel_val/curscene.camera->numsamples);
-                
+                cumulative_pixel = cumulative_pixel + (pixel_val/float(curscene.camera->numsamples));
                 // std::cout << image[i][j].x << ", " << image[i][j].y << ", " << image[i][j].z << "\n";
 
                 
@@ -189,7 +221,12 @@ int main(int argc, char const *argv[])
             // scale to 0,1
             gammaCorrectImage(flatArray, 3, imgWidth, imgHeight, curscene.camera->gamma);
         }
-        
+        else{
+            for (int i = 0; i < imgWidth * imgHeight * 3; ++i) {
+                flatArray[i] = std::min(flatArray[i], 255.0f);
+            }
+
+        }
 
         
 
