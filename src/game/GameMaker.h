@@ -63,7 +63,10 @@ public:
     const std::string pipe_in = "/tmp/pipe_in";
     const std::string pipe_out = "/tmp/pipe_out";
 
-    int temp_increment = 0;
+    pair<int,int> cursor;
+    
+
+
 
     GameMaker(Scene* scene);
     ~GameMaker();
@@ -71,7 +74,7 @@ public:
     int render_scene();
     int placeObjectTo(Object* object, pair<int, int> tile, int num_objects);
     int wait_for_messages();
-
+    int move_cursor(string movement);
 
     player player1;
     player player2;

@@ -9,7 +9,6 @@ int GameMaker::render_scene(){
     {
         curscene->sceneObjects[j]->id = j;
     }
-    bvh->visualize(0);
     curscene->bvh = bvh;
     Shader shader = Shader(
         curscene
@@ -118,6 +117,45 @@ int GameMaker::placeObjectTo(Object* object, pair<int, int> tile, int num_object
 }
 
 
+int GameMaker::move_cursor(string movement){
+    int old_tile_index = cursor.first * 4 + cursor.second;
+    int new_tile_index;
+    if(movement == "right"){
+        this->cursor.second += 1;
+        this->cursor.first += this->cursor.second / 4;
+        this->cursor.second = this->cursor.second % 4;
+        new_tile_index = cursor.first * 4 + cursor.second;        
+    }else if(movement == "left"){
+        this->cursor.second -= 1;
+        if(this->cursor.second<0){
+            this->cursor.first -= 1; 
+            this->cursor.second = 3;
+        }
+        new_tile_index = cursor.first * 4 + cursor.second;        
+    }else if(movement == "up"){
+        this->cursor.first +=1;
+        new_tile_index = cursor.first * 4 + cursor.second;        
+    }else if(movement == "down"){
+        this->cursor.first -=1;
+        new_tile_index = cursor.first * 4 + cursor.second;        
+    }
+
+    
+    int wall_material = 3;
+    Object* base_wall_1 = scene->sceneObjects[32];
+    ObjectInstance* new_obj  = new ObjectInstance(base_wall_1, false, new TransformationMatrix(), scene->materials.at(wall_material));
+    this->placeObjectTo(new_obj, cursor, 1); // This should move the new object to 0,0 tile 
+    scene->sceneObjects[0] = new_obj;
+    
+    // *(scene->sceneObjects[old_tile_index]->getMaterial()) =  old_tile_index % 2 == 0 ? *(scene->materials.at(1)) : *(scene->materials.at(0));
+    // *(scene->sceneObjects[new_tile_index]->getMaterial()) = *(scene->materials[15]);
+
+    std::cout << "New cursor position: " << cursor.first << ", " << cursor.second << "\n";
+    std::cout << "Old cursor index: " << old_tile_index << ", new cursor index: " << new_tile_index << "\n";
+
+    
+}
+
 int GameMaker::wait_for_messages(){
     // Read the response from the Python program
     std::ifstream read_pipe(pipe_out);
@@ -129,6 +167,8 @@ int GameMaker::wait_for_messages(){
     std::getline(read_pipe, response);
     std::cout << "C++ received: " << response << std::endl;
     read_pipe.close();
+    
+    response = response.substr(1, response.rfind('\"')-1);
     
     
 
@@ -142,6 +182,12 @@ int GameMaker::wait_for_messages(){
     std::cout << "C++ sending: " << message << std::endl;
     write_pipe << message << std::endl;
     write_pipe.close();
+
+
+    move_cursor(response);
+    this->render_scene();
+
+
     return 0;
 
 
@@ -150,6 +196,8 @@ int GameMaker::wait_for_messages(){
 
 GameMaker::GameMaker(Scene* scene)
 {
+    cursor.first = 0;
+    cursor.second = 0;
 
     this->scene = scene;
     std::cout << "I set my scene: \n";
@@ -159,12 +207,6 @@ GameMaker::GameMaker(Scene* scene)
     */
 
     // walls
-    int wall_material = 3;
-    Object* base_wall_1 = scene->sceneObjects[32];
-    ObjectInstance* new_obj  = new ObjectInstance(base_wall_1, false, new TransformationMatrix(), scene->materials.at(wall_material));
-    this->placeObjectTo(new_obj, pair<int, int>(1,3), 1); // This should move the new object to 0,0 tile 
-    scene->sceneObjects[0] = new_obj;
-    
     
     this->render_scene();
     

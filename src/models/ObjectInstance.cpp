@@ -165,7 +165,7 @@ float ObjectInstance::Intersects(Ray ray) {
     this->max.y = newMax.y;
     this->max.z = newMax.z;
 
-    std::cout << "Object instance bbox is questioned: Min: (" << this->min.x << "," << this->min.y << "," << this->min.z << "), Max: ("<< this->max.x << "," << this->max.y << "," << this->max.z << ")\n";
+    // std::cout << "Object instance bbox is questioned: Min: (" << this->min.x << "," << this->min.y << "," << this->min.z << "), Max: ("<< this->max.x << "," << this->max.y << "," << this->max.z << ")\n";
 
     if(isMax)
         return this->max;
