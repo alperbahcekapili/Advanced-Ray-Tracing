@@ -118,6 +118,36 @@ int GameMaker::placeObjectTo(Object* object, pair<int, int> tile, int num_object
 }
 
 
+int GameMaker::wait_for_messages(){
+    // Read the response from the Python program
+    std::ifstream read_pipe(pipe_out);
+    if (!read_pipe) {
+        std::cerr << "Failed to open read pipe.\n";
+        return 1;
+    }
+    std::string response;
+    std::getline(read_pipe, response);
+    std::cout << "C++ received: " << response << std::endl;
+    read_pipe.close();
+    
+    
+
+    // Write to the Python program
+    std::ofstream write_pipe(pipe_in);
+    if (!write_pipe) {
+        std::cerr << "Failed to open write pipe.\n";
+        return 1;
+    }
+    std::string message = "Hello from C++!";
+    std::cout << "C++ sending: " << message << std::endl;
+    write_pipe << message << std::endl;
+    write_pipe.close();
+    return 0;
+
+
+}
+
+
 GameMaker::GameMaker(Scene* scene)
 {
 
@@ -135,9 +165,6 @@ GameMaker::GameMaker(Scene* scene)
     this->placeObjectTo(new_obj, pair<int, int>(1,3), 1); // This should move the new object to 0,0 tile 
     scene->sceneObjects[0] = new_obj;
     
-    // update material
-    *(scene->sceneObjects[1]->getMaterial()) = *(scene->materials[15]);
-    *(scene->sceneObjects[7]->getMaterial()) = *(scene->materials[15]);
     
     this->render_scene();
     

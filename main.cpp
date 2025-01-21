@@ -35,6 +35,15 @@ int main(int argc, char const *argv[])
     GameMaker* gm = new GameMaker(scenes.at(0));
     gm->render_scene();
 
+    while (true)
+    {
+        int retval = gm->wait_for_messages();
+        if(retval != 0)
+            break;
+    }
+    
+    
+
 
 
     

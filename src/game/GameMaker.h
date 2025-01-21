@@ -18,6 +18,12 @@
 #include <algorithm>
 #include <cmath> // For fmod
 #include <stdio.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unistd.h>
 
 enum tile_animation{
     FIRE=1,
@@ -54,11 +60,17 @@ private:
     /* data */
 public:
 
+    const std::string pipe_in = "/tmp/pipe_in";
+    const std::string pipe_out = "/tmp/pipe_out";
+
+    int temp_increment = 0;
+
     GameMaker(Scene* scene);
     ~GameMaker();
 
     int render_scene();
     int placeObjectTo(Object* object, pair<int, int> tile, int num_objects);
+    int wait_for_messages();
 
 
     player player1;
