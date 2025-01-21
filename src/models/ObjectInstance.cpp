@@ -16,23 +16,16 @@ Vec3 ObjectInstance::getMotionBlur(){
 
 
 
-ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm, Material* material, Vec3 motionBlur)
+ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix* tm, Material* material)
 {
     this->parent = parent;
     this->reset = reset;
-    this->motionBlur.x = motionBlur.x;
-    this->motionBlur.y = motionBlur.y;
-    this->motionBlur.z = motionBlur.z;
     std::cout << "I am creating an instance...";
     this->tm = new TransformationMatrix();
-    TransformationMatrix blur_tra = TransformationMatrix(motionBlur, 't');
     this->material = material;
-    if(reset){
-        *(this->tm) = *(tm) * (parent->gettm()->inverse()) ;
-    }else
     *(this->tm) = *(tm);
 
-
+    this->objectType = MeshInstanceType;
 
 
     Vec3 originalMin = parent->getBoundingBox(false);
@@ -70,12 +63,6 @@ ObjectInstance::ObjectInstance(Object* parent, bool reset, TransformationMatrix*
     this->max.x = newMax.x;
     this->max.y = newMax.y;
     this->max.z = newMax.z;
-
-
-    this->objectType = MeshInstanceType;
-
-    std::cout << "My top coordinates (MMesh Instance): " << this->max.x << ", " << this->max.y << ", " << this->max.z << "\n";
-    std::cout << "My bottom coordinates (MMesh Instance): " << this->min.x << ", " << this->min.y << ", " << this->min.z << "\n";
 
 }
 
@@ -141,10 +128,50 @@ float ObjectInstance::Intersects(Ray ray) {
         return MeshInstanceType;
     }
     Vec3 ObjectInstance::getBoundingBox(bool isMax){
+    
+    Vec3 originalMin = parent->getBoundingBox(false);
+    Vec3 originalMax = parent->getBoundingBox(true);
+
+    // Get all 8 corners
+    std::vector<Vec3> corners = {
+        Vec3(originalMin.x, originalMin.y, originalMin.z),
+        Vec3(originalMax.x, originalMin.y, originalMin.z),
+        Vec3(originalMin.x, originalMax.y, originalMin.z),
+        Vec3(originalMax.x, originalMax.y, originalMin.z),
+        Vec3(originalMin.x, originalMin.y, originalMax.z),
+        Vec3(originalMax.x, originalMin.y, originalMax.z),
+        Vec3(originalMin.x, originalMax.y, originalMax.z),
+        Vec3(originalMax.x, originalMax.y, originalMax.z),
+    };
+
+    // Transform corners and compute new AABB
+    Vec3 newMin = this->tm->transform(corners[0]);
+    Vec3 newMax = newMin;
+    for (Vec3 corner : corners) {
+        Vec3 transformed = this->tm->transform(corner);
+        
+        newMin.x = std::min(newMin.x, transformed.x);
+        newMin.y = std::min(newMin.y, transformed.y);
+        newMin.z = std::min(newMin.z, transformed.z);
+        newMax.x = std::max(newMax.x, transformed.x);
+        newMax.y = std::max(newMax.y, transformed.y);
+        newMax.z = std::max(newMax.z, transformed.z);
+    }
+
+    this->min.x = newMin.x;
+    this->min.y = newMin.y;
+    this->min.z = newMin.z;
+    this->max.x = newMax.x;
+    this->max.y = newMax.y;
+    this->max.z = newMax.z;
+
+    std::cout << "Object instance bbox is questioned: Min: (" << this->min.x << "," << this->min.y << "," << this->min.z << "), Max: ("<< this->max.x << "," << this->max.y << "," << this->max.z << ")\n";
 
     if(isMax)
         return this->max;
     return this->min;
+
+
     }
     Vec3  ObjectInstance::getCenter(){
         return this->tm->transform(parent->getCenter());

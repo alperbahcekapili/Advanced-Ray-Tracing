@@ -1081,7 +1081,7 @@ while(element){
 
     reset_transform = (reset == "true");
 
-    ObjectInstance* new_obj  = new ObjectInstance(meshes.at(parent_id-1), reset_transform, resulting_tm, materials.at(mesh_material_id-1), motionBlur);
+    ObjectInstance* new_obj  = new ObjectInstance(meshes.at(parent_id-1), reset_transform, resulting_tm, materials.at(mesh_material_id-1));
     meshes.push_back(new_obj);
     all_objects.push_back(new_obj);
     element = element->NextSiblingElement("MeshInstance");
@@ -1131,6 +1131,7 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+    s->materials = materials;
     s->spherical_light_flag = SPHERICAL_LIGHT;
     s->spherical_light = spherical_light;
     s->bg_texture_set = false;

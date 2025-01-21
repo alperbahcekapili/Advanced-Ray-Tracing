@@ -31,7 +31,7 @@ public:
     Triangle(Material* material, ObjectType objectType, Vec3 v1, Vec3 v2, Vec3 v3, TransformationMatrix* tm, Mesh* mesh, int num_tex_maps, TextureMap* texture_maps, std::vector<std::pair<float, float> > uv_coords_triangle);
     float Intersects(Ray ray) override ;
     TransformationMatrix* gettm() override;
-    float getArea(void);
+
     Vec3 getSurfaceNormal(Ray r) override;
     Triangle();
     Material *getMaterial() override;

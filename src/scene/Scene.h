@@ -21,6 +21,7 @@ public:
     float refraction_index;
     float shadow_ray_eps;
     std::vector<Vec3> corner_grads;
+    std::vector<Material*> materials;
     BVH* bvh;
     TextureMap* bg_texture;
     bool bg_texture_set;    

@@ -14,7 +14,7 @@ public:
     texture_flags tex_flags;
     TransformationMatrix* tm;
     float Intersects(Ray ray) override ;
-    float getArea(void);
+
     Vec3 getSurfaceNormal(Ray r) override;
     Material *getMaterial() override;
     ObjectType getObject() override;
@@ -22,7 +22,7 @@ public:
     Vec3  getCenter() override;
     Vec3 getMotionBlur() override;
     TransformationMatrix* gettm() override;
-    ObjectInstance(Object* parent, bool reset, TransformationMatrix* resulting_tm, Material* material, Vec3 motionBlur);
+    ObjectInstance(Object* parent, bool reset, TransformationMatrix* resulting_tm, Material* material);
     ~ObjectInstance();
 
 

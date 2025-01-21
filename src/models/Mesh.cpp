@@ -8,7 +8,8 @@
 
 Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces, TransformationMatrix* tm, int num_tex_maps, TextureMap* texture_maps, std::vector<std::pair<float, float> > uv_coords_mesh):
  objectType(objectType){
-    this->material = material;
+    this->material = new Material();
+    *(this->material) = *(material);
     this->num_tex_maps = num_tex_maps;
     // construct tmap_flags objects as well
     this->tex_flags = texture_flags();
@@ -83,7 +84,9 @@ Mesh::Mesh(Material* material, ObjectType objectType, Vec3* faces, int numfaces,
     this->bvh_faces = new BVH(triangles, num_faces, 0);
     
     this->objectType = MeshType;
-    // this->center = resulting_tm->transform(this->center);
+
+    std::cout << "Created " << numfaces << " triangles... \n";
+    this->center = resulting_tm->transform(this->center);
     // std::cout << "Mesh Center After Transform: " << this->center.x << ", " << this->center.y << ", " << this->center.z << "\n";
 }
 

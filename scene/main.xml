@@ -10,7 +10,7 @@
             <Up>0 0 1</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
             <NearDistance>10</NearDistance>
-            <ImageResolution>800 800</ImageResolution>
+            <ImageResolution>200 200</ImageResolution>
             <NumSamples>1</NumSamples>
             <ImageName>plane_bilinear.png</ImageName>
         </Camera>
@@ -148,6 +148,24 @@
             <SpecularReflectance>1 1 1</SpecularReflectance>
             <PhongExponent>3000</PhongExponent>
         </Material>
+
+
+        <Material id="15">
+            <AmbientReflectance>0 0 0</AmbientReflectance>
+            <DiffuseReflectance>0 0 0</DiffuseReflectance>
+            <SpecularReflectance>0 0 0</SpecularReflectance>
+            <PhongExponent>3000</PhongExponent>
+        </Material>
+
+        <Material id="16">
+            <AmbientReflectance>0 0 0</AmbientReflectance>
+            <DiffuseReflectance>200 0 0</DiffuseReflectance>
+            <SpecularReflectance>0 0 0</SpecularReflectance>
+            <PhongExponent>3000</PhongExponent>
+        </Material>
+
+
+        
 
 
     </Materials>
@@ -617,21 +635,21 @@
 
 
  
-        <Mesh id="33">
+        <!-- <Mesh id="33">
             <Material>14</Material>
             <Transformations>s3 r3 t3</Transformations>
             <Faces plyFile="ply/chinese_dragon.ply" />
-        </Mesh> 
+        </Mesh>  -->
         <!-- <MeshInstance id="34" baseMeshId="33">
             <Material>14</Material>
             <Transformations>t6</Transformations>
         </MeshInstance> -->
-        <Mesh id="26">
+        <!-- <Mesh id="26">
             <Material>14</Material>
             <Transformations>s6 r6 t6</Transformations>
             <Faces plyFile="ply/chinese_dragon.ply" />
         </Mesh>
-        
+         -->
 
 
         
@@ -656,7 +674,7 @@
 
 
 
-
+<!-- 
         <Mesh id="1" shadingMode="smooth">
             <Material>3</Material>
             <Transformations>s1 r1 r2 t1</Transformations>
@@ -807,7 +825,7 @@
             <Faces plyFile="ply/berserker_ply_ply/mesh_18.ply" /></Mesh>
 
 
-
+ -->
 
 
     </Objects>
