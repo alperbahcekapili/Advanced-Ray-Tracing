@@ -383,8 +383,15 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
 
         // Texture related computations
         if(intersectingObject->get_texture_flags().any){
-        if(intersectingObject->getObject() == MeshType){
-            Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
+        if(intersectingObject->getObject() == MeshType || intersectingObject->getObject() == MeshInstanceType){
+            Mesh* mesh = nullptr;
+            if(intersectingObject->getObject() == MeshInstanceType){
+                ObjectInstance* tmp = dynamic_cast<ObjectInstance*>(intersectingObject);
+                mesh = dynamic_cast<Mesh*>(tmp->parent);
+            }
+            else{
+                mesh = dynamic_cast<Mesh*>(intersectingObject);    
+            }
             if(hitTri == nullptr)
                 hitTri = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
             Triangle* triangle = hitTri;
@@ -410,27 +417,6 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 bg_pixel_val = triangle->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, triangle->get_texture_flags().replace_all_texture->interpolation_type) * 255;
                 return bg_pixel_val;
             }   
-        }
-        else if (intersectingObject->getObject() == SphereType){
-            Sphere* sphere = dynamic_cast<Sphere*>(intersectingObject);
-            uv tmp_uv = uv::calculateUVSphere(location, sphere->center, sphere->R);
-            Vec3 bg_pixel_val = Vec3(0,0,0);
-            if(intersectingObject->get_texture_flags().replace_kd)
-                if(sphere->get_texture_flags().replace_kd_texture->is_image)
-                    bg_pixel_val = sphere->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().replace_kd_texture->interpolation_type);
-            else{
-                bg_pixel_val = sphere->get_texture_flags().replace_kd_texture->interpolateAt(location);
-            }
-            if(intersectingObject->get_texture_flags().replace_kd)
-                tmp =  bg_pixel_val * irradiance;
-            else if(intersectingObject->get_texture_flags().blend_kd){
-                bg_pixel_val = sphere->get_texture_flags().blend_kd_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().blend_kd_texture->interpolation_type);
-                tmp = tmp + (bg_pixel_val * irradiance);
-                tmp = tmp / 2;
-            }else if(intersectingObject->get_texture_flags().replace_all){
-                bg_pixel_val = sphere->get_texture_flags().replace_all_texture->interpolateAt(tmp_uv, sphere->get_texture_flags().replace_all_texture->interpolation_type) * 255;
-                return bg_pixel_val;
-            }      
         }
         }
         pixel = pixel + tmp;

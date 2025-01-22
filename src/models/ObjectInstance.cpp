@@ -190,5 +190,5 @@ TextureMap* ObjectInstance::get_texture_maps() {
     return this->parent->texture_maps;
 }
 texture_flags ObjectInstance::get_texture_flags(){
-    return this->parent->tex_flags;
+    return this->parent->get_texture_flags();
 }

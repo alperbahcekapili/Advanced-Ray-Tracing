@@ -6,7 +6,7 @@ import os
 import threading
 import json
 
-
+from game import Game
 
 pipe_in = '/tmp/pipe_in'
 pipe_out = '/tmp/pipe_out'
@@ -14,20 +14,8 @@ pipe_out = '/tmp/pipe_out'
 
 cursor_pos = [0,0]
 
-def write_to_pipe(data):
-    with open(pipe_out, 'w') as pipe:
-        pipe.write(json.dumps(data))
 
 
-# Function triggered by keystroke
-def up(event):
-    threading.Thread(target=write_to_pipe, args=('up',)).start()
-def down(event):
-    threading.Thread(target=write_to_pipe, args=("down",)).start()
-def right(event):
-    threading.Thread(target=write_to_pipe, args=("right",)).start()
-def left(event):
-    threading.Thread(target=write_to_pipe, args=("left",)).start()
 
 
 
@@ -63,7 +51,7 @@ class ImageRefreshApp:
                 # Blocking call - waits for data from the pipe
                 data = pipe.read().strip()
                 if data:
-                    # Trigger game refresh on receiving data
+                    print("I read from cpp")
                     self.refresh_image()
 
 
@@ -75,10 +63,13 @@ def main():
     root.title("Image Refresh App")
 
     # Register keystoke event
-    root.bind('<s>', down)
-    root.bind('<w>', up)
-    root.bind('<d>', right)
-    root.bind('<a>', left)
+    game = Game()
+
+    root.bind('<w>', game.handle)
+    root.bind('<a>', game.handle)
+    root.bind('<s>', game.handle)
+    root.bind('<d>', game.handle)
+    root.bind('<m>', game.handle)
     
 
     app = ImageRefreshApp(root, image_path, refresh_interval)
@@ -94,13 +85,11 @@ def main():
 
 
 if __name__ == "__main__":
-
-
+    
     if not os.path.exists(pipe_in):
         os.mkfifo(pipe_in)
     if not os.path.exists(pipe_out):
         os.mkfifo(pipe_out)
-
 
     main()
 

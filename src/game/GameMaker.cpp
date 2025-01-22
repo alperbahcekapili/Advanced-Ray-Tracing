@@ -14,11 +14,11 @@ int GameMaker::render_scene(){
     
     Scene* curscene = this->scene;
     BVH* bvh = new BVH(curscene->sceneObjects, curscene->numObjects, 0);
-    for (int j = 0; j < curscene->numObjects; j++)
-    {
-        // curscene->sceneObjects[j]->id = j;
-        std::cout << "New center: " << curscene->sceneObjects[j]->getCenter().x << "," << curscene->sceneObjects[j]->getCenter().y << "," << curscene->sceneObjects[j]->getCenter().z << "\n";
-    }
+    // for (int j = 0; j < curscene->numObjects; j++)
+    // {
+    //     // curscene->sceneObjects[j]->id = j;
+    //     std::cout << "New center: " << curscene->sceneObjects[j]->getCenter().x << "," << curscene->sceneObjects[j]->getCenter().y << "," << curscene->sceneObjects[j]->getCenter().z << "\n";
+    // }
     curscene->bvh = bvh;
     Shader shader = Shader(
         curscene
@@ -96,6 +96,17 @@ int GameMaker::render_scene(){
         curscene->camera->name.replace(pos, 4, ".png");
     }
     unsigned error = lodepng::encode(curscene->camera->name, image_mat, width, height, LCT_RGB);
+
+    // Let python know we updated the frame
+    std::ofstream write_pipe(pipe_in);
+    if (!write_pipe) {
+        std::cerr << "Failed to open write pipe.\n";
+    }
+    std::string message = "Hello from C++!";
+    std::cout << "C++ sending: " << message << std::endl;
+    write_pipe << message << std::endl;
+
+
     if (error) {
         std::cerr << "Error encoding PNG: " << lodepng_error_text(error) << std::endl;
         return 0;
@@ -130,34 +141,14 @@ int GameMaker::placeObjectTo(Object* object, pair<int, int> tile, int num_object
 }
 
 
-int GameMaker::move_cursor(string movement){
-    int old_tile_index = cursor.first * 4 + cursor.second;
-    int new_tile_index;
-    if(movement == "left"){
-        this->cursor.second += 1;
-        this->cursor.first += this->cursor.second / 4;
-        this->cursor.second = this->cursor.second % 4;
-        new_tile_index = cursor.first * 4 + cursor.second;        
-    }else if(movement == "right"){
-        this->cursor.second -= 1;
-        if(this->cursor.second<0){
-            this->cursor.first -= 1; 
-            this->cursor.second = 3;
-        }
-        new_tile_index = cursor.first * 4 + cursor.second;        
-    }else if(movement == "up"){
-        this->cursor.first +=1;
-        new_tile_index = cursor.first * 4 + cursor.second;        
-    }else if(movement == "down"){
-        this->cursor.first -=1;
-        new_tile_index = cursor.first * 4 + cursor.second;        
-    }
-
+int GameMaker::paint_tile(int ind1, int ind2, int material){
+    int tile_index = ind1 * 4 + ind2;
+    Object* old_obj = scene->object_vec.at(tile_index);
+    *(old_obj->getMaterial()) =  *(scene->materials.at(material));
     
-    int wall_material = 3;
     // Object* base_wall_1 = scene->sceneObjects[32];
     
-    this->placeObjectTo(scene->object_vec.at(34), cursor, 1); // This should move the new object to 0,0 tile 
+    // this->placeObjectTo(scene->object_vec.at(48), cursor, 1); // This should move the new object to 0,0 tile 
     // scene->object_vec.at(0) = new_obj;
     // scene->sceneObjects[0] = new_obj;
     // Object* old_obj = scene->object_vec.at(old_tile_index);
@@ -170,6 +161,18 @@ int GameMaker::move_cursor(string movement){
     
 }
 
+std::vector<std::string> GameMaker::processCommand(string in){
+    std::stringstream ss(in);
+    std::string item;
+    std::vector<std::string> items;
+
+    // Split the string by comma
+    while (std::getline(ss, item, ',')) {
+        items.push_back(item);
+    }
+    return items;
+}
+
 int GameMaker::wait_for_messages(){
     // Read the response from the Python program
     std::ifstream read_pipe(pipe_out);
@@ -180,28 +183,25 @@ int GameMaker::wait_for_messages(){
     std::string response;
     std::getline(read_pipe, response);
     std::cout << "C++ received: " << response << std::endl;
-    read_pipe.close();
-    
-    response = response.substr(1, response.rfind('\"')-1);
     
     
-
-    // Write to the Python program
-    std::ofstream write_pipe(pipe_in);
-    if (!write_pipe) {
-        std::cerr << "Failed to open write pipe.\n";
-        return 1;
+    std::vector<std::string>cmds = this->processCommand(response);
+    if (cmds.at(0) == "p")
+    {
+        // paint related udpates
+        int pos1 = stoi(cmds.at(1));
+        int pos2 = stoi(cmds.at(2));
+        int matid = stoi(cmds.at(3));
+        paint_tile(pos1, pos2, matid);
+    }else if (cmds.at(0) == "m")
+    {
+        int pos1 = stoi(cmds.at(1));
+        int pos2 = stoi(cmds.at(2));
+        int objid = stoi(cmds.at(3));
+        placeObjectTo(scene->object_vec.at(objid), {pos1,pos2}, 1);
     }
-    std::string message = "Hello from C++!";
-    std::cout << "C++ sending: " << message << std::endl;
-    write_pipe << message << std::endl;
-    write_pipe.close();
-
-
-    move_cursor(response);
-    this->render_scene();
-
-
+    
+    
     return 0;
 
 
@@ -220,11 +220,13 @@ GameMaker::GameMaker(Scene* scene)
     Reads xml file and create object instances out of the base objects
     */
 
-    // walls
     
-    this->render_scene();
+    // wait_for_messages();
+    
     
 
+
+    
     
 
 }

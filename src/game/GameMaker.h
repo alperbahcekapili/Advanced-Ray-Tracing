@@ -25,6 +25,10 @@
 #include <string>
 #include <unistd.h>
 
+#include <sstream>
+#include <vector>
+
+
 enum tile_animation{
     FIRE=1,
     HOVER=2,
@@ -64,7 +68,7 @@ public:
     const std::string pipe_out = "/tmp/pipe_out";
 
     pair<int,int> cursor;
-    
+    std::vector<std::string> processCommand(string in);
 
 
 
@@ -74,11 +78,8 @@ public:
     int render_scene();
     int placeObjectTo(Object* object, pair<int, int> tile, int num_objects);
     int wait_for_messages();
-    int move_cursor(string movement);
+    int paint_tile(int ind1, int ind2, int material);
 
-    player player1;
-    player player2;
-    board game_board;
 
     Scene* scene;
 

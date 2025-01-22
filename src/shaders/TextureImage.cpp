@@ -61,8 +61,6 @@ TextureImage::~TextureImage(){
 
 Vec3 TextureImage::get_value(float u, float v, InterploationType type){
 
-    u = abs(u);
-    v = abs(v);
 
     if(type == NEAREAST_NEIGHBOR){
         int x = int(u * this->width);

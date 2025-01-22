@@ -33,11 +33,11 @@ int main(int argc, char const *argv[])
     std::cout << "xml loaded\n";
 
     GameMaker* gm = new GameMaker(scenes.at(0));
-    gm->render_scene();
 
     while (true)
     {
         int retval = gm->wait_for_messages();
+        gm->render_scene();
         if(retval != 0)
             break;
     }

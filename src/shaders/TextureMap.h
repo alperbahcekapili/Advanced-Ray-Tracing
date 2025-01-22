@@ -26,15 +26,6 @@ struct uv{
     const std::pair<float, float>& uv_c  // Texture coordinates at vertex c,
 ) {
 
-    // if(uv_a.first == uv_b.first && uv_a.second == uv_b.second)
-    //     std::cout << "A anb B coords are same";
-
-    // if(uv_a.first == uv_c.first && uv_a.second == uv_c.second)
-    //     std::cout << "A anb C coords are same";
-
-    // if(uv_c.first == uv_b.first && uv_c.second == uv_b.second)
-    //     std::cout << "C anb B coords are same";
-    
 
     // Compute the triangle edges
     Vec3 v0 = b - a;

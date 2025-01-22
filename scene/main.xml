@@ -10,7 +10,7 @@
             <Up>0 0 1</Up>
             <NearPlane>-10 10 -10 10</NearPlane>
             <NearDistance>10</NearDistance>
-            <ImageResolution>1000 1000</ImageResolution>
+            <ImageResolution>960 580</ImageResolution>
             <NumSamples>1</NumSamples>
             <ImageName>plane_bilinear.png</ImageName>
         </Camera>
@@ -725,18 +725,22 @@
 
         <MeshInstance id="39" baseMeshId="33">
             <Material>3</Material>
+            <Textures>1</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="40" baseMeshId="33">
             <Material>3</Material>
+            <Textures>1</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="41" baseMeshId="33">
             <Material>3</Material>
+            <Textures>1</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="42" baseMeshId="33">
             <Material>3</Material>
+            <Textures>1</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
 
@@ -744,18 +748,22 @@
 
         <MeshInstance id="43" baseMeshId="34">
             <Material>3</Material>
+            <Textures>2</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="44" baseMeshId="34">
             <Material>3</Material>
+            <Textures>2</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="45" baseMeshId="34">
             <Material>3</Material>
+            <Textures>2</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="46" baseMeshId="34">
             <Material>3</Material>
+            <Textures>2</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         
@@ -763,18 +771,22 @@
 
         <MeshInstance id="47" baseMeshId="35">
             <Material>3</Material>
+            <Textures>3</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="48" baseMeshId="35">
             <Material>3</Material>
+            <Textures>3</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="49" baseMeshId="35">
             <Material>3</Material>
+            <Textures>3</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
         <MeshInstance id="50" baseMeshId="35">
             <Material>3</Material>
+            <Textures>3</Textures>
             <Transformations>t7</Transformations>
         </MeshInstance>
 
