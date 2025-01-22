@@ -84,6 +84,11 @@ BVH::BVH(Object** objects, int num_objects, int depth)
 
 }
 
+Object* BVH::searchID(int id){
+    return this->map[id];
+        
+}
+
 BVH::~BVH()
 {
 }
@@ -181,7 +186,7 @@ bool BVH::intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax){
     
     // std::cout << "Tminl: " << tminl << ", tmaxl: " << tmaxl << ", tminr: " << tminr << ", tmaxr: " << tmaxr << "\n";
     if(lintersects && rintersects){
-        if(tminl > tminr){
+        if(tminl < tminr){
             tmin = tminl;
             tmax = tmaxl;
             to_fill = to_fill_l;

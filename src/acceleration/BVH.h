@@ -2,7 +2,11 @@
 
 #include "../models/Object.h"
 #include "../util/data_structures.h"
+#include <iostream>
+#include <unordered_map>
+#include <string>
 
+using namespace std;
 class BVH
 {
 private:
@@ -17,6 +21,7 @@ public:
     bool is_leaf;
     Object* leaf_object;
     int total_depth;
+    unordered_map<int, Object*> map;
 
 
     Vec3 calculateBounds(Object** objects, int num_objects, bool isMax) {
@@ -29,7 +34,7 @@ public:
         }
         return bounds;
     }
-
+    Object* searchID(int id);
     BVH(Object** objects, int num_objects, int depth);
     bool intersectObject(Ray ray, Object*& to_fill, float& tmin, float& tmax);
     bool intersects(Ray r, float& tNear, float& tFar);

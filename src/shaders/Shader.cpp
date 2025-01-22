@@ -381,13 +381,6 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
         Vec3  tmp = intersectingObject->getMaterial()->diffuseProp * irradiance;
 
 
-        if (intersectingObject->objectType == MeshInstanceType){
-            location = intersectingObject->gettm()->inverse().transform(location);
-            ObjectInstance* mesh = dynamic_cast<ObjectInstance*>(intersectingObject);
-            intersectingObject = mesh->parent;
-        }
-
-
         // Texture related computations
         if(intersectingObject->get_texture_flags().any){
         if(intersectingObject->getObject() == MeshType){
@@ -396,7 +389,7 @@ Vec3 Shader::diffuseShadingAt(Vec3  location, Object* intersectingObject, int in
                 hitTri = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
             Triangle* triangle = hitTri;
             Vec3 bg_pixel_val = Vec3(0,0,0);
-            uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
+            uv tmp_uv = uv::calculateUVTriangle(location, triangle->gettm()->transform(triangle->v1), triangle->gettm()->transform(triangle->v2), triangle->gettm()->transform(triangle->v3), 
             triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
             
             if(intersectingObject->get_texture_flags().replace_kd)
@@ -501,20 +494,11 @@ Vec3  Shader::specularShadingAt(Ray cameraRay,Vec3  location, Object* intersecti
         if(this->scene->lights[i]->ltype == SphericalDirectionalLightType)
             costheta = 1;
 
-        if(intersectingObject->get_texture_flags().replace_ks){
-            if(intersectingObject->getObject() == MeshType){
-                Mesh* mesh = dynamic_cast<Mesh*>(intersectingObject);
-                Triangle* triangle = dynamic_cast<Triangle*>(mesh->last_intersected_obj);
-                uv tmp_uv = uv::calculateUVTriangle(location, triangle->v1, triangle->v2, triangle->v3, 
-                triangle->uv_coords_triangle.at(0), triangle->uv_coords_triangle.at(1), triangle->uv_coords_triangle.at(2));
-                Vec3 bg_pixel_val = triangle->get_texture_flags().replace_kd_texture->interpolateAt(tmp_uv, NEAREAST_NEIGHBOR);
-                resultingMagnitude = resultingMagnitude + (bg_pixel_val * (this->scene->lights[i]->irradianceAt(lightRay, location) * costheta));
-            } 
-        }else{
+        
             resultingMagnitude = resultingMagnitude + 
         (intersectingObject->getMaterial()->specularProp * 
         (this->scene->lights[i]->irradianceAt(lightRay, location) * costheta));
-        }
+        
         
 
         

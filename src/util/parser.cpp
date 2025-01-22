@@ -809,7 +809,6 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
       stream.clear();
         // convert vector to list
         Vec3* mesh_faces_ar = new Vec3[mesh_faces.size()];
-        #pragma omp parallel for
         for (int i = 0; i < mesh_faces.size(); i++)
         {
             mesh_faces_ar[i] = mesh_faces.at(i);
@@ -901,89 +900,6 @@ std::vector<Scene*> loadFromXml(const std::string &filepath)
 }
 stream.str("");
 stream.clear();
-
-
-// //Get Spheres
-element = root->FirstChildElement("Objects");
-element = element->FirstChildElement("Sphere");
-while (element)
-{
-    child = element->FirstChildElement("Material");
-    stream << child->GetText() << std::endl;
-    stream >> sphere_material_id;
-
-    child = element->FirstChildElement("Center");
-    stream << child->GetText() << std::endl;
-    stream >> sphere_center_id;
-
-    child = element->FirstChildElement("Radius");
-    stream << child->GetText() << std::endl;
-    stream >> shpere_radius;
-
-    
-    // read textures if exist
-    std::vector<TextureMap*> tmaps;
-    child = element->FirstChildElement("Textures");
-    if(child){
-        stream << child->GetText() << std::endl;
-        int texture_buffer;
-        while(stream >> texture_buffer){
-            tmaps.push_back(tmap_list.at(texture_buffer-1));
-        }
-
-    }
-
-    std::vector<TransformationMatrix*> tms;
-    child = element->FirstChildElement("Transformations");
-    if(child){
-        stream.clear();
-        stream << child->GetText() << std::endl;
-        string transformation_buffer;
-        while(stream >> transformation_buffer){
-            char op = transformation_buffer.at(0);
-            int id = std::stoi(transformation_buffer.substr(1));
-            if(op=='r'){
-                tms.push_back(new TransformationMatrix(rotate.at(id-1), op));
-            }else if (op=='t')
-            {
-                tms.push_back(new TransformationMatrix(translate.at(id-1), op));
-            }else if (op=='s')
-            {
-                tms.push_back(new TransformationMatrix(scale.at(id-1), op));
-            }
-        }
-    }
-    // Initialize resulting tm as identity matrix so that it means no transformation
-    TransformationMatrix* resulting_tm = new TransformationMatrix();
-    resulting_tm->matrix[0][0] = 1;
-    resulting_tm->matrix[1][1] = 1;
-    resulting_tm->matrix[2][2] = 1;
-    resulting_tm->matrix[3][3] = 1;
-    for (int i = 0; i < tms.size(); i++)
-    {
-        *resulting_tm = *resulting_tm * (*tms.at( tms.size() - i - 1));
-    }
-    
-
-    TextureMap* tmaps_array = new TextureMap[tmaps.size()];
-    for (size_t i = 0; i < tmaps.size(); i++)
-    {
-        tmaps_array[i] = *(tmaps.at(i));
-    }
-
-    Sphere* s = new Sphere(
-    vertices.at(sphere_center_id-1),
-    shpere_radius,  
-    materials.at(sphere_material_id-1),
-    ObjectType::SphereType, resulting_tm, tmaps.size(), tmaps_array);
-    element = element->NextSiblingElement("Sphere");
-    spheres.push_back(s);
-}
-
-
-
-
-
 
 
 
@@ -1095,6 +1011,18 @@ while(element){
 
 
 
+/*
+Crete Game related instances
+*/
+// ObjectInstance* wall11  = new ObjectInstance(all_objects.at(32), false, new TransformationMatrix(), materials.at(3));
+// ObjectInstance* wall12 = new ObjectInstance(all_objects.at(32), false, new TransformationMatrix(), materials.at(3));
+// ObjectInstance* wall21  = new ObjectInstance(all_objects.at(32), false, new TransformationMatrix(), materials.at(3));
+// ObjectInstance* wall22  = new ObjectInstance(all_objects.at(32), false, new TransformationMatrix(), materials.at(3));
+// all_objects.push_back(wall11);
+// all_objects.push_back(wall12);
+// all_objects.push_back(wall21);
+// all_objects.push_back(wall22);
+
 
 num_objects = all_objects.size();
 Object** objlist = new Object*[num_objects];
@@ -1120,7 +1048,18 @@ for (size_t i = 0; i < cameras.size(); i++)
     }
     Vec3 bg(background_color.x,background_color.y,background_color.z);
     Vec3 ambli(ambient_light.x, ambient_light.y, ambient_light.z);
-    // TODO refraction index not give thus leaving none
+    
+
+
+
+
+
+
+
+
+
+
+
     Scene* s = new Scene(
         objlist, 
         num_objects,
@@ -1131,6 +1070,7 @@ for (size_t i = 0; i < cameras.size(); i++)
         bg, 
         ambli, shadow_ray_eps, 1
     );
+    s->object_vec = all_objects;
     s->materials = materials;
     s->spherical_light_flag = SPHERICAL_LIGHT;
     s->spherical_light = spherical_light;

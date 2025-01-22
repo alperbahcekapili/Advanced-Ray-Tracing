@@ -1,13 +1,23 @@
 #include "GameMaker.h"
 
 
+
+
+
+
+
+
+
+
+
 int GameMaker::render_scene(){
     
     Scene* curscene = this->scene;
     BVH* bvh = new BVH(curscene->sceneObjects, curscene->numObjects, 0);
     for (int j = 0; j < curscene->numObjects; j++)
     {
-        curscene->sceneObjects[j]->id = j;
+        // curscene->sceneObjects[j]->id = j;
+        std::cout << "New center: " << curscene->sceneObjects[j]->getCenter().x << "," << curscene->sceneObjects[j]->getCenter().y << "," << curscene->sceneObjects[j]->getCenter().z << "\n";
     }
     curscene->bvh = bvh;
     Shader shader = Shader(
@@ -17,7 +27,7 @@ int GameMaker::render_scene(){
     int imgHeight = curscene->imagePane->dimy;
     Vec3** image = new Vec3*[imgWidth];
     int total_progress = 0;
-    // #pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < imgWidth; i++)
     {
         image[i] = new Vec3[imgHeight];
@@ -37,8 +47,11 @@ int GameMaker::render_scene(){
             Object* tofill = nullptr;
             bool intersected = bvh->intersectObject(cameraRay, tofill, minTValue, maxTValue);
             int intersectingObjIndex = -1;
-            if(intersected)
-                intersectingObjIndex = tofill -> id;                    
+            if(intersected){
+                auto it = std::find(curscene->sceneObjects, curscene->sceneObjects + curscene->numObjects, tofill);
+                intersectingObjIndex = std::distance(curscene->sceneObjects, it); // tofill -> id;                    
+            }
+                
             if (intersectingObjIndex == -1){
                 // if scene has bg texture then use it
                 Vec3 bg_pixel_val = Vec3(float(shader.scene->bg.x),float(shader.scene->bg.y),float(shader.scene->bg.z));
@@ -120,12 +133,12 @@ int GameMaker::placeObjectTo(Object* object, pair<int, int> tile, int num_object
 int GameMaker::move_cursor(string movement){
     int old_tile_index = cursor.first * 4 + cursor.second;
     int new_tile_index;
-    if(movement == "right"){
+    if(movement == "left"){
         this->cursor.second += 1;
         this->cursor.first += this->cursor.second / 4;
         this->cursor.second = this->cursor.second % 4;
         new_tile_index = cursor.first * 4 + cursor.second;        
-    }else if(movement == "left"){
+    }else if(movement == "right"){
         this->cursor.second -= 1;
         if(this->cursor.second<0){
             this->cursor.first -= 1; 
@@ -142,16 +155,17 @@ int GameMaker::move_cursor(string movement){
 
     
     int wall_material = 3;
-    Object* base_wall_1 = scene->sceneObjects[32];
-    ObjectInstance* new_obj  = new ObjectInstance(base_wall_1, false, new TransformationMatrix(), scene->materials.at(wall_material));
-    this->placeObjectTo(new_obj, cursor, 1); // This should move the new object to 0,0 tile 
-    scene->sceneObjects[0] = new_obj;
+    // Object* base_wall_1 = scene->sceneObjects[32];
     
-    // *(scene->sceneObjects[old_tile_index]->getMaterial()) =  old_tile_index % 2 == 0 ? *(scene->materials.at(1)) : *(scene->materials.at(0));
-    // *(scene->sceneObjects[new_tile_index]->getMaterial()) = *(scene->materials[15]);
+    this->placeObjectTo(scene->object_vec.at(34), cursor, 1); // This should move the new object to 0,0 tile 
+    // scene->object_vec.at(0) = new_obj;
+    // scene->sceneObjects[0] = new_obj;
+    // Object* old_obj = scene->object_vec.at(old_tile_index);
+    // Object* new_obj = scene->object_vec.at(new_tile_index);
 
-    std::cout << "New cursor position: " << cursor.first << ", " << cursor.second << "\n";
-    std::cout << "Old cursor index: " << old_tile_index << ", new cursor index: " << new_tile_index << "\n";
+    // int material_index = cursor.first * 3 + cursor.second;
+    // *(old_obj->getMaterial()) =  material_index % 2 == 0 ? *(scene->materials.at(1)) : *(scene->materials.at(0));
+    // *(new_obj->getMaterial()) = *(scene->materials[15]);
 
     
 }
