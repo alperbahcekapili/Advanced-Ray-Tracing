@@ -33,7 +33,7 @@ class ImageRefreshApp:
     def load_image(self):
         try:
             image = Image.open(self.image_path)
-            image = image.resize((1920, 1080), Image.Resampling.LANCZOS)  # Resize for display
+            
             return ImageTk.PhotoImage(image)
         except Exception as e:
             print(f"Error loading image: {e}")

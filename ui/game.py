@@ -13,11 +13,32 @@ pipe_out = '/tmp/pipe_out'
 
 
 
+import asyncio
+import vlc
+
+async def play_sound_partial(file_path, duration=1.0):
+    """
+    Plays a portion of the audio file asynchronously.
+    :param file_path: Path to the MP3 file.
+    :param duration: Duration to play the sound (in seconds).
+    """
+    # Initialize VLC player
+    player = vlc.MediaPlayer("/home/alpfischer/raytracer_project/Advanced-Ray-Tracing/ui/sound/"+file_path)
+    
+    # Start playback
+    player.play()
+    
+    # Wait for the specified duration
+    await asyncio.sleep(duration)
+    
+    # Stop playback
+    player.stop()
+
 class Game:
 
     def kill(self, obj_id):
         print(f"Killing object {obj_id}, it's location: {self.object_locs[obj_id]}")
-        print()
+        
         self.send_move_event(8, 0, obj_id)
 
         print(f"Killing object {obj_id}, it's location: {self.object_locs[obj_id]}")
@@ -86,7 +107,9 @@ class Game:
                     self.normalize_tile(endangered_pos1[0], endangered_pos1[1])
                     return
                 # if object is not wall, then unfortunately for my guy life is over
+                asyncio.run(play_sound_partial("fire.mp3"))
                 self.kill(obj_in_the_middle)
+                
             self.normalize_tile(endangered_pos1[0], endangered_pos1[1])
 
 
@@ -115,9 +138,6 @@ class Game:
 
 
         elif attacking_obj in berserker_ids:
-
-
-
             # Berserker will swing it's sword now. All the pieces in the radius will be effected
             direction = 1 if endangered_pos[other_axis] - attacker_pos[other_axis] > 0 else -1
             endangered_pos1 = [attacker_pos[0], attacker_pos[1]]
@@ -132,6 +152,7 @@ class Game:
                     self.normalize_tile(endangered_pos1[0], endangered_pos1[1])
                     return
                 # if object is not wall, then unfortunately for my guy life is over
+                asyncio.run(play_sound_partial("sword.mp3"))
                 self.kill(obj_in_the_middle)
             self.normalize_tile(endangered_pos1[0], endangered_pos1[1])
             
@@ -243,6 +264,7 @@ class Game:
             pipe.read()
             print("Frame is updated...")
             self.refresh.set()
+            
 
 
     def send_paint_event(self, first, second, material):
@@ -253,7 +275,19 @@ class Game:
         # we need to empty old location
         self.object_locs[obj_index] = [first,second]
         self.write_to_pipe(f"m,{first},{second},{obj_index}")
+
+        if first == 8:
+            self.wait_update()
+            return
+        
+        if obj_index in self.berserker_ids:
+            asyncio.run(play_sound_partial("walk.mp3"))
+        elif obj_index in self.dragon_ids:
+            asyncio.run(play_sound_partial("wings.mp3"))
+        elif obj_index in self.wall_ids:
+            asyncio.run(play_sound_partial("brick_put.mp3"))
         self.wait_update()
+        
 
     def get_object_at_(self, pos1, pos2):
         try:
