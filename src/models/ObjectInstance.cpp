@@ -89,7 +89,7 @@ float ObjectInstance::Intersects(Ray ray) {
     
 
     // Calculate the distance from the original ray origin
-    float resulting_t  = (new_o - intersecting_location).magnitude();
+    float resulting_t  = (ray.o - intersecting_location).magnitude();
     
     return resulting_t;
     

@@ -21,12 +21,13 @@ cursor_pos = [0,0]
 
 
 class ImageRefreshApp:
-    def __init__(self, root, image_path, refresh_interval):
+    def __init__(self, root, image_path, game):
         self.root = root
         self.image_path = image_path
         self.image_label = tk.Label(root)
         self.image_label.pack()
-        threading.Thread(target=self.listen_to_pipe, daemon=True).start()
+        self.game = game
+        threading.Thread(target=self.listen_to_pipe, args=(self.game, )).start()
 
 
     def load_image(self):
@@ -45,14 +46,16 @@ class ImageRefreshApp:
             self.image_label.image = img
 
     # Function to read from the named pipe
-    def listen_to_pipe(self,):
-        while True:
-            with open(pipe_in, 'r') as pipe:
-                # Blocking call - waits for data from the pipe
-                data = pipe.read().strip()
-                if data:
-                    print("I read from cpp")
-                    self.refresh_image()
+    def listen_to_pipe(self, obj):
+        try:
+            while True:
+                obj.refresh.wait()
+                print("Trying to refres...")
+                obj.refresh.clear()
+                self.refresh_image()
+            
+        except Exception as e:
+            pass
 
 
 def main():
@@ -61,6 +64,9 @@ def main():
 
     root = tk.Tk()
     root.title("Image Refresh App")
+
+    
+
 
     # Register keystoke event
     game = Game()
@@ -72,7 +78,7 @@ def main():
     root.bind('<m>', game.handle)
     
 
-    app = ImageRefreshApp(root, image_path, refresh_interval)
+    app = ImageRefreshApp(root, image_path, game)
     app.refresh_image()
 
     def on_closing():
